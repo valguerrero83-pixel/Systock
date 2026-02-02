@@ -83,3 +83,8 @@ export interface CrearRepuestoDTO {
   cantidad_inicial: number;
   usuario_id: string;
 }
+
+export interface StockActual {
+  repuesto_id: string;
+  stock: number;
+}

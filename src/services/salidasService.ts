@@ -58,13 +58,29 @@ export async function obtenerHistorialSalidas(): Promise<Movimiento[]> {
       tipo,
       cantidad,
       created_at,
-      repuestos:repuesto_id(id, nombre, unidad),
-      empleado_entrega:empleado_entrega_id(id, nombre),
-      empleado_recibe:empleado_recibe_id(id, nombre)
+      repuestos:repuesto_id (
+        id,
+        nombre,
+        unidad
+      ),
+      empleado_entrega:empleado_entrega_id (
+        id,
+        nombre
+      ),
+      empleado_recibe:empleado_recibe_id (
+        id,
+        nombre
+      )
     `)
     .eq("tipo", "SALIDA")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data as Movimiento[];
+
+  return (data ?? []).map((m: any) => ({
+    ...m,
+    repuestos: m.repuestos ?? null,
+    empleado_entrega: m.empleado_entrega ?? null,
+    empleado_recibe: m.empleado_recibe ?? null,
+  })) as Movimiento[];
 }
