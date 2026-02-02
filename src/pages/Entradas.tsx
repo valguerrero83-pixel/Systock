@@ -112,8 +112,6 @@ export default function Entradas() {
   }
 
   const fecha = new Date();
-  const fechaStr = fecha.toLocaleDateString("es-CO");
-  const horaStr = fecha.toLocaleTimeString("es-CO");
 
   return (
     <PageTransition>

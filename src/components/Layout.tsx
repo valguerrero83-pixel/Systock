@@ -36,7 +36,6 @@ export default function Layout() {
     usuario?.rol_usuario === "admin" || usuario?.rol_usuario === "dev";
 
   const esJefe = usuario?.rol_usuario === "jefe";
-  const esConsulta = usuario?.rol_usuario === "consulta";
 
   return (
     <div className="min-h-screen bg-[#f5f7fa] flex flex-col">

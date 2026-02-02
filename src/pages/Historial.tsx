@@ -1,25 +1,12 @@
 import { useEffect, useState } from "react";
-import { obtenerHistorial } from "../services/historialService";
+import { obtenerHistorialMovimientos } from "../services/historialService";
 import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
 
-import type {
-  Movimiento,
-  Empleado,
-  Repuesto,
-} from "../types/index";
+import type { Movimiento, Empleado, Repuesto } from "../types/index";
 
 /* ICONOS */
-const CalendarIcon = () => (
-  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <rect x="3" y="4" width="18" height="18" rx="2" />
-    <line x1="3" y1="10" x2="21" y2="10" />
-    <line x1="8" y1="2" x2="8" y2="6" />
-    <line x1="16" y1="2" x2="16" y2="6" />
-  </svg>
-);
-
 const ArrowIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" fill="none">
     <polyline points="8 4 17 12 8 20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -45,7 +32,7 @@ export default function Historial() {
   }, []);
 
   async function cargarDatos() {
-    const hist = await obtenerHistorial();
+    const hist = await obtenerHistorialMovimientos("365");
 
     const { data: emp } = await supabase
       .from("empleados")
@@ -54,11 +41,11 @@ export default function Historial() {
 
     const { data: rep } = await supabase
       .from("repuestos")
-      .select("id, nombre")
+      .select("id, nombre, unidad, stock_minimo")
       .order("nombre");
 
-    setHistOriginal(hist);
-    setMovimientos(hist);
+    setHistOriginal(hist ?? []);
+    setMovimientos(hist ?? []);
     setEmpleados(emp ?? []);
     setRepuestos(rep ?? []);
   }
@@ -80,7 +67,7 @@ export default function Historial() {
 
     if (n.desde) {
       lista = lista.filter(
-        (m) => new Date(m.created_at) >= new Date(n.desde)
+        (m) => new Date(m.created_at + "Z") >= new Date(n.desde)
       );
     }
 
@@ -88,14 +75,16 @@ export default function Historial() {
       const fechaTope = new Date(n.hasta);
       fechaTope.setHours(23, 59, 59);
       lista = lista.filter(
-        (m) => new Date(m.created_at) <= fechaTope
+        (m) => new Date(m.created_at + "Z") <= fechaTope
       );
     }
 
     setMovimientos(lista);
   }
 
-  function handleFiltro(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+  function handleFiltro(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
     const { name, value } = e.target;
     const nuevos = { ...filtros, [name]: value };
     setFiltros(nuevos);
@@ -107,7 +96,7 @@ export default function Historial() {
     if (!movimientos.length) return;
 
     const filas = movimientos.map((m) => ({
-      Fecha: new Date(m.created_at).toLocaleDateString("es-CO"),
+      Fecha: new Date(m.created_at + "Z").toLocaleDateString("es-CO"),
       Tipo: m.tipo,
       Repuesto: m.repuestos?.nombre,
       Cantidad: `${m.tipo === "ENTRADA" ? "+" : "-"}${m.cantidad} ${m.repuestos?.unidad}`,
@@ -153,7 +142,6 @@ export default function Historial() {
 
         {/* FILTROS */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-          
           <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
             <option value="">Todos</option>
             {empleados.map((e) => (
@@ -208,9 +196,9 @@ export default function Historial() {
                   className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-md"
                 >
                   <Td>
-                    {new Date(m.created_at).toLocaleDateString("es-CO")}<br />
+                    {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}<br />
                     <span className="text-xs text-gray-500">
-                      {new Date(m.created_at).toLocaleTimeString("es-CO")}
+                      {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
                     </span>
                   </Td>
 
@@ -224,11 +212,11 @@ export default function Historial() {
                     </span>
                   </Td>
 
-                  <Td>{m.repuestos?.nombre}</Td>
+                  <Td>{m.repuestos?.nombre ?? "—"}</Td>
 
                   <Td>
                     {m.tipo === "ENTRADA" ? "+" : "-"}
-                    {m.cantidad} {m.repuestos?.unidad}
+                    {m.cantidad} {m.repuestos?.unidad ?? ""}
                   </Td>
 
                   <Td className="flex items-center gap-2">
@@ -263,7 +251,7 @@ function Filtro({
   return (
     <div>
       <label className="text-sm font-semibold text-gray-700">{label}</label>
-      {typeof children === "object" ? (
+      {Array.isArray(children) ? (
         <select
           name={name}
           value={value}
@@ -283,6 +271,12 @@ function Th({ children }: { children: React.ReactNode }) {
   return <th className="py-3 text-left">{children}</th>;
 }
 
-function Td({ children }: { children: React.ReactNode }) {
-  return <td className="py-3">{children}</td>;
+function Td({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <td className={`py-3 ${className}`}>{children}</td>;
 }
