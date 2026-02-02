@@ -38,12 +38,12 @@ export default function Empleados() {
 
     const movCount: Record<string, number> = {};
 
-    movData?.forEach((m) => {
-      if (m.empleado_entrega_id)
-        movCount[m.empleado_entrega_id] = (movCount[m.empleado_entrega_id] || 0) + 1;
+    ;(movData ?? []).forEach((m) => {
+    if (m?.empleado_entrega_id)
+      movCount[m.empleado_entrega_id!] = (movCount[m.empleado_entrega_id!] || 0) + 1;
 
-      if (m.empleado_recibe_id)
-        movCount[m.empleado_recibe_id] = (movCount[m.empleado_recibe_id] || 0) + 1;
+    if (m?.empleado_recibe_id)
+      movCount[m.empleado_recibe_id!] = (movCount[m.empleado_recibe_id!] || 0) + 1;
     });
 
     // 3️⃣ Unir

@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import type{
+import type {
   Repuesto,
   Empleado,
   StockActual,
@@ -14,7 +14,6 @@ export async function obtenerRepuestos(): Promise<Repuesto[]> {
     .order("nombre");
 
   if (error) throw error;
-
   return data as Repuesto[];
 }
 
@@ -25,7 +24,6 @@ export async function obtenerEmpleados(): Promise<Empleado[]> {
     .order("nombre");
 
   if (error) throw error;
-
   return data as Empleado[];
 }
 
@@ -35,7 +33,6 @@ export async function obtenerStockActual(): Promise<StockActual[]> {
     .select("repuesto_id, stock");
 
   if (error) throw error;
-
   return data as StockActual[];
 }
 
@@ -69,6 +66,5 @@ export async function obtenerHistorialSalidas(): Promise<Movimiento[]> {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-
   return data as Movimiento[];
 }

@@ -1,48 +1,26 @@
 import { supabase } from "../lib/supabase";
-import type { CrearRepuestoDTO } from "../types/index";
+import type { Movimiento } from "../types";
 
-export async function crearRepuesto(payload: CrearRepuestoDTO): Promise<boolean> {
+export async function obtenerHistorialMovimientos(periodo: string): Promise<Movimiento[]> {
+  const dias = Number(periodo);
+  const fechaDesde = new Date();
+  fechaDesde.setDate(fechaDesde.getDate() - dias);
 
-  // 1️⃣ Verificar si existe un repuesto con ese nombre
-  const { data: existe } = await supabase
-    .from("repuestos")
-    .select("id")
-    .eq("nombre", payload.nombre.trim())
-    .maybeSingle();
+  const { data, error } = await supabase
+    .from("movimientos")
+    .select(`
+      id,
+      tipo,
+      cantidad,
+      created_at,
+      repuestos:repuesto_id(id, nombre, unidad),
+      empleado_entrega:empleado_entrega_id(id, nombre),
+      empleado_recibe:empleado_recibe_id(id, nombre)
+    `)
+    .gte("created_at", fechaDesde.toISOString())
+    .order("created_at", { ascending: false });
 
-  if (existe) {
-    throw new Error("Ya existe un repuesto con ese nombre.");
-  }
+  if (error) throw error;
 
-  // 2️⃣ Crear repuesto
-  const { data: rep, error: repError } = await supabase
-    .from("repuestos")
-    .insert([
-      {
-        nombre: payload.nombre,
-        unidad: payload.unidad,
-        stock_minimo: payload.stock_minimo
-      }
-    ])
-    .select("id")
-    .single();
-
-  if (repError) throw repError;
-
-  // 3️⃣ Movimiento inicial automático
-  const { error: movError } = await supabase.from("movimientos").insert([
-    {
-      tipo: "ENTRADA",
-      repuesto_id: rep.id,
-      cantidad: payload.cantidad_inicial,
-      empleado_entrega_id: null,
-      empleado_recibe_id: null,
-      registrado_por: payload.usuario_id,
-      notas: "Registro inicial"
-    }
-  ]);
-
-  if (movError) throw movError;
-
-  return true;
+  return data as Movimiento[];
 }
