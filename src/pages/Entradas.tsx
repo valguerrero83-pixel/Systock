@@ -110,9 +110,7 @@ export default function Entradas() {
       showToast("Error al registrar entrada.");
     }
   }
-
-  const fecha = new Date();
-
+  
   return (
     <PageTransition>
       <div className="w-full max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
