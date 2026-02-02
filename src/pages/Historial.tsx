@@ -6,7 +6,7 @@ import PageTransition from "../components/PageTransition";
 
 import type { Movimiento, Empleado, Repuesto } from "../types/index";
 
-/* ICONOS */
+/* ICONO */
 const ArrowIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" fill="none">
     <polyline points="8 4 17 12 8 20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -98,8 +98,10 @@ export default function Historial() {
     const filas = movimientos.map((m) => ({
       Fecha: new Date(m.created_at + "Z").toLocaleDateString("es-CO"),
       Tipo: m.tipo,
-      Repuesto: m.repuestos?.nombre,
-      Cantidad: `${m.tipo === "ENTRADA" ? "+" : "-"}${m.cantidad} ${m.repuestos?.unidad}`,
+      Repuesto: m.repuestos?.nombre ?? "",
+      Cantidad: `${m.tipo === "ENTRADA" ? "+" : "-"}${m.cantidad} ${
+        m.repuestos?.unidad ?? ""
+      }`,
       EntregadoPor: m.empleado_entrega?.nombre ?? "",
       RecibidoPor: m.empleado_recibe?.nombre ?? "",
     }));
@@ -163,13 +165,23 @@ export default function Historial() {
           </Filtro>
 
           <Filtro label="Desde">
-            <input type="date" name="desde" value={filtros.desde} onChange={handleFiltro}
-              className="w-full mt-1 px-3 py-2 border rounded-lg"/>
+            <input
+              type="date"
+              name="desde"
+              value={filtros.desde}
+              onChange={handleFiltro}
+              className="w-full mt-1 px-3 py-2 border rounded-lg"
+            />
           </Filtro>
 
           <Filtro label="Hasta">
-            <input type="date" name="hasta" value={filtros.hasta} onChange={handleFiltro}
-              className="w-full mt-1 px-3 py-2 border rounded-lg"/>
+            <input
+              type="date"
+              name="hasta"
+              value={filtros.hasta}
+              onChange={handleFiltro}
+              className="w-full mt-1 px-3 py-2 border rounded-lg"
+            />
           </Filtro>
         </div>
 
@@ -203,11 +215,13 @@ export default function Historial() {
                   </Td>
 
                   <Td>
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                      m.tipo === "ENTRADA"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-semibold ${
+                        m.tipo === "ENTRADA"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
                       {m.tipo}
                     </span>
                   </Td>
@@ -251,18 +265,16 @@ function Filtro({
   return (
     <div>
       <label className="text-sm font-semibold text-gray-700">{label}</label>
-      {Array.isArray(children) ? (
-        <select
-          name={name}
-          value={value}
-          onChange={onChange}
-          className="w-full mt-1 px-3 py-2 border rounded-lg"
-        >
-          {children}
-        </select>
-      ) : (
-        children
-      )}
+
+      {/* SELECT corregido */}
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full mt-1 px-3 py-2 border rounded-lg"
+      >
+        {children}
+      </select>
     </div>
   );
 }
