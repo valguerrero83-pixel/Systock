@@ -3,10 +3,21 @@ import { obtenerEmpleados } from "../services/salidasService";
 import { obtenerRepuestos } from "../services/entradasService";
 import { obtenerHistorialMovimientos } from "../services/reportesService";
 
-export default function ModalReportes({ abierto, onClose }: any) {
-  const [empleados, setEmpleados] = useState([]);
-  const [repuestos, setRepuestos] = useState([]);
-  const [historial, setHistorial] = useState([]);
+import type {
+  Empleado,
+  Repuesto,
+  Movimiento
+} from "../types";
+
+interface PropsModal {
+  abierto: boolean;
+  onClose: () => void;
+}
+
+export default function ModalReportes({ abierto, onClose }: PropsModal) {
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
+  const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
+  const [historial, setHistorial] = useState<Movimiento[]>([]);
 
   const [filtros, setFiltros] = useState({
     empleado: "",
@@ -34,13 +45,13 @@ export default function ModalReportes({ abierto, onClose }: any) {
     setHistorial(datos);
   }
 
-  async function handleFiltro(e: any) {
+  function handleFiltro(e: React.ChangeEvent<HTMLSelectElement>) {
     const { name, value } = e.target;
-    setFiltros({ ...filtros, [name]: value });
 
-    if (name === "periodo") {
-      filtrarMovimientos(value);
-    }
+    const nuevosFiltros = { ...filtros, [name]: value };
+    setFiltros(nuevosFiltros);
+
+    if (name === "periodo") filtrarMovimientos(value);
   }
 
   function exportarCSV() {
@@ -56,14 +67,15 @@ export default function ModalReportes({ abierto, onClose }: any) {
     }));
 
     const encabezados = Object.keys(filas[0]).join(",");
-    const contenido = filas.map((row) =>
-      Object.values(row).join(",")
-    );
+    const contenido = filas
+      .map((f) => Object.values(f).join(","))
+      .join("\n");
 
-    const csv = [encabezados, ...contenido].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([encabezados + "\n" + contenido], {
+      type: "text/csv",
+    });
 
-    const url = window.URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = "reporte_movimientos.csv";
@@ -74,27 +86,18 @@ export default function ModalReportes({ abierto, onClose }: any) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex justify-center items-start pt-10 z-50">
-
       <div className="bg-white w-[90%] max-w-6xl rounded-2xl shadow-xl p-8">
 
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M8 12h8M12 8v8" />
-            </svg>
             Historial de Movimientos
           </h2>
 
           <button
             onClick={exportarCSV}
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 flex items-center gap-2"
+            className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900"
           >
-            <svg width="18" height="18" stroke="currentColor" fill="none">
-              <path d="M12 3v12M5 10l7 7 7-7" />
-              <path d="M5 19h14" />
-            </svg>
             Exportar CSV
           </button>
 
@@ -105,18 +108,18 @@ export default function ModalReportes({ abierto, onClose }: any) {
 
         {/* FILTROS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-
+          
           {/* Empleado */}
           <div>
-            <label className="text-sm font-semibold text-gray-700">Empleado</label>
+            <label className="text-sm font-semibold">Empleado</label>
             <select
               name="empleado"
               value={filtros.empleado}
               onChange={handleFiltro}
-              className="w-full mt-1 px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg mt-1"
             >
               <option value="">Todos</option>
-              {empleados.map((e: any) => (
+              {empleados.map((e) => (
                 <option key={e.id} value={e.id}>{e.nombre}</option>
               ))}
             </select>
@@ -124,15 +127,15 @@ export default function ModalReportes({ abierto, onClose }: any) {
 
           {/* Repuesto */}
           <div>
-            <label className="text-sm font-semibold text-gray-700">Repuesto</label>
+            <label className="text-sm font-semibold">Repuesto</label>
             <select
               name="repuesto"
               value={filtros.repuesto}
               onChange={handleFiltro}
-              className="w-full mt-1 px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg mt-1"
             >
               <option value="">Todos</option>
-              {repuestos.map((r: any) => (
+              {repuestos.map((r) => (
                 <option key={r.id} value={r.id}>{r.nombre}</option>
               ))}
             </select>
@@ -140,12 +143,12 @@ export default function ModalReportes({ abierto, onClose }: any) {
 
           {/* Periodo */}
           <div>
-            <label className="text-sm font-semibold text-gray-700">Periodo</label>
+            <label className="text-sm font-semibold">Periodo</label>
             <select
               name="periodo"
               value={filtros.periodo}
               onChange={handleFiltro}
-              className="w-full mt-1 px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg mt-1"
             >
               <option value="7">Últimos 7 días</option>
               <option value="30">Últimos 30 días</option>
@@ -160,25 +163,24 @@ export default function ModalReportes({ abierto, onClose }: any) {
         <div className="border rounded-xl overflow-hidden">
           <div className="max-h-[60vh] overflow-y-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-100 text-gray-600 font-semibold">
+              <thead className="bg-gray-100 text-gray-600">
                 <tr>
-                  <th className="px-4 py-3 text-left">Fecha/Hora</th>
-                  <th className="px-4 py-3 text-left">Tipo</th>
-                  <th className="px-4 py-3 text-left">Repuesto</th>
-                  <th className="px-4 py-3 text-left">Cantidad</th>
-                  <th className="px-4 py-3 text-left">Entregado por</th>
-                  <th className="px-4 py-3 text-left">Recibido por</th>
+                  <th className="px-4 py-3">Fecha/Hora</th>
+                  <th>Tipo</th>
+                  <th>Repuesto</th>
+                  <th>Cantidad</th>
+                  <th>Entregado por</th>
+                  <th>Recibido por</th>
                 </tr>
               </thead>
 
               <tbody>
-                {historial.map((m: any) => (
+                {historial.map((m) => (
                   <tr key={m.id} className="border-b hover:bg-gray-50">
-
                     <td className="px-4 py-3">
-                      {new Date(m.created_at).toLocaleDateString("es-CO")} <br />
+                      {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}<br />
                       <span className="text-xs text-gray-500">
-                        {new Date(m.created_at).toLocaleTimeString("es-CO")}
+                        {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
                       </span>
                     </td>
 
@@ -199,10 +201,10 @@ export default function ModalReportes({ abierto, onClose }: any) {
 
                     <td className="px-4 py-3">{m.empleado_entrega?.nombre ?? "-"}</td>
                     <td className="px-4 py-3">{m.empleado_recibe?.nombre ?? "-"}</td>
-
                   </tr>
                 ))}
               </tbody>
+
             </table>
           </div>
         </div>

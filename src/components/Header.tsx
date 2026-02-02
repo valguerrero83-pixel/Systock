@@ -18,7 +18,7 @@ borderBottom: '1px solid #e5e7eb',
 
 
 <div>
-<strong>{usuario?.nombre}</strong> · {usuario?.rol}
+<strong>{usuario?.nombre}</strong> · {usuario?.rol_usuario}
 <button
 onClick={logout}
 style={{ marginLeft: '1rem' }}
