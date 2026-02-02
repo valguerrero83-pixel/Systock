@@ -1,3 +1,4 @@
+// src/components/Layout.tsx
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
@@ -31,22 +32,26 @@ export default function Layout() {
     cargarDashboard();
   }, []);
 
+  const esAdmin =
+    usuario?.rol_usuario === "admin" || usuario?.rol_usuario === "dev";
+
+  const esJefe = usuario?.rol_usuario === "jefe";
+  const esConsulta = usuario?.rol_usuario === "consulta";
+
   return (
     <div className="min-h-screen bg-[#f5f7fa] flex flex-col">
 
-      {/* 🔵 BARRA SUPERIOR */}
-      <header className="w-full bg-white shadow-sm px-4 md:px-8 py-4
-        flex flex-col md:flex-row md:items-center md:justify-between
-        gap-4 border-b">
+      {/* --------------------- BARRA SUPERIOR --------------------- */}
+      <header className="w-full bg-white shadow-sm px-4 md:px-8 py-4 
+        flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b">
 
+        {/* LOGO + TÍTULO */}
         <div className="flex items-center gap-3">
-
-          {/* LOGO */}
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round"
             strokeLinejoin="round" className="text-slate-800">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 
-            2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 
+            2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
             <polyline points="3.3 7.3 12 12 20.7 7.3" />
             <line x1="12" y1="22" x2="12" y2="12" />
           </svg>
@@ -57,10 +62,11 @@ export default function Layout() {
           </div>
         </div>
 
+        {/* --------------------- NAV SUPERIOR --------------------- */}
         <nav className="flex items-center gap-3 flex-wrap justify-start md:justify-end">
 
-          {/* EMPLEADO → solo admin + dev */}
-          {(usuario?.rol_usuario === "admin" || usuario?.rol_usuario === "dev") && (
+          {/* Crear Empleado → SOLO ADMIN / DEV */}
+          {esAdmin && (
             <>
               <TopButton
                 icon={userIcon()}
@@ -72,13 +78,13 @@ export default function Layout() {
               <ModalNuevoEmpleado
                 abierto={modalEmpleadoAbierto}
                 onClose={() => setModalEmpleadoAbierto(false)}
-                onCreated={() => console.log("Empleado creado ✓")}
+                onCreated={() => {}}
               />
             </>
           )}
 
-          {/* NUEVO REPUESTO → solo admin + dev */}
-          {(usuario?.rol_usuario === "admin" || usuario?.rol_usuario === "dev") && (
+          {/* Crear Repuesto → SOLO ADMIN / DEV */}
+          {esAdmin && (
             <button
               onClick={() => setModalAbierto(true)}
               className="px-4 py-2 rounded-lg flex items-center gap-2 border transition
@@ -89,7 +95,7 @@ export default function Layout() {
             </button>
           )}
 
-          {/* LOGOUT */}
+          {/* Logout */}
           <button
             onClick={async () => {
               await logout();
@@ -103,10 +109,9 @@ export default function Layout() {
         </nav>
       </header>
 
-      {/* Dashboard Overview */}
+      {/* ---------------- DASHBOARD CARDS ---------------- */}
       <section className="w-full px-4 md:px-6 mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
-
           <DashboardCard
             title="TOTAL REPUESTOS"
             value={totalRepuestos}
@@ -134,28 +139,43 @@ export default function Layout() {
         </div>
       </section>
 
-      {/* 📌 CONTENIDO PRINCIPAL */}
+      {/* --------------------- CONTENIDO --------------------- */}
       <main className="flex-1 px-6 py-6 pb-24">
         <Outlet />
       </main>
 
-      {/* 🔵 MENÚ INFERIOR */}
-      <footer className="fixed bottom-0 left-0 w-full bg-white shadow-inner border-t
+      {/* --------------------- MENÚ INFERIOR --------------------- */}
+      <footer className="fixed bottom-0 left-0 w-full bg-white shadow-inner border-t 
         flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
 
-        <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
-        <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
+        {/* Salidas → ADMIN + DEV + JEFE */}
+        {(esAdmin || esJefe) && (
+          <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
+        )}
+
+        {/* Entradas → SOLO ADMIN + DEV */}
+        {esAdmin && (
+          <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
+        )}
+
+        {/* Inventario → TODOS */}
         <MenuItem to="/inventario" icon={clipboardIcon()} label="Inventario" />
+
+        {/* Historial → TODOS */}
         <MenuItem to="/historial" icon={historyIcon()} label="Historial" />
-        <MenuItem to="/empleados" icon={userIcon()} label="Empleados" />
+
+        {/* Empleados → SOLO ADMIN + DEV */}
+        {esAdmin && (
+          <MenuItem to="/empleados" icon={userIcon()} label="Empleados" />
+        )}
 
       </footer>
 
-      {/* 📌 MODAL NUEVO REPUESTO */}
+      {/* --------------------- MODAL NUEVO REPUESTO --------------------- */}
       <ModalNuevoRepuesto
         abierto={modalAbierto}
         onClose={() => setModalAbierto(false)}
-        onCreated={() => console.log("Repuesto creado ✓")}
+        onCreated={() => {}}
       />
 
     </div>
@@ -163,7 +183,6 @@ export default function Layout() {
 }
 
 /* ---------------------- COMPONENTES ---------------------- */
-
 function TopButton({ icon, label, primary, onClick }: any) {
   return (
     <button
@@ -211,8 +230,7 @@ function DashboardCard({ title, value, subtitle, color, icon }: any) {
   );
 }
 
-/* ---------------------- ICONOS ---------------------- */
-
+/* ---------------------- ICONOS SVG ---------------------- */
 function logoutIcon() {
   return (
     <svg width="22" height="22" stroke="currentColor" fill="none" viewBox="0 0 24 24">

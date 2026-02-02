@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
-
 import {
   obtenerUsuarios,
   actualizarRol,
   actualizarArea
 } from "../services/userService";
-
 import { useAuth } from "../context/AuthContext";
 
 export default function Usuarios() {
@@ -90,6 +88,7 @@ export default function Usuarios() {
                   <th>Acciones</th>
                 </tr>
               </thead>
+
               <tbody>
                 {usuarios.map((u, index) => (
                   <motion.tr
@@ -105,9 +104,9 @@ export default function Usuarios() {
                     {/* ROL */}
                     <td>
                       <select
-                        value={u.rol_usuario}
+                        value={u.rol_usuario || ""}
                         onChange={(e) => cambiarRol(u.id, e.target.value)}
-                        className="border rounded-lg px-2 py-1"
+                        className="border rounded-lg px-2 py-1 bg-white"
                       >
                         {roles.map((r) => (
                           <option key={r} value={r}>{r}</option>
@@ -119,7 +118,7 @@ export default function Usuarios() {
                     <td>
                       <input
                         type="text"
-                        className="border px-2 py-1 rounded-lg"
+                        className="border px-2 py-1 rounded-lg bg-white w-full"
                         value={u.area || ""}
                         placeholder="Área..."
                         onChange={(e) => cambiarArea(u.id, e.target.value)}
@@ -129,7 +128,7 @@ export default function Usuarios() {
                     <td>
                       <button
                         className="text-blue-600 hover:underline"
-                        onClick={() => cargarUsuarios()}
+                        onClick={cargarUsuarios}
                       >
                         Refrescar
                       </button>

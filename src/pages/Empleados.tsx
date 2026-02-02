@@ -3,30 +3,35 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
+import type { Empleado } from "../types/index";
+
+interface EmpleadoConMovimientos extends Empleado {
+  movimientos: number;
+}
 
 export default function Empleados() {
   const { usuario } = useAuth();
 
-  const [empleados, setEmpleados] = useState<any[]>([]);
+  const [empleados, setEmpleados] = useState<EmpleadoConMovimientos[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Cargar empleados + contar movimientos manualmente
+  // 🔥 Cargar empleados + contar movimientos real
   async function cargarEmpleados() {
     setLoading(true);
 
-    // 1️⃣ Obtener empleados REALES
+    // 1️⃣ Obtener empleados
     const { data: empleadosData, error: empError } = await supabase
       .from("empleados")
       .select("*")
       .order("nombre", { ascending: true });
 
-    if (empError) {
+    if (empError || !empleadosData) {
       console.error("Error cargando empleados:", empError);
       setLoading(false);
       return;
     }
 
-    // 2️⃣ Obtener todos los movimientos
+    // 2️⃣ Obtener movimientos
     const { data: movData } = await supabase
       .from("movimientos")
       .select("empleado_entrega_id, empleado_recibe_id");
@@ -41,9 +46,11 @@ export default function Empleados() {
         movCount[m.empleado_recibe_id] = (movCount[m.empleado_recibe_id] || 0) + 1;
     });
 
-    // 3️⃣ Unir empleados + movimientos
-    const empleadosFinal = empleadosData.map((e) => ({
-      ...e,
+    // 3️⃣ Unir
+    const empleadosFinal: EmpleadoConMovimientos[] = empleadosData.map((e) => ({
+      id: e.id,
+      nombre: e.nombre,
+      area: e.area ?? null,
       movimientos: movCount[e.id] || 0,
     }));
 
@@ -59,41 +66,21 @@ export default function Empleados() {
     const confirmar = confirm("¿Seguro que deseas eliminar este empleado?");
     if (!confirmar) return;
 
-    if (!id) {
-      alert("Error: el ID del empleado no existe.");
-      return;
-    }
-
-    // 1️⃣ Verificar movimientos asociados
-    const { count: movCount, error: movError } = await supabase
+    // 1️⃣ Verificar movimientos
+    const { count: movCount } = await supabase
       .from("movimientos")
       .select("*", { count: "exact", head: true })
       .or(`empleado_entrega_id.eq.${id},empleado_recibe_id.eq.${id}`);
 
-    if (movError) {
-      console.error("Error revisando movimientos:", movError);
-      alert("Error verificando movimientos.");
+    if (movCount && movCount > 0) {
+      alert("❌ No puedes eliminar este empleado: tiene movimientos.");
       return;
     }
 
-    if (movCount > 0) {
-      alert("❌ No puedes eliminar este empleado porque tiene movimientos registrados.");
-      return;
-    }
+    // 2️⃣ Eliminar
+    await supabase.from("empleados").delete().eq("id", id);
 
-    // 2️⃣ Eliminar empleado
-    const { error } = await supabase
-      .from("empleados")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error eliminando empleado:", error);
-      alert("Error eliminando el empleado.");
-      return;
-    }
-
-    alert("Empleado eliminado correctamente ✓");
+    alert("Empleado eliminado ✓");
     cargarEmpleados();
   }
 
@@ -103,67 +90,45 @@ export default function Empleados() {
         className="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow mt-6"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
       >
-
-        <motion.h1
-          className="text-2xl font-bold mb-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          Empleados
-        </motion.h1>
+        <h1 className="text-2xl font-bold mb-6">Empleados</h1>
 
         {loading ? (
           <p>Cargando…</p>
         ) : (
-          <motion.table
-            className="w-full text-sm border-separate border-spacing-y-1"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
+          <table className="w-full text-sm border-separate border-spacing-y-1">
             <thead>
               <tr className="text-gray-700">
-                <th className="text-left py-2">Nombre</th>
-                <th className="text-left py-2">Cargo</th>
-                <th className="text-left py-2">Movimientos</th>
-                <th className="text-left py-2">Acciones</th>
+                <th>Nombre</th>
+                <th>Cargo</th>
+                <th>Movs</th>
+                <th>Acciones</th>
               </tr>
             </thead>
 
             <tbody>
-              {empleados.map((e, index) => (
-                <motion.tr
-                  key={e.id}
-                  className="bg-gray-50 rounded-lg hover:bg-gray-100"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
+              {empleados.map((e) => (
+                <tr key={e.id} className="bg-gray-50 hover:bg-gray-100">
                   <td className="py-3 px-2 font-medium">{e.nombre}</td>
                   <td className="py-3 px-2">{e.area || "—"}</td>
                   <td className="py-3 px-2">{e.movimientos}</td>
 
-                  <td className="py-3 px-2 flex gap-2">
+                  <td className="py-3 px-2">
                     {usuario?.rol_usuario === "admin" ? (
-                      <>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => eliminarEmpleado(e.id)}
-                          className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-700"
-                        >
-                          Eliminar
-                        </motion.button>
-                      </>
+                      <button
+                        onClick={() => eliminarEmpleado(e.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded"
+                      >
+                        Eliminar
+                      </button>
                     ) : (
                       <p className="text-gray-500 text-xs">Sin permisos</p>
                     )}
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
-          </motion.table>
+          </table>
         )}
       </motion.div>
     </PageTransition>

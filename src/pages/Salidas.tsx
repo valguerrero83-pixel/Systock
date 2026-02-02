@@ -73,7 +73,7 @@ export default function Salidas() {
     const { name, value } = e.target;
 
     if (name === "cantidad" && stockDisponible !== null) {
-      if (Number(value) > stockDisponible) {
+      if (Number(value) > Number(stockDisponible)) {
         showToast("No puedes retirar más de lo disponible.");
         return;
       }
@@ -83,6 +83,11 @@ export default function Salidas() {
   }
 
   async function handleSubmit() {
+    if (!usuario?.id) {
+      showToast("Error: usuario no autenticado.");
+      return;
+    }
+
     if (!form.repuesto_id || !form.cantidad || !form.entregado_por || !form.recibido_por) {
       showToast("Completa todos los campos obligatorios.");
       return;
@@ -95,7 +100,7 @@ export default function Salidas() {
         entregado_por: form.entregado_por,
         recibido_por: form.recibido_por,
         notas: form.notas,
-        usuario_id: usuario!.id,
+        usuario_id: usuario.id,
       });
 
       showToast("Salida registrada ✓");
@@ -115,12 +120,11 @@ export default function Salidas() {
   }
 
   const fecha = new Date();
-  const fechaStr = fecha.toLocaleDateString("es-CO", { timeZone: "America/Bogota" });
+  const fechaStr = fecha.toLocaleDateString("es-CO");
   const horaStr = fecha.toLocaleTimeString("es-CO", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    timeZone: "America/Bogota",
   });
 
   return (
@@ -144,7 +148,9 @@ export default function Salidas() {
 
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
             <p className="text-xs text-red-700 font-semibold">FECHA Y HORA DEL REGISTRO</p>
-            <p className="text-lg font-bold text-gray-900">{fechaStr} • {horaStr}</p>
+            <p className="text-lg font-bold text-gray-900">
+              {fechaStr} • {horaStr}
+            </p>
           </div>
 
           {/* Repuesto */}

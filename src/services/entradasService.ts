@@ -1,58 +1,59 @@
-// src/services/entradasService.ts
 import { supabase } from "../lib/supabase";
+import type {
+  Repuesto,
+  Empleado,
+  StockActual,
+  CrearEntradaDTO,
+  Movimiento
+} from "../types/index";
 
-// REPUESTOS
-export async function obtenerRepuestos() {
+export async function obtenerRepuestos(): Promise<Repuesto[]> {
   const { data, error } = await supabase
     .from("repuestos")
     .select("id, codigo_corto, nombre, unidad")
     .order("nombre");
 
   if (error) throw error;
-  return data;
+
+  return data as Repuesto[];
 }
 
-// EMPLEADOS
-export async function obtenerEmpleados() {
+export async function obtenerEmpleados(): Promise<Empleado[]> {
   const { data, error } = await supabase
     .from("empleados")
     .select("id, nombre")
     .order("nombre");
 
   if (error) throw error;
-  return data;
+
+  return data as Empleado[];
 }
 
-// STOCK REAL DESDE LA VISTA
-export async function obtenerStockActual() {
+export async function obtenerStockActual(): Promise<StockActual[]> {
   const { data, error } = await supabase
     .from("stock_actual")
     .select("repuesto_id, stock");
 
   if (error) throw error;
-  return data;
+
+  return data as StockActual[];
 }
 
-// REGISTRAR ENTRADA
-export async function registrarEntrada({ repuesto_id, cantidad, recibido_por, notas, usuario_id }) {
-
-  const { error } = await supabase
-    .from("movimientos")
-    .insert({
-      tipo: "ENTRADA",
-      repuesto_id,
-      cantidad,
-      empleado_entrega_id: null,
-      empleado_recibe_id: recibido_por,
-      notas,
-      registrado_por: usuario_id,
-    });
+export async function registrarEntrada(payload: CrearEntradaDTO): Promise<void> {
+  const { error } = await supabase.from("movimientos").insert({
+    tipo: "ENTRADA",
+    repuesto_id: payload.repuesto_id,
+    cantidad: payload.cantidad,
+    empleado_entrega_id: null,
+    empleado_recibe_id: payload.recibido_por,
+    notas: payload.notas ?? "",
+    registrado_por: payload.usuario_id,
+  });
 
   if (error) throw error;
 }
 
-// HISTORIAL DE ENTRADAS
-export async function obtenerHistorialEntradas() {
+export async function obtenerHistorialEntradas(): Promise<Movimiento[]> {
   const { data, error } = await supabase
     .from("movimientos")
     .select(`
@@ -68,5 +69,6 @@ export async function obtenerHistorialEntradas() {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data;
+
+  return data as Movimiento[];
 }

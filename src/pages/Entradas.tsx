@@ -10,6 +10,12 @@ import {
 
 import PageTransition from "../components/PageTransition";
 import { motion } from "framer-motion";
+import type {
+  Repuesto,
+  Empleado,
+  StockActual,
+  Movimiento,
+} from "../types/index";
 
 // --- TOAST ---
 const Toast = ({ mensaje }: { mensaje: string }) => (
@@ -17,8 +23,7 @@ const Toast = ({ mensaje }: { mensaje: string }) => (
     initial={{ opacity: 0, y: 30 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 30 }}
-    transition={{ duration: 0.3 }}
-    className="fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl"
+    className="fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-3 rounded-xl"
   >
     {mensaje}
   </motion.div>
@@ -27,10 +32,10 @@ const Toast = ({ mensaje }: { mensaje: string }) => (
 export default function Entradas() {
   const { usuario } = useAuth();
 
-  const [repuestos, setRepuestos] = useState<any[]>([]);
-  const [empleados, setEmpleados] = useState<any[]>([]);
-  const [stock, setStock] = useState<any[]>([]);
-  const [historial, setHistorial] = useState<any[]>([]);
+  const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
+  const [stock, setStock] = useState<StockActual[]>([]);
+  const [historial, setHistorial] = useState<Movimiento[]>([]);
   const [toast, setToast] = useState("");
 
   const [form, setForm] = useState({
@@ -107,42 +112,22 @@ export default function Entradas() {
   }
 
   const fecha = new Date();
-  const fechaStr = fecha.toLocaleDateString("es-CO", { timeZone: "America/Bogota" });
-  const horaStr = fecha.toLocaleTimeString("es-CO", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZone: "America/Bogota",
-  });
+  const fechaStr = fecha.toLocaleDateString("es-CO");
+  const horaStr = fecha.toLocaleTimeString("es-CO");
 
   return (
     <PageTransition>
-      <div className="w-full max-w-7xl mx-auto mt-8 px-4 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="w-full max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
 
         {/* FORM */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
+          className="bg-white rounded-2xl p-6 shadow-lg border"
         >
-
-          <motion.h2
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-xl font-semibold text-gray-800 mb-4"
-          >
+          <h2 className="text-xl font-semibold mb-4">
             Registrar Entrada de Repuesto
-          </motion.h2>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6"
-          >
-            <p className="text-xs text-green-700 font-semibold">FECHA Y HORA DEL REGISTRO</p>
-            <p className="text-lg font-bold text-gray-900">{fechaStr} • {horaStr}</p>
-          </motion.div>
+          </h2>
 
           {/* Repuesto */}
           <label className="text-sm font-semibold">Repuesto</label>
@@ -150,7 +135,7 @@ export default function Entradas() {
             name="repuesto_id"
             value={form.repuesto_id}
             onChange={handleChange}
-            className="w-full mt-1 py-2 px-3 border border-gray-200 rounded-lg mb-2"
+            className="w-full border rounded-lg p-2 mb-2"
           >
             <option value="">Buscar repuesto...</option>
             {repuestos.map((r) => (
@@ -162,8 +147,7 @@ export default function Entradas() {
 
           {stockDisponible !== null && (
             <p className="text-xs text-gray-600 mb-4">
-              Disponible: <span className="font-bold">{stockDisponible}</span>{" "}
-              {repuestoSeleccionado?.unidad}
+              Disponible: <b>{stockDisponible}</b> {repuestoSeleccionado?.unidad}
             </p>
           )}
 
@@ -174,7 +158,7 @@ export default function Entradas() {
             name="cantidad"
             value={form.cantidad}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-4"
+            className="w-full border rounded-lg p-2 mb-4"
           />
 
           {/* Empleado */}
@@ -183,7 +167,7 @@ export default function Entradas() {
             name="recibido_por"
             value={form.recibido_por}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-4"
+            className="w-full border rounded-lg p-2 mb-4"
           >
             <option value="">Seleccione...</option>
             {empleados.map((e) => (
@@ -192,72 +176,59 @@ export default function Entradas() {
           </select>
 
           {/* Notas */}
-          <label className="text-sm font-semibold">Notas (opcional)</label>
+          <label className="text-sm font-semibold">Notas</label>
           <textarea
             name="notas"
             rows={3}
             value={form.notas}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg"
-            placeholder="Factura, observaciones..."
+            className="w-full border rounded-lg p-2"
           />
 
           {/* Botón */}
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            whileHover={{ scale: 1.01 }}
+          <button
             onClick={handleSubmit}
-            className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg shadow-sm transition"
+            className="w-full bg-green-600 text-white py-3 rounded-lg mt-6"
           >
             Registrar Entrada
-          </motion.button>
+          </button>
         </motion.div>
 
         {/* HISTORIAL */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
+          className="bg-white rounded-2xl p-6 shadow-lg border"
         >
-          <h2 className="text-xl font-semibold mb-4">Historial de Movimientos</h2>
+          <h2 className="text-xl font-semibold mb-4">Historial</h2>
 
-          <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100 
-                          scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-
-            {historial.slice(0, 12).map((m, index) => (
+          <div className="max-h-[520px] overflow-y-auto pr-2 divide-y">
+            {historial.slice(0, 12).map((m, i) => (
               <motion.div
                 key={m.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: i * 0.05 }}
                 className="py-4 grid grid-cols-5 text-sm items-center gap-2"
               >
-
-                {/* Fecha */}
                 <div>
-                  <p className="font-semibold text-gray-800">
-                    {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
+                  <p className="font-semibold">
+                    {new Date(m.created_at).toLocaleDateString("es-CO")}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
+                    {new Date(m.created_at).toLocaleTimeString("es-CO")}
                   </p>
                 </div>
 
-                {/* Cantidad */}
-                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md text-xs font-semibold w-fit">
+                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded">
                   +{m.cantidad} {m.repuestos?.unidad}
                 </span>
 
-                {/* Repuesto */}
-                <span className="font-medium text-gray-800">{m.repuestos?.nombre}</span>
+                <span className="font-medium">{m.repuestos?.nombre}</span>
 
-                {/* Entregado por (en entradas no aplica) */}
                 <span className="text-gray-400">—</span>
 
-                {/* Recibido por */}
                 <span className="text-gray-600">{m.empleado_recibe?.nombre}</span>
-
               </motion.div>
             ))}
           </div>

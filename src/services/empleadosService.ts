@@ -1,20 +1,24 @@
 import { supabase } from "../lib/supabase";
+import type { CrearEmpleadoDTO, Empleado } from "../types/index";
 
-export async function crearEmpleado({ nombre, cargo }: any) {
+export async function crearEmpleado(payload: CrearEmpleadoDTO): Promise<Empleado[]> {
   const { data, error } = await supabase
     .from("empleados")
-    .insert([{ nombre, area:cargo }]);
+    .insert([{ nombre: payload.nombre, area: payload.cargo }])
+    .select("*");
 
   if (error) throw error;
-  return data;
+
+  return data as Empleado[];
 }
 
-export async function obtenerEmpleados() {
+export async function obtenerEmpleados(): Promise<Empleado[]> {
   const { data, error } = await supabase
     .from("empleados")
     .select("*")
-    .order("nombre", { ascending: true });
+    .order("nombre");
 
   if (error) throw error;
-  return data;
+
+  return data as Empleado[];
 }

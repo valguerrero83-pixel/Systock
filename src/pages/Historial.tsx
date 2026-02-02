@@ -4,6 +4,12 @@ import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
 
+import type {
+  Movimiento,
+  Empleado,
+  Repuesto,
+} from "../types/index";
+
 /* ICONOS */
 const CalendarIcon = () => (
   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -21,10 +27,10 @@ const ArrowIcon = () => (
 );
 
 export default function Historial() {
-  const [histOriginal, setHistOriginal] = useState<any[]>([]);
-  const [movimientos, setMovimientos] = useState<any[]>([]);
-  const [empleados, setEmpleados] = useState<any[]>([]);
-  const [repuestos, setRepuestos] = useState<any[]>([]);
+  const [histOriginal, setHistOriginal] = useState<Movimiento[]>([]);
+  const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
+  const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
 
   const [filtros, setFiltros] = useState({
     empleado: "",
@@ -53,8 +59,8 @@ export default function Historial() {
 
     setHistOriginal(hist);
     setMovimientos(hist);
-    setEmpleados(emp || []);
-    setRepuestos(rep || []);
+    setEmpleados(emp ?? []);
+    setRepuestos(rep ?? []);
   }
 
   /* FILTRAR */
@@ -74,7 +80,7 @@ export default function Historial() {
 
     if (n.desde) {
       lista = lista.filter(
-        (m) => new Date(m.created_at + "Z") >= new Date(n.desde)
+        (m) => new Date(m.created_at) >= new Date(n.desde)
       );
     }
 
@@ -82,14 +88,14 @@ export default function Historial() {
       const fechaTope = new Date(n.hasta);
       fechaTope.setHours(23, 59, 59);
       lista = lista.filter(
-        (m) => new Date(m.created_at + "Z") <= fechaTope
+        (m) => new Date(m.created_at) <= fechaTope
       );
     }
 
     setMovimientos(lista);
   }
 
-  function handleFiltro(e: any) {
+  function handleFiltro(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
     const nuevos = { ...filtros, [name]: value };
     setFiltros(nuevos);
@@ -101,7 +107,7 @@ export default function Historial() {
     if (!movimientos.length) return;
 
     const filas = movimientos.map((m) => ({
-      Fecha: new Date(m.created_at + "Z").toLocaleDateString("es-CO"),
+      Fecha: new Date(m.created_at).toLocaleDateString("es-CO"),
       Tipo: m.tipo,
       Repuesto: m.repuestos?.nombre,
       Cantidad: `${m.tipo === "ENTRADA" ? "+" : "-"}${m.cantidad} ${m.repuestos?.unidad}`,
@@ -118,9 +124,8 @@ export default function Historial() {
       type: "text/csv;charset=utf-8",
     });
 
-    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
+    a.href = URL.createObjectURL(blob);
     a.download = "historial_movimientos.csv";
     a.click();
   }
@@ -131,46 +136,24 @@ export default function Historial() {
         className="max-w-7xl mx-auto bg-white p-6 rounded-2xl shadow-lg"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
       >
-
-        {/* TITULO */}
-        <motion.div
-          className="flex items-center justify-between mb-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="bg-gray-100 p-3 rounded-xl">
-              <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <polyline points="1 4 1 10 7 10" />
-                <path d="M3.51 15a9 9 0 1 0 .49-9" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-semibold text-gray-800">
-              Historial de Movimientos
-            </h1>
-          </div>
+        {/* TÍTULO */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-xl font-semibold text-gray-800">
+            Historial de Movimientos
+          </h1>
 
           <button
             onClick={exportarCSV}
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 flex items-center gap-2"
+            className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900"
           >
-            <svg width="18" height="18" stroke="currentColor" fill="none">
-              <path d="M12 3v12M5 10l7 7 7-7" />
-              <path d="M5 19h14" />
-            </svg>
             Exportar CSV
           </button>
-        </motion.div>
+        </div>
 
         {/* FILTROS */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+          
           <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
             <option value="">Todos</option>
             {empleados.map((e) => (
@@ -200,12 +183,12 @@ export default function Historial() {
             <input type="date" name="hasta" value={filtros.hasta} onChange={handleFiltro}
               className="w-full mt-1 px-3 py-2 border rounded-lg"/>
           </Filtro>
-        </motion.div>
+        </div>
 
         {/* TABLA */}
         <div className="max-h-[550px] overflow-y-auto pr-2">
           <table className="w-full text-sm border-separate border-spacing-y-1">
-            <thead className="sticky top-0 bg-white z-10 shadow-sm rounded-md">
+            <thead className="sticky top-0 bg-white shadow">
               <tr className="text-gray-600">
                 <Th>Fecha/Hora</Th>
                 <Th>Tipo</Th>
@@ -222,24 +205,17 @@ export default function Historial() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  className="bg-gray-50 hover:bg-gray-100 transition border border-gray-200 rounded-md"
+                  className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-md"
                 >
                   <Td>
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon />
-                      <div>
-                        <p className="font-medium text-gray-700">
-                          {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
-                        </p>
-                      </div>
-                    </div>
+                    {new Date(m.created_at).toLocaleDateString("es-CO")}<br />
+                    <span className="text-xs text-gray-500">
+                      {new Date(m.created_at).toLocaleTimeString("es-CO")}
+                    </span>
                   </Td>
 
                   <Td>
-                    <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
                       m.tipo === "ENTRADA"
                         ? "bg-green-100 text-green-700"
                         : "bg-red-100 text-red-700"
@@ -248,25 +224,17 @@ export default function Historial() {
                     </span>
                   </Td>
 
-                  <Td className="font-medium text-gray-700">{m.repuestos?.nombre}</Td>
+                  <Td>{m.repuestos?.nombre}</Td>
 
                   <Td>
-                    <span className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                      m.tipo === "ENTRADA"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}>
-                      {m.tipo === "ENTRADA" ? "+" : "-"}
-                      {m.cantidad} {m.repuestos?.unidad}
-                    </span>
+                    {m.tipo === "ENTRADA" ? "+" : "-"}
+                    {m.cantidad} {m.repuestos?.unidad}
                   </Td>
 
-                  <Td>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      {m.empleado_entrega?.nombre || "—"}
-                      <ArrowIcon />
-                      {m.empleado_recibe?.nombre || "—"}
-                    </div>
+                  <Td className="flex items-center gap-2">
+                    {m.empleado_entrega?.nombre ?? "—"}
+                    <ArrowIcon />
+                    {m.empleado_recibe?.nombre ?? "—"}
                   </Td>
                 </motion.tr>
               ))}
@@ -279,12 +247,23 @@ export default function Historial() {
 }
 
 /* SUBCOMPONENTES */
-function Filtro({ label, name, value, onChange, children }: any) {
+function Filtro({
+  label,
+  name,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  name?: string;
+  value?: string;
+  onChange?: any;
+  children: any;
+}) {
   return (
     <div>
       <label className="text-sm font-semibold text-gray-700">{label}</label>
-
-      {(children?.type === "option" || children?.length > 0) ? (
+      {typeof children === "object" ? (
         <select
           name={name}
           value={value}
@@ -300,10 +279,10 @@ function Filtro({ label, name, value, onChange, children }: any) {
   );
 }
 
-function Th({ children }: any) {
+function Th({ children }: { children: React.ReactNode }) {
   return <th className="py-3 text-left">{children}</th>;
 }
 
-function Td({ children }: any) {
+function Td({ children }: { children: React.ReactNode }) {
   return <td className="py-3">{children}</td>;
 }

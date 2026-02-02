@@ -1,16 +1,13 @@
-// src/services/inventarioService.ts
 import { supabase } from "../lib/supabase";
+import type { InventarioItem } from "../types/index";
 
-export async function obtenerInventario() {
+export async function obtenerInventario(): Promise<InventarioItem[]> {
   const { data, error } = await supabase
-    .from("stock_actual") // ← vista correcta
-    .select("*")
-    .order("codigo_corto", { ascending: true });
+    .from("stock_actual")  
+    .select("*")          
+    .order("codigo_corto");
 
-  if (error) {
-    console.error("Error al obtener inventario:", error);
-    throw error;
-  }
+  if (error) throw error;
 
-  return data; // la vista ya devuelve todo limpio
+  return data as InventarioItem[];
 }
