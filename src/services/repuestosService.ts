@@ -48,3 +48,4 @@ export async function crearRepuesto(payload: {
 
   return rep;
 }
+
