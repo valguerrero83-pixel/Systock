@@ -57,7 +57,7 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
   function exportarCSV() {
     if (historial.length === 0) return;
 
-    const filas = historial.map((m) => ({
+    const filas = historial.map((m: Movimiento) => ({
       Fecha: m.created_at,
       Tipo: m.tipo,
       Repuesto: m.repuestos?.nombre,
@@ -175,7 +175,7 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
               </thead>
 
               <tbody>
-                {historial.map((m) => (
+                {historial.map((m: Movimiento) => (
                   <tr key={m.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-3">
                       {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}<br />

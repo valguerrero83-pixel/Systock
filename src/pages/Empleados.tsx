@@ -72,7 +72,7 @@ export default function Empleados() {
       .select("*", { count: "exact", head: true })
       .or(`empleado_entrega_id.eq.${id},empleado_recibe_id.eq.${id}`);
 
-    if (movCount && movCount > 0) {
+    if ((movCount ?? 0) > 0) {
       alert("❌ No puedes eliminar este empleado: tiene movimientos.");
       return;
     }

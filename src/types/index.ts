@@ -38,7 +38,7 @@ export interface Movimiento {
   empleado_recibe_id?: string | null;
   registrado_por: string;
 
-  repuestos?: Repuesto;
+  repuestos?: Repuesto | null;
   empleado_entrega?: Empleado | null;
   empleado_recibe?: Empleado | null;
 }

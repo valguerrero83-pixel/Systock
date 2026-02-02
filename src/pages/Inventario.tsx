@@ -27,19 +27,27 @@ export default function Inventario() {
     setLoading(false);
   }
 
-    useEffect(() => {
-      cargarInventario();
+  useEffect(() => {
+    cargarInventario();
 
-      const channel = supabase
-        .channel("rt_inventario")
-        .on("postgres_changes", { event: "*", schema: "public", table: "movimientos" }, cargarInventario)
-        .on("postgres_changes", { event: "*", schema: "public", table: "repuestos" }, cargarInventario)
-        .subscribe();
+    const channel = supabase
+      .channel("rt_inventario")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "movimientos" },
+        () => { cargarInventario(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "repuestos" },
+        () => { cargarInventario(); }
+      )
+      .subscribe();
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }, []);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <PageTransition>

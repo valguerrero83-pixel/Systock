@@ -10,6 +10,13 @@ export async function obtenerHistorialMovimientos(
 
   if (error) throw error;
 
-  // 🔥 Solución EXACTA que funcionó en entradas/salidas
-  return Array.isArray(data) ? (data as Movimiento[]) : [];
+  if (!Array.isArray(data)) return [];
+
+  // 🔥 Asegurar que siempre existan las relaciones esperadas
+  return data.map((m: any) => ({
+    ...m,
+    repuestos: m.repuestos ?? null,
+    empleado_entrega: m.empleado_entrega ?? null,
+    empleado_recibe: m.empleado_recibe ?? null,
+  })) as Movimiento[];
 }
