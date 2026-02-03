@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // 🔥 Obtener perfil desde la tabla usuarios
       const { data: perfil, error } = await supabase
-        .from("usuarios")
+        .from("users")
         .select("*")
         .eq("id", session.user.id)
         .single();
