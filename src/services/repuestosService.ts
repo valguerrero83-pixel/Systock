@@ -28,7 +28,7 @@ export async function crearRepuesto(payload: {
       repuesto_id: rep.id,
       cantidad: payload.cantidad_inicial,
       empleado_entrega_id: null,
-      empleado_recibe_id: payload.usuario_id,
+      empleado_recibe_id: null,
       notas: "Stock inicial",
       registrado_por: payload.usuario_id,
     });
