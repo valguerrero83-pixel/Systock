@@ -144,6 +144,7 @@ export default function Historial() {
 
         {/* FILTROS */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+
           <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
             <>
               <option value="">Todos</option>
@@ -189,6 +190,7 @@ export default function Historial() {
               className="w-full mt-1 px-3 py-2 border rounded-lg"
             />
           </Filtro>
+
         </div>
 
         {/* TABLA */}
@@ -260,34 +262,28 @@ function Filtro({
   name,
   value,
   onChange,
-  children,
+  children
 }: {
   label: string;
   name?: string;
-  value?: any;
-  onChange?: (e: any) => void;
-  children: any;
+  value?: string;
+  onChange?: any;
+  children: React.ReactNode;
 }) {
-  const esSelect = Array.isArray(children);
-
   return (
     <div>
-      <label className="text-sm font-semibold text-gray-700">{label}</label>
+      <label className="text-sm font-semibold text-gray-700">
+        {label}
+      </label>
 
-      <div className="mt-1">
-        {esSelect ? (
-          <select
-            name={name}
-            value={value}
-            onChange={onChange}
-            className="w-full px-3 py-2 border rounded-lg"
-          >
-            {children}
-          </select>
-        ) : (
-          children
-        )}
-      </div>
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full mt-1 px-3 py-2 border rounded-lg"
+      >
+        {children}
+      </select>
     </div>
   );
 }
@@ -298,7 +294,7 @@ function Th({ children }: { children: React.ReactNode }) {
 
 function Td({
   children,
-  className = "",
+  className = ""
 }: {
   children: React.ReactNode;
   className?: string;
