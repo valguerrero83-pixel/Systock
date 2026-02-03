@@ -55,14 +55,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    loadUser();
+    const init = async () => {
+      await new Promise(r => setTimeout(r, 200)); // ✨ Espera a que Supabase guarde sesión
+      await loadUser();
+    };
+
+    init();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         if (!session) {
           setUsuario(null);
         } else {
-          loadUser();
+          await new Promise(r => setTimeout(r, 200));  // ✨ Asegura sincronización
+          await loadUser();
         }
       }
     );
