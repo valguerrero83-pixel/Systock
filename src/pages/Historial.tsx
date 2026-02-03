@@ -202,7 +202,7 @@ export default function Historial() {
               <tr className="text-gray-600">
                 <Th>Fecha/Hora</Th>
                 <Th>Tipo</Th>
-                <Th className="text-center">Repuesto</Th>
+                <Th className="text-left pl-4">Repuesto</Th>
                 <Th>Cantidad</Th>
                 <Th>Transacción</Th>
               </tr>
