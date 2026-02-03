@@ -20,7 +20,7 @@ export default function Login() {
   setLoading(true);
 
   // 1. Intentar login
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signInWithPassword({
     email: form.email,
     password: form.password,
   });
