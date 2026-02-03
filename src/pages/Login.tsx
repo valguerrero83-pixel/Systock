@@ -15,28 +15,40 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   async function handleLogin(e: any) {
-    e.preventDefault();
-    setErrorMsg("");
-    setLoading(true);
+  e.preventDefault();
+  setErrorMsg("");
+  setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: form.email,
-      password: form.password,
-    });
+  // 1. Intentar login
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: form.email,
+    password: form.password,
+  });
 
-    console.log("LOGIN SESION DESPUES DEL LOGIN", await supabase.auth.getSession()); 
-
-    if (error) {
-      setErrorMsg("Correo o contraseña incorrectos");
-      setLoading(false);
-      return;
-    }
-
-    // Esperar a que AuthContext refresque el usuario
-    setTimeout(() => {
-      navigate("/inventario");
-    }, 100);
+  if (error) {
+    setErrorMsg("Correo o contraseña incorrectos");
+    setLoading(false);
+    return;
   }
+
+  // 2. Esperar a que Supabase realmente guarde la sesión
+  let session = null;
+  for (let i = 0; i < 10; i++) {
+    const res = await supabase.auth.getSession();
+    session = res.data.session;
+    if (session) break;
+    await new Promise((r) => setTimeout(r, 100)); // esperar 100ms
+  }
+
+  if (!session) {
+    setErrorMsg("Error de sesión, intenta de nuevo.");
+    setLoading(false);
+    return;
+  }
+
+  // 3. Todo bien → entrar
+  navigate("/inventario");
+}
 
   return (
     <motion.div
