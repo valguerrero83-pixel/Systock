@@ -1,13 +1,13 @@
 import { supabase } from "../lib/supabase";
-import type { InventarioItem } from "../types/index";
+import type { StockActual } from "../types/index";
 
-export async function obtenerInventario(): Promise<InventarioItem[]> {
+export async function obtenerInventario(): Promise<StockActual[]> {
   const { data, error } = await supabase
     .from("stock_actual")
-    .select("repuesto_id, codigo_corto, nombre, unidad, stock_minimo, stock")
-    .order("codigo_corto", { ascending: true });
+    .select("*")
+    .order("nombre");
 
   if (error) throw error;
 
-  return data as InventarioItem[];
+  return data as StockActual[];
 }
