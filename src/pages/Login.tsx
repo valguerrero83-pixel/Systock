@@ -15,41 +15,40 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   async function handleLogin(e: any) {
-    e.preventDefault();
-    setErrorMsg("");
-    setLoading(true);
+  e.preventDefault();
+  setErrorMsg("");
+  setLoading(true);
 
-    // 1. Intentar login
-    const { error } = await supabase.auth.signInWithPassword({
-      email: form.email.trim(),
-      password: form.password,
-    });
+  // 1. Intentar login
+  const {error } = await supabase.auth.signInWithPassword({
+    email: form.email,
+    password: form.password,
+  });
 
-    if (error) {
-      setErrorMsg("Correo o contraseña incorrectos");
-      setLoading(false);
-      return;
-    }
-
-    // 2. Verificar sesión real y esperar si aún no está lista
-    let session = null;
-
-    for (let i = 0; i < 8; i++) {
-      const res = await supabase.auth.getSession();
-      session = res.data.session;
-      if (session) break; // Sesión lista → salir del bucle
-      await new Promise((r) => setTimeout(r, 120));
-    }
-
-    if (!session) {
-      setErrorMsg("Error iniciando sesión. Intenta nuevamente.");
-      setLoading(false);
-      return;
-    }
-
-    // 3. Redirigir
-    navigate("/inventario");
+  if (error) {
+    setErrorMsg("Correo o contraseña incorrectos");
+    setLoading(false);
+    return;
   }
+
+  // 2. Esperar a que Supabase realmente guarde la sesión
+  let session = null;
+  for (let i = 0; i < 10; i++) {
+    const res = await supabase.auth.getSession();
+    session = res.data.session;
+    if (session) break;
+    await new Promise((r) => setTimeout(r, 100)); // esperar 100ms
+  }
+
+  if (!session) {
+    setErrorMsg("Error de sesión, intenta de nuevo.");
+    setLoading(false);
+    return;
+  }
+
+  // 3. Todo bien → entrar
+  navigate("/inventario");
+}
 
   return (
     <motion.div
@@ -65,10 +64,12 @@ export default function Login() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
       >
+        {/* TÍTULO */}
         <motion.h1
           className="text-2xl font-bold text-center mb-4"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
         >
           Iniciar Sesión
         </motion.h1>
@@ -77,6 +78,7 @@ export default function Login() {
           className="text-center text-gray-600 mb-6"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
         >
           Accede a tu panel de inventario
         </motion.p>
@@ -88,7 +90,6 @@ export default function Login() {
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           className="w-full px-3 py-2 border rounded-lg mt-1 mb-4"
-          required
         />
 
         {/* CONTRASEÑA */}
@@ -98,10 +99,9 @@ export default function Login() {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           className="w-full px-3 py-2 border rounded-lg mt-1 mb-4"
-          required
         />
 
-        {/* ERROR */}
+        {/* ERROR ANIMADO */}
         <AnimatePresence>
           {errorMsg && (
             <motion.p
@@ -119,7 +119,6 @@ export default function Login() {
         <motion.button
           type="submit"
           whileTap={{ scale: 0.96 }}
-          disabled={loading}
           className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm mt-2 transition"
         >
           {loading ? "Ingresando..." : "Entrar"}
