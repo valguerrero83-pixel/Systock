@@ -50,7 +50,6 @@ export default function Historial() {
     setRepuestos(rep ?? []);
   }
 
-  /* FILTRAR */
   function aplicarFiltros(n = filtros) {
     let lista = [...histOriginal];
 
@@ -91,7 +90,6 @@ export default function Historial() {
     aplicarFiltros(nuevos);
   }
 
-  /* EXPORTAR CSV */
   function exportarCSV() {
     if (!movimientos.length) return;
 
@@ -136,7 +134,7 @@ export default function Historial() {
 
           <button
             onClick={exportarCSV}
-            className="bg-gray-700 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 transition"
+            className="bg-gray-800 text-white px-4 py-2 rounded-xl shadow hover:bg-gray-900"
           >
             Exportar CSV
           </button>
@@ -170,29 +168,25 @@ export default function Historial() {
             </>
           </Filtro>
 
-          {/* Fecha desde */}
-          <div>
-            <label className="text-sm font-semibold text-gray-700">Desde</label>
+          <Filtro label="Desde">
             <input
               type="date"
               name="desde"
               value={filtros.desde}
               onChange={handleFiltro}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-gray-400 focus:border-gray-400"
+              className="w-full mt-1 px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all bg-white"
             />
-          </div>
+          </Filtro>
 
-          {/* Fecha hasta */}
-          <div>
-            <label className="text-sm font-semibold text-gray-700">Hasta</label>
+          <Filtro label="Hasta">
             <input
               type="date"
               name="hasta"
               value={filtros.hasta}
               onChange={handleFiltro}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-gray-400 focus:border-gray-400"
+              className="w-full mt-1 px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all bg-white"
             />
-          </div>
+          </Filtro>
         </div>
 
         {/* TABLA */}
@@ -215,43 +209,48 @@ export default function Historial() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-md"
+                  className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg"
                 >
-                <Td className="pl-4">
-                  {new Date(m.created_at + 'Z').toLocaleDateString('es-CO')}<br/>
-                  <span className="text-xs text-gray-500 mt-0 block">
-                    {new Date(m.created_at + 'Z').toLocaleTimeString('es-CO')}
-                  </span>
-                </Td>
+                  <Td className="pl-4">
+                    {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}<br />
+                    <span className="text-xs text-gray-500 block mt-0.5">
+                      {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
+                    </span>
+                  </Td>
 
-                <Td className="pl-2">
-                  <span className={`px-2 py-1 rounded-lg text-xs font-semibold
-                    ${m.tipo === 'ENTRADA' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {m.tipo}
-                  </span>
-                </Td>
+                  <Td className="pl-2">
+                    <span
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold ${
+                        m.tipo === "ENTRADA"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {m.tipo}
+                    </span>
+                  </Td>
 
-                <Td className="pl-8">{m.repuestos?.nombre ?? '—'}</Td>
+                  <Td className="pl-8">{m.repuestos?.nombre ?? "—"}</Td>
 
-                <Td className="pl-2">
-                  {m.tipo === 'ENTRADA' ? '+' : '-'}
-                  {m.cantidad} {m.repuestos?.unidad ?? ''}
-                </Td>
+                  <Td className="pl-2">
+                    {m.tipo === "ENTRADA" ? "+" : "-"}
+                    {m.cantidad} {m.repuestos?.unidad ?? ""}
+                  </Td>
 
-                <Td className="pl-4 flex items-center gap-3">
-                  {m.empleado_entrega?.nombre ?? '—'}
-                  <ArrowIcon />
-                  {m.empleado_recibe?.nombre ?? '—'}
-                </Td>
-                                </motion.tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </motion.div>
-                    </PageTransition>
-                  );
-                }
+                  <Td className="pl-4 flex items-center gap-3">
+                    {m.empleado_entrega?.nombre ?? "—"}
+                    <ArrowIcon />
+                    {m.empleado_recibe?.nombre ?? "—"}
+                  </Td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+    </PageTransition>
+  );
+}
 
 /* SUBCOMPONENTES */
 function Filtro({
@@ -275,8 +274,8 @@ function Filtro({
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full mt-1 px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm
-                  focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all bg-white"
+        className="w-full mt-1 px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm 
+                   focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all bg-white"
       >
         {children}
       </select>
@@ -284,26 +283,10 @@ function Filtro({
   );
 }
 
-function Th({
-  children,
-  className = ""
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <th className={`py-3 ${className}`}>
-      {children}
-    </th>
-  );
+function Th({ children, className = "" }: { children: any; className?: string }) {
+  return <th className={`py-3 font-semibold ${className}`}>{children}</th>;
 }
 
-function Td({
-  children,
-  className = ""
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+function Td({ children, className = "" }: { children: any; className?: string }) {
   return <td className={`py-3 ${className}`}>{children}</td>;
 }
