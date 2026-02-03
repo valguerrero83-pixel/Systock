@@ -33,7 +33,7 @@ export default function Login() {
     // Esperar a que AuthContext refresque el usuario
     setTimeout(() => {
       navigate("/inventario");
-    }, 300);
+    }, 100);
   }
 
   return (

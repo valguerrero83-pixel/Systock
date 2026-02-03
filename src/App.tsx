@@ -14,9 +14,17 @@ import Usuarios from "./pages/Usuarios";
 function ProtectedRoute() {
   const { usuario, loading } = useAuth();
 
-  if (loading) return <p>Cargando...</p>;
-  if (!usuario) return <Navigate to="/login" replace />;
+  // ⏳ NO redirigir mientras carga
+  if (loading) {
+    return <div className="p-6 text-center">Cargando...</div>;
+  }
 
+  // ❌ Si ya terminó y NO hay usuario
+  if (!usuario) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // ✔ Usuario listo → permitir
   return <Outlet />;
 }
 
