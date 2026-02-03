@@ -133,6 +133,7 @@ export default function Historial() {
             Historial de Movimientos
           </h1>
 
+
           <button
             onClick={exportarCSV}
             className="bg-gray-800 text-white px-4 py-2 rounded-xl shadow hover:bg-gray-900"
