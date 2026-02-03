@@ -145,23 +145,29 @@ export default function Historial() {
         {/* FILTROS */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
           <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
-            <option value="">Todos</option>
-            {empleados.map((e) => (
-              <option key={e.id} value={e.id}>{e.nombre}</option>
-            ))}
+            <>
+              <option value="">Todos</option>
+              {empleados.map((e) => (
+                <option key={e.id} value={e.id}>{e.nombre}</option>
+              ))}
+            </>
           </Filtro>
 
           <Filtro label="Repuesto" name="repuesto" value={filtros.repuesto} onChange={handleFiltro}>
-            <option value="">Todos</option>
-            {repuestos.map((r) => (
-              <option key={r.id} value={r.id}>{r.nombre}</option>
-            ))}
+            <>
+              <option value="">Todos</option>
+              {repuestos.map((r) => (
+                <option key={r.id} value={r.id}>{r.nombre}</option>
+              ))}
+            </>
           </Filtro>
 
           <Filtro label="Tipo" name="tipo" value={filtros.tipo} onChange={handleFiltro}>
-            <option value="">Todos</option>
-            <option value="ENTRADA">Entrada</option>
-            <option value="SALIDA">Salida</option>
+            <>
+              <option value="">Todos</option>
+              <option value="ENTRADA">Entrada</option>
+              <option value="SALIDA">Salida</option>
+            </>
           </Filtro>
 
           <Filtro label="Desde">
@@ -258,23 +264,30 @@ function Filtro({
 }: {
   label: string;
   name?: string;
-  value?: string;
-  onChange?: any;
+  value?: any;
+  onChange?: (e: any) => void;
   children: any;
 }) {
+  const esSelect = Array.isArray(children);
+
   return (
     <div>
       <label className="text-sm font-semibold text-gray-700">{label}</label>
 
-      {/* SELECT corregido */}
-      <select
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="w-full mt-1 px-3 py-2 border rounded-lg"
-      >
-        {children}
-      </select>
+      <div className="mt-1">
+        {esSelect ? (
+          <select
+            name={name}
+            value={value}
+            onChange={onChange}
+            className="w-full px-3 py-2 border rounded-lg"
+          >
+            {children}
+          </select>
+        ) : (
+          children
+        )}
+      </div>
     </div>
   );
 }

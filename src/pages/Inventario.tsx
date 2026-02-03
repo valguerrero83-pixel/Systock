@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition";
 import type { InventarioItem } from "../types/index";
-
+import { obtenerInventario } from "../services/inventarioService";
 
 export default function Inventario() {
   const [items, setItems] = useState<InventarioItem[]>([]);
@@ -12,17 +12,8 @@ export default function Inventario() {
   async function cargarInventario() {
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("stock_actual")
-      .select("*")
-      .order("codigo_corto");
-
-    if (error) {
-      console.error("Error cargando inventario:", error);
-      alert("Error cargando inventario");
-    } else {
-      setItems(data ?? []);
-    }
+    const data = await obtenerInventario();
+    setItems(data);
 
     setLoading(false);
   }
@@ -35,12 +26,12 @@ export default function Inventario() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "movimientos" },
-        () => { cargarInventario(); }
+        () => cargarInventario()
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "repuestos" },
-        () => { cargarInventario(); }
+        () => cargarInventario()
       )
       .subscribe();
 
@@ -77,7 +68,7 @@ export default function Inventario() {
             </thead>
 
             <tbody>
-              {items.map((i, index) => {
+              {items.map((i, idx) => {
                 const stockBajo = Number(i.stock) < Number(i.stock_minimo);
 
                 return (
@@ -86,12 +77,16 @@ export default function Inventario() {
                     className={stockBajo ? "bg-yellow-50" : ""}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
+                    transition={{ delay: idx * 0.03 }}
                   >
                     <td className="py-3">{i.codigo_corto}</td>
                     <td>{i.nombre}</td>
-                    <td className="font-semibold">{i.stock} {i.unidad}</td>
-                    <td>{i.stock_minimo} {i.unidad}</td>
+                    <td className="font-semibold">
+                      {i.stock} {i.unidad}
+                    </td>
+                    <td>
+                      {i.stock_minimo} {i.unidad}
+                    </td>
                     <td>
                       {stockBajo ? (
                         <span className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-lg text-xs">
@@ -111,11 +106,15 @@ export default function Inventario() {
         </div>
 
         {!loading && items.length === 0 && (
-          <p className="text-center text-gray-500 mt-6">No hay repuestos registrados.</p>
+          <p className="text-center text-gray-500 mt-6">
+            No hay repuestos registrados.
+          </p>
         )}
 
         {loading && (
-          <p className="text-center text-gray-500 mt-6 animate-pulse">Cargando inventario...</p>
+          <p className="text-center text-gray-500 mt-6 animate-pulse">
+            Cargando inventario...
+          </p>
         )}
       </motion.div>
     </PageTransition>

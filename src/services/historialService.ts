@@ -9,9 +9,17 @@ export async function obtenerHistorialMovimientos(
   });
 
   if (error) {
-    console.error("Error RPC:", error);
+    console.error("Error RPC historial:", error);
     return [];
   }
 
-  return Array.isArray(data) ? data : [];
+  if (!Array.isArray(data)) return [];
+
+  // Normalizar por si algún join viene null
+  return data.map((m: any) => ({
+    ...m,
+    repuestos: m.repuestos ?? null,
+    empleado_entrega: m.empleado_entrega ?? null,
+    empleado_recibe: m.empleado_recibe ?? null,
+  })) as Movimiento[];
 }
