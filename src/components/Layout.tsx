@@ -77,7 +77,7 @@ export default function Layout() {
         <nav className="flex items-center gap-3 flex-wrap justify-start md:justify-end">
 
           {/* Crear Empleado → SOLO ADMIN / DEV */}
-          {esAdmin && !esViewer && (
+          {esAdmin && (
             <>
               <TopButton
                 icon={userIcon()}
@@ -95,7 +95,7 @@ export default function Layout() {
           )}
 
           {/* Crear Repuesto → SOLO ADMIN / DEV */}
-          {esAdmin && !esViewer && (
+          {esAdmin && (
             <button
               onClick={() => setModalAbierto(true)}
               className="px-4 py-2 rounded-lg flex items-center gap-2 border transition
@@ -164,12 +164,12 @@ export default function Layout() {
         flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
 
         {/* Salidas → ADMIN + DEV + JEFE */}
-        {(esAdmin || esJefe) && !esViewer && (
+        {(esAdmin || esJefe || esViewer) && (
           <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
         )}
 
         {/* Entradas → SOLO ADMIN + DEV */}
-        {esAdmin && !esViewer &&(
+        {(esAdmin || esViewer) &&(
           <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
         )}
 
@@ -180,7 +180,7 @@ export default function Layout() {
         <MenuItem to="/historial" icon={historyIcon()} label="Historial" />
 
         {/* Empleados → SOLO ADMIN + DEV */}
-        {esAdmin && (
+        {(esAdmin || esViewer) && (
           <MenuItem to="/empleados" icon={userIcon()} label="Empleados" />
         )}
 
