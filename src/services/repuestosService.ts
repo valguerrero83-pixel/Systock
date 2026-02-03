@@ -7,7 +7,7 @@ export async function crearRepuesto(payload: {
   cantidad_inicial: number;
   usuario_id: string;
 }) {
-  // Crear repuesto (trigger genera codigo_corto y lo inserta en stock_actual)
+  // 🔹 1. Crear repuesto y obtener su ID real
   const { data: rep, error: repError } = await supabase
     .from("repuestos")
     .insert({
@@ -15,20 +15,23 @@ export async function crearRepuesto(payload: {
       unidad: payload.unidad,
       stock_minimo: payload.stock_minimo,
     })
-    .select()
+    .select("id")   // <= SOLO pedimos el ID
     .single();
 
   if (repError) throw repError;
 
-  // Registrar movimiento inicial
+  // 🔹 Validar ID
+  if (!rep?.id) throw new Error("No se obtuvo el ID del repuesto");
+
+  // 🔹 2. Registrar movimiento inicial correctamente
   const { error: movError } = await supabase
     .from("movimientos")
     .insert({
       tipo: "ENTRADA",
-      repuesto_id: rep.id,
-      cantidad: payload.cantidad_inicial,
+      repuesto_id: rep.id,                    // <= AHORA SEGURO
+      cantidad: payload.cantidad_inicial,     // <= SE SUMA A LA VISTA
       empleado_entrega_id: null,
-      empleado_recibe_id: null,
+      empleado_recibe_id: null,               // <= No queremos mezclar empleados con usuarios
       notas: "Stock inicial",
       registrado_por: payload.usuario_id,
     });
