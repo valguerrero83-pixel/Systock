@@ -24,6 +24,8 @@ export default function Login() {
       password: form.password,
     });
 
+    console.log("LOGIN SESION DESPUES DEL LOGIN", await supabase.auth.getSession()); 
+
     if (error) {
       setErrorMsg("Correo o contraseña incorrectos");
       setLoading(false);
