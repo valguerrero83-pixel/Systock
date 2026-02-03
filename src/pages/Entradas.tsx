@@ -110,7 +110,7 @@ export default function Entradas() {
       showToast("Error al registrar entrada.");
     }
   }
-  
+
   return (
     <PageTransition>
       <div className="w-full max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
@@ -119,7 +119,7 @@ export default function Entradas() {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border"
+          className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
         >
           <h2 className="text-xl font-semibold mb-4">
             Registrar Entrada de Repuesto
@@ -131,7 +131,7 @@ export default function Entradas() {
             name="repuesto_id"
             value={form.repuesto_id}
             onChange={handleChange}
-            className="w-full border rounded-lg p-2 mb-2"
+            className="w-full mt-1 py-2 px-3 border border-gray-200 rounded-lg mb-2"
           >
             <option value="">Buscar repuesto...</option>
             {repuestos.map((r) => (
@@ -143,7 +143,8 @@ export default function Entradas() {
 
           {stockDisponible !== null && (
             <p className="text-xs text-gray-600 mb-4">
-              Disponible: <b>{stockDisponible}</b> {repuestoSeleccionado?.unidad}
+              Disponible: <b>{stockDisponible}</b>{" "}
+              {repuestoSeleccionado?.unidad}
             </p>
           )}
 
@@ -154,7 +155,7 @@ export default function Entradas() {
             name="cantidad"
             value={form.cantidad}
             onChange={handleChange}
-            className="w-full border rounded-lg p-2 mb-4"
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-4"
           />
 
           {/* Empleado */}
@@ -163,7 +164,7 @@ export default function Entradas() {
             name="recibido_por"
             value={form.recibido_por}
             onChange={handleChange}
-            className="w-full border rounded-lg p-2 mb-4"
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-4"
           >
             <option value="">Seleccione...</option>
             {empleados.map((e) => (
@@ -178,13 +179,13 @@ export default function Entradas() {
             rows={3}
             value={form.notas}
             onChange={handleChange}
-            className="w-full border rounded-lg p-2"
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg"
           />
 
           {/* Botón */}
           <button
             onClick={handleSubmit}
-            className="w-full bg-green-600 text-white py-3 rounded-lg mt-6"
+            className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg shadow-sm transition"
           >
             Registrar Entrada
           </button>
@@ -194,11 +195,11 @@ export default function Entradas() {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-6 shadow-lg border"
+          className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
         >
           <h2 className="text-xl font-semibold mb-4">Historial</h2>
 
-          <div className="max-h-[520px] overflow-y-auto pr-2 divide-y">
+          <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {historial.slice(0, 12).map((m, i) => (
               <motion.div
                 key={m.id}
@@ -208,21 +209,21 @@ export default function Entradas() {
                 className="py-4 grid grid-cols-5 text-sm items-center gap-2"
               >
                 <div>
-                  <p className="font-semibold">
-                    {new Date(m.created_at).toLocaleDateString("es-CO")}
+                  <p className="font-semibold text-gray-800">
+                    {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {new Date(m.created_at).toLocaleTimeString("es-CO")}
+                    {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
                   </p>
                 </div>
 
-                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
                   +{m.cantidad} {m.repuestos?.unidad}
                 </span>
 
                 <span className="font-medium">{m.repuestos?.nombre}</span>
 
-                <span className="text-gray-400">—</span>
+                <span className="text-gray-600">—</span>
 
                 <span className="text-gray-600">{m.empleado_recibe?.nombre}</span>
               </motion.div>
