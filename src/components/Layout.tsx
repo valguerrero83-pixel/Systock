@@ -12,8 +12,13 @@ import {
   obtenerMovimientosHoy
 } from "../services/dashboardService";
 
+
+
 export default function Layout() {
   const { usuario, logout } = useAuth();
+  console.log("ROL USUARIO:",
+  usuario?.rol_usuario
+  );
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalEmpleadoAbierto, setModalEmpleadoAbierto] = useState(false);
