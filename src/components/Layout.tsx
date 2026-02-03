@@ -40,7 +40,7 @@ export default function Layout() {
   const esAdmin =
     usuario?.rol_usuario === "admin" || usuario?.rol_usuario === "dev";
 
-  const esJefe = usuario?.rol_usuario === "jefe";
+  // const esJefe = usuario?.rol_usuario === "jefe";
 
   const esViewer = usuario?.rol_usuario === "viewer";
   return (
@@ -161,17 +161,13 @@ export default function Layout() {
 
       {/* --------------------- MENÚ INFERIOR --------------------- */}
       <footer className="fixed bottom-0 left-0 w-full bg-white shadow-inner border-t 
-        flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
+              flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
 
-        {/* Salidas → ADMIN + DEV + JEFE */}
-        {(esAdmin || esJefe || esViewer) && (
-          <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
-        )}
+        {/* Salidas → visibles para todos */}
+        <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
 
-        {/* Entradas → SOLO ADMIN + DEV */}
-        {(esAdmin || esViewer) &&(
-          <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
-        )}
+        {/* Entradas → visibles para todos */}
+        <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
 
         {/* Inventario → TODOS */}
         <MenuItem to="/inventario" icon={clipboardIcon()} label="Inventario" />
@@ -179,8 +175,8 @@ export default function Layout() {
         {/* Historial → TODOS */}
         <MenuItem to="/historial" icon={historyIcon()} label="Historial" />
 
-        {/* Empleados → SOLO ADMIN + DEV */}
-        {(esAdmin || esViewer) && (
+        {/* Empleados → solo admin/dev */}
+        {esAdmin && !esViewer && (
           <MenuItem to="/empleados" icon={userIcon()} label="Empleados" />
         )}
 
