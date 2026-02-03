@@ -125,6 +125,19 @@ export default function Entradas() {
             Registrar Entrada de Repuesto
           </h2>
 
+          {/* FECHA Y HORA DEL REGISTRO - VERSION VERDE */}
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+            <p className="text-xs text-green-700 font-semibold">FECHA Y HORA DEL REGISTRO</p>
+            <p className="text-lg font-bold text-gray-900">
+              {new Date().toLocaleDateString("es-CO")} •{" "}
+              {new Date().toLocaleTimeString("es-CO", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
+            </p>
+          </div>
+
           {/* Repuesto */}
           <label className="text-sm font-semibold">Repuesto</label>
           <select
