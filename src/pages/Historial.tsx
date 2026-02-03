@@ -136,15 +136,14 @@ export default function Historial() {
 
           <button
             onClick={exportarCSV}
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900"
+            className="bg-gray-700 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 transition"
           >
             Exportar CSV
           </button>
         </div>
 
         {/* FILTROS */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
           <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
             <>
               <option value="">Todos</option>
@@ -171,32 +170,35 @@ export default function Historial() {
             </>
           </Filtro>
 
-          <Filtro label="Desde">
+          {/* Fecha desde */}
+          <div>
+            <label className="text-sm font-semibold text-gray-700">Desde</label>
             <input
               type="date"
               name="desde"
               value={filtros.desde}
               onChange={handleFiltro}
-              className="w-full mt-1 px-3 py-2 border rounded-lg"
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-gray-400 focus:border-gray-400"
             />
-          </Filtro>
+          </div>
 
-          <Filtro label="Hasta">
+          {/* Fecha hasta */}
+          <div>
+            <label className="text-sm font-semibold text-gray-700">Hasta</label>
             <input
               type="date"
               name="hasta"
               value={filtros.hasta}
               onChange={handleFiltro}
-              className="w-full mt-1 px-3 py-2 border rounded-lg"
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-gray-400 focus:border-gray-400"
             />
-          </Filtro>
-
+          </div>
         </div>
 
         {/* TABLA */}
         <div className="max-h-[550px] overflow-y-auto pr-2">
           <table className="w-full text-sm border-separate border-spacing-y-1">
-            <thead className="sticky top-0 bg-white shadow">
+            <thead className="sticky top-0 bg-white shadow-sm">
               <tr className="text-gray-600">
                 <Th>Fecha/Hora</Th>
                 <Th>Tipo</Th>
@@ -216,10 +218,13 @@ export default function Historial() {
                   className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-md"
                 >
                   <Td>
-                    {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}<br />
-                    <span className="text-xs text-gray-500">
-                      {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
-                    </span>
+                    <div className="pl-1">
+                      {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
+                      <br />
+                      <span className="text-xs text-gray-500">
+                        {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
+                      </span>
+                    </div>
                   </Td>
 
                   <Td>
@@ -234,17 +239,21 @@ export default function Historial() {
                     </span>
                   </Td>
 
-                  <Td>{m.repuestos?.nombre ?? "—"}</Td>
+                  <Td className="text-center">
+                    {m.repuestos?.nombre ?? "—"}
+                  </Td>
 
                   <Td>
                     {m.tipo === "ENTRADA" ? "+" : "-"}
                     {m.cantidad} {m.repuestos?.unidad ?? ""}
                   </Td>
 
-                  <Td className="flex items-center gap-2">
-                    {m.empleado_entrega?.nombre ?? "—"}
-                    <ArrowIcon />
-                    {m.empleado_recibe?.nombre ?? "—"}
+                  <Td>
+                    <div className="flex items-center gap-2 pt-1">
+                      {m.empleado_entrega?.nombre ?? "—"}
+                      <ArrowIcon />
+                      {m.empleado_recibe?.nombre ?? "—"}
+                    </div>
                   </Td>
                 </motion.tr>
               ))}
@@ -268,19 +277,17 @@ function Filtro({
   name?: string;
   value?: string;
   onChange?: any;
-  children: React.ReactNode;
+  children: any;
 }) {
   return (
     <div>
-      <label className="text-sm font-semibold text-gray-700">
-        {label}
-      </label>
+      <label className="text-sm font-semibold text-gray-700">{label}</label>
 
       <select
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full mt-1 px-3 py-2 border rounded-lg"
+        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-gray-400 focus:border-gray-400"
       >
         {children}
       </select>
@@ -289,15 +296,9 @@ function Filtro({
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-  return <th className="py-3 text-left">{children}</th>;
+  return <th className="py-3 text-left px-2">{children}</th>;
 }
 
-function Td({
-  children,
-  className = ""
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <td className={`py-3 ${className}`}>{children}</td>;
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <td className={`py-3 px-2 align-middle ${className}`}>{children}</td>;
 }
