@@ -202,7 +202,7 @@ export default function Historial() {
               <tr className="text-gray-600">
                 <Th>Fecha/Hora</Th>
                 <Th>Tipo</Th>
-                <Th>Repuesto</Th>
+                <Th className="text-center">Repuesto</Th>
                 <Th>Cantidad</Th>
                 <Th>Transacción</Th>
               </tr>
@@ -239,7 +239,7 @@ export default function Historial() {
                     </span>
                   </Td>
 
-                  <Td className="text-center">
+                  <Td className="text-left pl-4">
                     {m.repuestos?.nombre ?? "—"}
                   </Td>
 
@@ -287,7 +287,7 @@ function Filtro({
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-gray-400 focus:border-gray-400"
+        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:ring-gray-400 focus:border-gray-400 bg-white"
       >
         {children}
       </select>
@@ -295,8 +295,18 @@ function Filtro({
   );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
-  return <th className="py-3 text-left px-2">{children}</th>;
+function Th({
+  children,
+  className = ""
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <th className={`py-3 ${className}`}>
+      {children}
+    </th>
+  );
 }
 
 function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
