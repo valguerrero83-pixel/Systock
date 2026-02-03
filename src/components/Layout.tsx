@@ -37,6 +37,7 @@ export default function Layout() {
 
   const esJefe = usuario?.rol_usuario === "jefe";
 
+  const esViewer = usuario?.rol_usuario === "viewer";
   return (
     <div className="min-h-screen bg-[#f5f7fa] flex flex-col">
 
@@ -71,7 +72,7 @@ export default function Layout() {
         <nav className="flex items-center gap-3 flex-wrap justify-start md:justify-end">
 
           {/* Crear Empleado → SOLO ADMIN / DEV */}
-          {esAdmin && (
+          {esAdmin && !esViewer && (
             <>
               <TopButton
                 icon={userIcon()}
@@ -89,7 +90,7 @@ export default function Layout() {
           )}
 
           {/* Crear Repuesto → SOLO ADMIN / DEV */}
-          {esAdmin && (
+          {esAdmin && !esViewer && (
             <button
               onClick={() => setModalAbierto(true)}
               className="px-4 py-2 rounded-lg flex items-center gap-2 border transition
@@ -158,12 +159,12 @@ export default function Layout() {
         flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
 
         {/* Salidas → ADMIN + DEV + JEFE */}
-        {(esAdmin || esJefe) && (
+        {(esAdmin || esJefe) && !esViewer && (
           <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
         )}
 
         {/* Entradas → SOLO ADMIN + DEV */}
-        {esAdmin && (
+        {esAdmin && !esViewer &&(
           <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
         )}
 

@@ -126,6 +126,16 @@ export default function Salidas() {
     minute: "2-digit",
     second: "2-digit",
   });
+  if (usuario?.rol_usuario === "viewer") {
+  return (
+    <PageTransition>
+      <div className="text-center text-gray-600 mt-20">
+        <h2 className="text-xl font-semibold">Modo Visor</h2>
+        <p>No tienes permisos para registrar salidas.</p>
+      </div>
+    </PageTransition>
+  );
+}
 
   return (
     <PageTransition>

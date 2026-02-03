@@ -111,6 +111,17 @@ export default function Entradas() {
     }
   }
 
+  if (usuario?.rol_usuario === "viewer") {
+  return (
+    <PageTransition>
+      <div className="text-center text-gray-600 mt-20">
+        <h2 className="text-xl font-semibold">Modo Visor</h2>
+        <p>No tienes permisos para registrar entradas.</p>
+      </div>
+    </PageTransition>
+  );
+}
+
   return (
     <PageTransition>
       <div className="w-full max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
