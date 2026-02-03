@@ -213,16 +213,33 @@ function MenuItem({ to, icon, label }: any) {
 
 function DashboardCard({ title, value, subtitle, color, icon }: any) {
   return (
-    <div className={`bg-${color}-50 rounded-2xl p-6 flex justify-between items-center
-        border border-${color}-200 shadow-[0_4px_20px_rgba(0,0,0,0.05)]
-        transition-all duration-300 hover:shadow-[0_6px_25px_rgba(0,0,0,0.08)] hover:-translate-y-1`}
+    <div
+      className={`
+        bg-${color}-100 
+        rounded-2xl 
+        p-6 flex justify-between items-center
+        border border-${color}-300
+        shadow-[0_6px_25px_rgba(0,0,0,0.1)]
+        transition-all duration-300 
+        hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)]
+        hover:-translate-y-1
+      `}
     >
       <div>
-        <h3 className={`text-sm font-semibold text-${color}-700`}>{title}</h3>
-        <p className="text-4xl font-bold text-gray-800 mt-1">{value}</p>
-        <p className={`text-${color}-700 text-sm mt-1`}>{subtitle}</p>
+        <h3 className={`text-sm font-semibold text-${color}-800`}>
+          {title}
+        </h3>
+
+        <p className="text-4xl font-bold text-gray-900 mt-1">
+          {value}
+        </p>
+
+        <p className={`text-${color}-700 text-sm mt-1`}>
+          {subtitle}
+        </p>
       </div>
-      <div className={`bg-${color}-100 p-4 rounded-2xl`}>
+
+      <div className={`bg-${color}-200 p-4 rounded-2xl`}>
         {icon}
       </div>
     </div>
