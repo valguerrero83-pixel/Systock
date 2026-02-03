@@ -3,7 +3,17 @@ import { crearRepuesto } from "../services/repuestosService";
 import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function ModalNuevoRepuesto({ abierto, onClose, onCreated }: any) {
+interface ModalNuevoRepuestoProps {
+  abierto: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}
+
+export default function ModalNuevoRepuesto({
+  abierto,
+  onClose,
+  onCreated,
+}: ModalNuevoRepuestoProps) {
   const { usuario } = useAuth();
 
   const [form, setForm] = useState({
@@ -15,7 +25,7 @@ export default function ModalNuevoRepuesto({ abierto, onClose, onCreated }: any)
 
   const [loading, setLoading] = useState(false);
 
-  function handleChange(e: any) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   }
@@ -39,10 +49,10 @@ export default function ModalNuevoRepuesto({ abierto, onClose, onCreated }: any)
         unidad: form.unidad,
         stock_minimo: Number(form.stock_minimo),
         cantidad_inicial: Number(form.cantidad_inicial),
-        usuario_id: usuario.id,
+        usuario_id: usuario.id, // YA NO DA ERROR
       });
 
-      // limpiar formulario
+      // Limpiar formulario
       setForm({
         nombre: "",
         cantidad_inicial: "",
@@ -52,7 +62,6 @@ export default function ModalNuevoRepuesto({ abierto, onClose, onCreated }: any)
 
       onCreated();
       onClose();
-
     } catch (error) {
       console.error(error);
       alert("Error al registrar el repuesto");
@@ -70,7 +79,6 @@ export default function ModalNuevoRepuesto({ abierto, onClose, onCreated }: any)
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-
           <motion.div
             className="bg-white w-[90%] max-w-lg rounded-2xl shadow-xl p-8"
             initial={{ scale: 0.8, opacity: 0, y: 20 }}
@@ -163,7 +171,6 @@ export default function ModalNuevoRepuesto({ abierto, onClose, onCreated }: any)
                 {loading ? "Guardando..." : "Agregar Repuesto"}
               </button>
             </div>
-
           </motion.div>
         </motion.div>
       )}

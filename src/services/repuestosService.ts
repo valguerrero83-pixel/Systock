@@ -7,7 +7,7 @@ export async function crearRepuesto(payload: {
   cantidad_inicial: number;
   usuario_id: string;
 }) {
-  // 🔹 1. Crear repuesto y obtener su ID real
+  // 1️⃣ Crear repuesto
   const { data: rep, error: repError } = await supabase
     .from("repuestos")
     .insert({
@@ -15,23 +15,20 @@ export async function crearRepuesto(payload: {
       unidad: payload.unidad,
       stock_minimo: payload.stock_minimo,
     })
-    .select("id")   // <= SOLO pedimos el ID
+    .select()
     .single();
 
   if (repError) throw repError;
 
-  // 🔹 Validar ID
-  if (!rep?.id) throw new Error("No se obtuvo el ID del repuesto");
-
-  // 🔹 2. Registrar movimiento inicial correctamente
+  // 2️⃣ Crear movimiento inicial (para stock_actual)
   const { error: movError } = await supabase
     .from("movimientos")
     .insert({
       tipo: "ENTRADA",
-      repuesto_id: rep.id,                    // <= AHORA SEGURO
-      cantidad: payload.cantidad_inicial,     // <= SE SUMA A LA VISTA
+      repuesto_id: rep.id,
+      cantidad: payload.cantidad_inicial,
       empleado_entrega_id: null,
-      empleado_recibe_id: null,               // <= No queremos mezclar empleados con usuarios
+      empleado_recibe_id: null,  // ← Aquí está el fix para que tu vista lo cuente
       notas: "Stock inicial",
       registrado_por: payload.usuario_id,
     });
