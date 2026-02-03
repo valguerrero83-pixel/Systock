@@ -49,8 +49,8 @@ export default function Layout() {
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round"
             strokeLinejoin="round" className="text-slate-800">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 
-            2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 
+            2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
             <polyline points="3.3 7.3 12 12 20.7 7.3" />
             <line x1="12" y1="22" x2="12" y2="12" />
           </svg>
@@ -111,6 +111,8 @@ export default function Layout() {
       {/* ---------------- DASHBOARD CARDS ---------------- */}
       <section className="w-full px-4 md:px-6 mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+          
+          {/* Total repuestos */}
           <DashboardCard
             title="TOTAL REPUESTOS"
             value={totalRepuestos}
@@ -119,6 +121,7 @@ export default function Layout() {
             icon={iconBox()}
           />
 
+          {/* Stock bajo */}
           <DashboardCard
             title="STOCK BAJO"
             value={stockBajo}
@@ -127,6 +130,7 @@ export default function Layout() {
             icon={iconWarning()}
           />
 
+          {/* Movimientos hoy */}
           <DashboardCard
             title="MOVIMIENTOS HOY"
             value={movimientosHoy}
@@ -211,35 +215,59 @@ function MenuItem({ to, icon, label }: any) {
   );
 }
 
+/* ---------------------- TARJETAS MEJORADAS ---------------------- */
 function DashboardCard({ title, value, subtitle, color, icon }: any) {
+  // 👇 Tailwind detectará estas clases porque están escritas literalmente
+  const bg =
+    color === "green"
+      ? "bg-green-100"
+      : color === "yellow"
+      ? "bg-yellow-100"
+      : "";
+
+  const border =
+    color === "green"
+      ? "border-green-300"
+      : color === "yellow"
+      ? "border-yellow-300"
+      : "";
+
+  const text =
+    color === "green"
+      ? "text-green-800"
+      : color === "yellow"
+      ? "text-yellow-800"
+      : "";
+
+  const iconBg =
+    color === "green"
+      ? "bg-green-300"
+      : color === "yellow"
+      ? "bg-yellow-300"
+      : "";
+
   return (
     <div
       className={`
-        bg-${color}-100 
-        rounded-2xl 
-        p-6 flex justify-between items-center
-        border border-${color}-300
-        shadow-[0_6px_25px_rgba(0,0,0,0.1)]
+        ${bg} ${border}
+        rounded-2xl p-6 flex justify-between items-center
+        border shadow-[0_4px_15px_rgba(0,0,0,0.07)]
         transition-all duration-300 
-        hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)]
+        hover:shadow-[0_6px_22px_rgba(0,0,0,0.12)]
         hover:-translate-y-1
       `}
     >
       <div>
-        <h3 className={`text-sm font-semibold text-${color}-800`}>
-          {title}
-        </h3>
+        <h3 className={`text-sm font-semibold ${text}`}>{title}</h3>
 
         <p className="text-4xl font-bold text-gray-900 mt-1">
           {value}
         </p>
 
-        <p className={`text-${color}-700 text-sm mt-1`}>
-          {subtitle}
-        </p>
+        <p className={`${text} text-sm mt-1`}>{subtitle}</p>
       </div>
 
-      <div className={`bg-${color}-200 p-4 rounded-2xl`}>
+      <div className={`${iconBg} p-4 rounded-2xl`}>
         {icon}
       </div>
     </div>
