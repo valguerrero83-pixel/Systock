@@ -1,16 +1,5 @@
 import { supabase } from "../lib/supabase";
-import type { StockActual } from "../types/index";
 
-export async function obtenerInventario(): Promise<StockActual[]> {
-  const { data, error } = await supabase
-    .from("stock_actual")
-    .select("*")
-    .order("codigo_corto");
-
-  if (error) throw error;
-
-  return data as StockActual[];
-}
 export async function crearRepuesto(payload: {
   nombre: string;
   unidad: string;
@@ -18,7 +7,7 @@ export async function crearRepuesto(payload: {
   cantidad_inicial: number;
   usuario_id: string;
 }) {
-  // 1️⃣ Crear repuesto
+  // Crear repuesto (trigger genera codigo_corto y lo inserta en stock_actual)
   const { data: rep, error: repError } = await supabase
     .from("repuestos")
     .insert({
@@ -31,7 +20,7 @@ export async function crearRepuesto(payload: {
 
   if (repError) throw repError;
 
-  // 2️⃣ Registrar movimiento inicial
+  // Registrar movimiento inicial
   const { error: movError } = await supabase
     .from("movimientos")
     .insert({
@@ -48,4 +37,3 @@ export async function crearRepuesto(payload: {
 
   return rep;
 }
-
