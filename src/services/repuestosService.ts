@@ -1,5 +1,16 @@
 import { supabase } from "../lib/supabase";
 
+export async function obtenerInventario() {
+  const { data, error } = await supabase
+    .from("stock_actual")
+    .select("*")
+    .order("codigo_corto", { ascending: true });
+
+  if (error) throw error;
+
+  return data;
+}
+
 export async function crearRepuesto(payload: {
   nombre: string;
   unidad: string;
@@ -20,17 +31,22 @@ export async function crearRepuesto(payload: {
 
   if (repError) throw repError;
 
-  // 2️⃣ Crear movimiento inicial (para stock_actual)
+  // 2️⃣ Registrar movimiento inicial (CORRECTO)
   const { error: movError } = await supabase
     .from("movimientos")
     .insert({
       tipo: "ENTRADA",
       repuesto_id: rep.id,
       cantidad: payload.cantidad_inicial,
+
+      // estos campos permiten null
       empleado_entrega_id: null,
-      empleado_recibe_id: null,  // ← Aquí está el fix para que tu vista lo cuente
-      notas: "Stock inicial",
+      empleado_recibe_id: null,
+
+      // obligatorio por RLS
       registrado_por: payload.usuario_id,
+
+      notas: "Registro inicial",
     });
 
   if (movError) throw movError;
