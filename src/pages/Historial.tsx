@@ -32,7 +32,7 @@ export default function Historial() {
   }, []);
 
   async function cargarDatos() {
-    const hist = await obtenerHistorialMovimientos();
+    const hist = await obtenerHistorialMovimientos("365");
 
     const { data: emp } = await supabase
       .from("empleados")
