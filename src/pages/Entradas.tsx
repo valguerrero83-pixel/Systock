@@ -210,7 +210,7 @@ export default function Entradas() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
         >
-          <h2 className="text-xl font-semibold mb-4">Historial DE Movimientos</h2>
+          <h2 className="text-xl font-semibold mb-4">Historial de Movimientos</h2>
 
           <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {historial.slice(0, 12).map((m, i) => (
