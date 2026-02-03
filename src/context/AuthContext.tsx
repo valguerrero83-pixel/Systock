@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUser = async () => {
     try {
+      // Obtener sesión actual
       const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData.session;
 
@@ -32,17 +33,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("users") // ⬅ tu tabla real
+      // 🔥 Obtener perfil desde la tabla usuarios
+      const { data: perfil, error } = await supabase
+        .from("usuarios")
         .select("*")
         .eq("id", session.user.id)
         .single();
 
-      if (error || !data) {
+      if (error || !perfil) {
         console.error("❌ Error obteniendo usuario:", error);
         setUsuario(null);
       } else {
-        setUsuario(data as Usuario);
+        setUsuario(perfil as Usuario);
       }
     } catch (e) {
       console.error("❌ Error en loadUser:", e);

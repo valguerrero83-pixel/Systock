@@ -58,7 +58,13 @@ export default function Layout() {
           <div>
             <h1 className="text-xl font-bold text-slate-800">Stock Mantenimiento</h1>
             <p className="text-sm text-gray-500 -mt-1">Control de inventario</p>
-          </div>
+          
+        {usuario?.nombre && (
+        <p className="text-sm text-gray-600 mt-1">
+          Hola, <span className="font-semibold text-gray-800">{usuario.nombre}</span> 👋
+        </p>
+      )}
+      </div>
         </div>
 
         {/* --------------------- NAV SUPERIOR --------------------- */}
