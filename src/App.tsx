@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Empleados from "./pages/Empleados";
 import Usuarios from "./pages/Usuarios";
 
+
 // 🔒 Wrapper de permisos
 function RequireRole({ allow }: { allow: string[] }) {
   const { usuario } = useAuth();
@@ -27,29 +28,32 @@ export default function App() {
       <BrowserRouter>
         <Routes>
 
-          {/* ROUTA PÚBLICA */}
+          {/* 🔓 PÚBLICA */}
           <Route path="/login" element={<Login />} />
 
-          {/* RUTAS PROTEGIDAS */}
+          {/* 🔐 PROTEGIDAS */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
 
-              {/* 🔵 ACCESO SOLO ADMIN + DEV */}
-              <Route element={<RequireRole allow={["admin", "dev"]} />}>
+              {/* ✔ ADMIN + DEV + VIEWER pueden entrar a ENTRADAS (pero viewer no registra) */}
+              <Route element={<RequireRole allow={["admin", "dev", "viewer"]} />}>
                 <Route path="/entradas" element={<Entradas />} />
-                <Route path="/empleados" element={<Empleados />} />
               </Route>
 
-              {/* 🔵 ACCESO SOLO JEFE + ADMIN + DEV */}
-              <Route element={<RequireRole allow={["jefe", "admin", "dev"]} />}>
+              {/* ✔ JEFE + ADMIN + DEV + VIEWER pueden entrar a SALIDAS (viewer solo mira) */}
+              <Route element={<RequireRole allow={["jefe", "admin", "dev", "viewer"]} />}>
                 <Route path="/salidas" element={<Salidas />} />
               </Route>
 
-              {/* 🔵 ACCESO PARA TODOS LOS ROLES */}
+              {/* ✔ SOLO ADMIN + DEV → Empleados */}
+              <Route element={<RequireRole allow={["admin", "dev"]} />}>
+                <Route path="/empleados" element={<Empleados />} />
+                <Route path="/usuarios" element={<Usuarios />} />
+              </Route>
+
+              {/* ✔ TODOS LOS ROLES */}
               <Route path="/inventario" element={<Inventario />} />
               <Route path="/historial" element={<Historial />} />
-                
-              <Route path="/usuarios" element={<Usuarios />} />
 
             </Route>
           </Route>
@@ -61,6 +65,7 @@ export default function App() {
     </AuthProvider>
   );
 }
+
 
 function ProtectedRoute() {
   const { usuario, loading } = useAuth();
