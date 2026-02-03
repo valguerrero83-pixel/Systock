@@ -196,15 +196,15 @@ export default function Historial() {
         </div>
 
         {/* TABLA */}
-        <div className="max-h-[550px] overflow-y-auto pr-2">
+        <div className="max-h-[550px] overflow-y-auto pr-2 rounded-xl border border-gray-200 bg-white">
           <table className="w-full text-sm border-separate border-spacing-y-1">
             <thead className="sticky top-0 bg-white shadow-sm">
-              <tr className="text-gray-600">
-                <Th>Fecha/Hora</Th>
-                <Th>Tipo</Th>
-                <Th className="text-left pl-4">Repuesto</Th>
-                <Th>Cantidad</Th>
-                <Th>Transacción</Th>
+              <tr className="text-gray-700 text-sm">
+                <Th className="pl-4">Fecha/Hora</Th>
+                <Th className="pl-2">Tipo</Th>
+                <Th className="pl-8">Repuesto</Th>
+                <Th className="pl-2">Cantidad</Th>
+                <Th className="pl-4">Transacción</Th>
               </tr>
             </thead>
 
@@ -217,53 +217,41 @@ export default function Historial() {
                   transition={{ delay: index * 0.03 }}
                   className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-md"
                 >
-                  <Td>
-                    <div className="pl-1">
-                      {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
-                      <br />
-                      <span className="text-xs text-gray-500">
-                        {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
-                      </span>
-                    </div>
-                  </Td>
+                <Td className="pl-4">
+                  {new Date(m.created_at + 'Z').toLocaleDateString('es-CO')}<br/>
+                  <span className="text-xs text-gray-500 mt-0 block">
+                    {new Date(m.created_at + 'Z').toLocaleTimeString('es-CO')}
+                  </span>
+                </Td>
 
-                  <Td>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-semibold ${
-                        m.tipo === "ENTRADA"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {m.tipo}
-                    </span>
-                  </Td>
+                <Td className="pl-2">
+                  <span className={`px-2 py-1 rounded-lg text-xs font-semibold
+                    ${m.tipo === 'ENTRADA' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {m.tipo}
+                  </span>
+                </Td>
 
-                  <Td className="text-left pl-4">
-                    {m.repuestos?.nombre ?? "—"}
-                  </Td>
+                <Td className="pl-8">{m.repuestos?.nombre ?? '—'}</Td>
 
-                  <Td>
-                    {m.tipo === "ENTRADA" ? "+" : "-"}
-                    {m.cantidad} {m.repuestos?.unidad ?? ""}
-                  </Td>
+                <Td className="pl-2">
+                  {m.tipo === 'ENTRADA' ? '+' : '-'}
+                  {m.cantidad} {m.repuestos?.unidad ?? ''}
+                </Td>
 
-                  <Td>
-                    <div className="flex items-center gap-2 pt-1">
-                      {m.empleado_entrega?.nombre ?? "—"}
-                      <ArrowIcon />
-                      {m.empleado_recibe?.nombre ?? "—"}
-                    </div>
-                  </Td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
-    </PageTransition>
-  );
-}
+                <Td className="pl-4 flex items-center gap-3">
+                  {m.empleado_entrega?.nombre ?? '—'}
+                  <ArrowIcon />
+                  {m.empleado_recibe?.nombre ?? '—'}
+                </Td>
+                                </motion.tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </motion.div>
+                    </PageTransition>
+                  );
+                }
 
 /* SUBCOMPONENTES */
 function Filtro({
@@ -287,7 +275,8 @@ function Filtro({
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-xl shadow-sm focus:ring-gray-400 focus:border-gray-400 bg-white"
+        className="w-full mt-1 px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm
+                  focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all bg-white"
       >
         {children}
       </select>
@@ -309,6 +298,12 @@ function Th({
   );
 }
 
-function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <td className={`py-3 px-2 align-middle ${className}`}>{children}</td>;
+function Td({
+  children,
+  className = ""
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <td className={`py-3 ${className}`}>{children}</td>;
 }
