@@ -79,7 +79,7 @@ export default function Inventario() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.03 }}
                   >
-                    <td className="py-3">{i.codigo_corto}</td>
+                    <td className="py-3 font-semibold">{i.codigo_corto}</td>
                     <td>{i.nombre}</td>
                     <td className="font-semibold">
                       {i.stock} {i.unidad}
