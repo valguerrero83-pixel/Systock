@@ -55,13 +55,7 @@ export default function Layout() {
 
         {/* LOGO + TÍTULO */}
         <div className="flex items-center gap-3">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-            strokeLinejoin="round" className="text-slate-800">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-            <polyline points="3.3 7.3 12 12 20.7 7.3" />
-            <line x1="12" y1="22" x2="12" y2="12" />
-          </svg>
+        <link rel="icon" type="image/png" href="/public/favicon.png" />
 
           <div>
             <h1 className="text-xl font-bold text-slate-800">Systock</h1>
