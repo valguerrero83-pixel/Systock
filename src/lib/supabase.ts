@@ -5,9 +5,8 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: true,       // 🔥 Mantiene la sesión guardada
-    autoRefreshToken: true,     // 🔥 Renueva tokens automáticamente
-    detectSessionInUrl: true,   // 🔥 Evita problemas de login en producción
-    storage: localStorage,
+    persistSession: true,       // Mantiene sesión
+    autoRefreshToken: true,     // 🔥 Renueva token automáticamente
+    detectSessionInUrl: false,  // 🔥 Debe ser FALSE en SPA (React + Vercel)
   },
 });
