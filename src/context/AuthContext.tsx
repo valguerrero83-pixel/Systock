@@ -53,10 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    console.log("AUTH STATE:", { usuario, loading});
-    }, [usuario, loading]);
     const init = async () => {
-      await new Promise((r) => setTimeout(r, 200));
+      console.log("🔄 Iniciando AuthContext...");
+      await new Promise((r) => setTimeout(r, 200)); // Espera para que Supabase escriba sesión
       await loadUser();
     };
 
@@ -64,6 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        console.log("📡 Cambió estado de sesión:", session);
+
         if (!session) {
           setUsuario(null);
         } else {
@@ -76,7 +77,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       listener.subscription.unsubscribe();
     };
-   [];
+  }, []);
+
+  // Log interno
+  useEffect(() => {
+    console.log("AUTH STATE:", { usuario, loading });
+  }, [usuario, loading]);
 
   const logout = async () => {
     try {
