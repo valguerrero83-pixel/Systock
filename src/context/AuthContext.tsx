@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // escuchar login y logout
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event) => {
         console.log("🔔 EVENT:", event);
 
         if (event === "SIGNED_IN") {
