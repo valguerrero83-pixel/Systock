@@ -10,17 +10,22 @@ import Login from "./pages/Login";
 import Empleados from "./pages/Empleados";
 import Usuarios from "./pages/Usuarios";
 
+// 🚨 YA NO USAMOS logout() AQUÍ ❌
+// Porque destruir la sesión rompe TODO el refresco de tokens.
 function ProtectedRoute() {
-  const { usuario, loading, logout } = useAuth();
+  const { usuario, loading } = useAuth();
 
-  if (loading) return <div className="p-6 text-center">Cargando...</div>;
+  // ⏳ Mientras cargamos la sesión (1 sola vez)
+  if (loading) {
+    return <div className="p-6 text-center">Cargando...</div>;
+  }
 
-  // Si no hay usuario, pero no estamos cargando → sesión inválida
+  // ❌ Si NO hay usuario → sesión expirada o inválida
   if (!usuario) {
-    logout(); // 🔥 Fuerza limpieza segura sin romper nada
     return <Navigate to="/login" replace />;
   }
 
+  // ✔ Usuario cargado correctamente
   return <Outlet />;
 }
 
@@ -39,10 +44,8 @@ export default function App() {
 
               <Route path="/entradas" element={<Entradas />} />
               <Route path="/salidas" element={<Salidas />} />
-
               <Route path="/inventario" element={<Inventario />} />
               <Route path="/historial" element={<Historial />} />
-
               <Route path="/empleados" element={<Empleados />} />
               <Route path="/usuarios" element={<Usuarios />} />
 
