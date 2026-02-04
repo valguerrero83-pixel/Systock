@@ -8,5 +8,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     persistSession: true,       // 🔥 Mantiene la sesión guardada
     autoRefreshToken: true,     // 🔥 Renueva tokens automáticamente
     detectSessionInUrl: true,   // 🔥 Evita problemas de login en producción
+    storage: localStorage,
   },
 });

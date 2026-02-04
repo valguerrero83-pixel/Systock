@@ -11,19 +11,16 @@ import Empleados from "./pages/Empleados";
 import Usuarios from "./pages/Usuarios";
 
 function ProtectedRoute() {
-  const { usuario, loading } = useAuth();
+  const { usuario, loading, logout } = useAuth();
 
-  // 🔄 SIEMPRE espera a Supabase antes de decidir
-  if (loading) {
-    return <div className="p-6 text-center">Cargando sesión...</div>;
-  }
+  if (loading) return <div className="p-6 text-center">Cargando...</div>;
 
-  // ⛔ Si no hay usuario → ir al login
+  // Si no hay usuario, pero no estamos cargando → sesión inválida
   if (!usuario) {
+    logout(); // 🔥 Fuerza limpieza segura sin romper nada
     return <Navigate to="/login" replace />;
   }
 
-  // ✔ Usuario OK → renderizar rutas internas
   return <Outlet />;
 }
 
