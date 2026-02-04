@@ -21,60 +21,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
-  /** 🔥 Cargar usuario de la sesión actual */
-  const loadUser = async () => {
+  async function loadUserFromSession() {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData.session;
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
 
       if (!session) {
         setUsuario(null);
+        setLoading(false);
         return;
       }
 
-      const { data: perfil, error } = await supabase
+      // --- PERFIL ---
+      const { data: perfil } = await supabase
         .from("users")
         .select("*")
         .eq("id", session.user.id)
         .single();
 
-      if (error) {
-        console.error("Error cargando perfil:", error);
-        setUsuario(null);
-      } else {
-        setUsuario(perfil);
-      }
+      setUsuario(perfil ?? null);
     } catch (err) {
-      console.error("Error en loadUser:", err);
+      console.error("Auth error:", err);
       setUsuario(null);
     }
-  };
+
+    setLoading(false);
+  }
 
   useEffect(() => {
-    let mounted = true;
+    let ignore = false;
 
-    const init = async () => {
-      await loadUser();
-      if (mounted) setLoading(false);
-    };
+    async function init() {
+      setLoading(true);
+      await loadUserFromSession();
+    }
 
     init();
 
-    // Listener de sesión (maneja refresh tokens, logout, login)
+    // Listener manejado correctamente
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log("Auth event:", _event);
+      async (event, session) => {
+        console.log("⚠️ Cambio de sesión:", event);
 
         if (!session) {
           setUsuario(null);
-        } else {
-          await loadUser();
+          return;
         }
+
+        // Evita estados intermedios
+        setLoading(true);
+
+        await loadUserFromSession();
+
+        setLoading(false);
       }
     );
 
     return () => {
-      mounted = false;
+      ignore = true;
       listener.subscription.unsubscribe();
     };
   }, []);
@@ -86,7 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ usuario, loading, logout }}>
-      {!loading && children}
+      {loading ? (
+        <div className="p-8 text-center text-gray-600">Cargando sesión...</div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }
