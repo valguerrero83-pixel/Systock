@@ -21,6 +21,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // --------- FUNCION QUE LIMPIA TODO Y MUESTRA LOGIN ---------
+  const hardLogout = async () => {
+    console.warn("⚠ Sesión inválida → Limpiando todo...");
+    await supabase.auth.signOut();
+    localStorage.clear();
+    sessionStorage.clear();
+    setUsuario(null);
+  };
+
   const loadUser = async () => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -32,16 +41,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data: perfil } = await supabase
+      // Verificar si el token ya es inválido
+      const jwt = session.access_token;
+      const payload = JSON.parse(atob(jwt.split(".")[1]));
+      const exp = payload.exp * 1000;
+
+      if (Date.now() > exp) {
+        await hardLogout();
+        setLoading(false);
+        return;
+      }
+
+      const { data: perfil, error } = await supabase
         .from("users")
         .select("*")
         .eq("id", session.user.id)
         .single();
 
-      setUsuario(perfil ?? null);
-    } catch (e) {
-      console.error("Error en loadUser:", e);
-      setUsuario(null);
+      if (error || !perfil) {
+        await hardLogout();
+        return;
+      }
+
+      setUsuario(perfil);
+    } catch (err) {
+      await hardLogout();
     }
 
     setLoading(false);
@@ -50,13 +74,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadUser();
 
-    // 👇 ESTE listener mantiene la sesión al refrescar
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!session) {
-          setUsuario(null);
-        } else {
+      async (event, session) => {
+        console.log("Auth event:", event);
+
+        if (event === "SIGNED_OUT") {
+          await hardLogout();
+        }
+
+        // Si el token se refrescó, recargar usuario
+        if (event === "TOKEN_REFRESHED" || event === "SIGNED_IN") {
           await loadUser();
+        }
+
+        // Si no hay sesión pero tenía usuario
+        if (!session) {
+          await hardLogout();
         }
       }
     );
@@ -67,8 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUsuario(null);
+    await hardLogout();
   };
 
   return (
