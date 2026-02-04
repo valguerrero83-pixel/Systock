@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // --- PERFIL ---
+      // Obtener perfil
       const { data: perfil } = await supabase
         .from("users")
         .select("*")
@@ -49,36 +49,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    let ignore = false;
+    setLoading(true);
+    loadUserFromSession();
 
-    async function init() {
-      setLoading(true);
-      await loadUserFromSession();
-    }
-
-    init();
-
-    // Listener manejado correctamente
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("⚠️ Cambio de sesión:", event);
 
         if (!session) {
           setUsuario(null);
-          return;
+        } else {
+          setLoading(true);
+          await loadUserFromSession();
         }
-
-        // Evita estados intermedios
-        setLoading(true);
-
-        await loadUserFromSession();
-
-        setLoading(false);
       }
     );
 
     return () => {
-      ignore = true;
       listener.subscription.unsubscribe();
     };
   }, []);
