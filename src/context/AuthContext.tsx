@@ -21,10 +21,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadUserFromSession() {
+  const loadUser = async () => {
     try {
-      const { data } = await supabase.auth.getSession();
-      const session = data.session;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData.session;
 
       if (!session) {
         setUsuario(null);
@@ -32,7 +32,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Obtener perfil
       const { data: perfil } = await supabase
         .from("users")
         .select("*")
@@ -40,27 +39,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       setUsuario(perfil ?? null);
-    } catch (err) {
-      console.error("Auth error:", err);
+    } catch (e) {
+      console.error("Error en loadUser:", e);
       setUsuario(null);
     }
 
     setLoading(false);
-  }
+  };
 
   useEffect(() => {
-    setLoading(true);
-    loadUserFromSession();
+    loadUser();
 
+    // 👇 ESTE listener mantiene la sesión al refrescar
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("⚠️ Cambio de sesión:", event);
-
+      async (_event, session) => {
         if (!session) {
           setUsuario(null);
         } else {
-          setLoading(true);
-          await loadUserFromSession();
+          await loadUser();
         }
       }
     );
@@ -77,11 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ usuario, loading, logout }}>
-      {loading ? (
-        <div className="p-8 text-center text-gray-600">Cargando sesión...</div>
-      ) : (
-        children
-      )}
+      {!loading && children}
     </AuthContext.Provider>
   );
 }

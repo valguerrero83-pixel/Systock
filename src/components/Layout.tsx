@@ -33,15 +33,27 @@ export default function Layout() {
   }
 
   useEffect(() => {
-    cargarDashboard();
+    cargarDashboard(); // carga inicial
 
-    const interval = setInterval(() => {
+    // 🔄 Actualización automática cada 5 segundos
+    const intervalo = setInterval(() => {
       cargarDashboard();
     }, 5000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(intervalo);
   }, []);
 
+  // 🔄 Actualizar al cambiar de página
+  useEffect(() => {
+    cargarDashboard();
+  }, [location.pathname]);
+
+  // 🔄 Actualizar cuando se registran entradas/salidas
+  useEffect(() => {
+    const listener = () => cargarDashboard();
+    window.addEventListener("dashboard-update", listener);
+    return () => window.removeEventListener("dashboard-update", listener);
+  }, []);
   // ------------------- ROLES -------------------
   const esAdmin =
     usuario?.rol_usuario === "admin" ||
