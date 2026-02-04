@@ -53,33 +53,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ----------------------------
   // Listener REAL sin romper nada
   // ----------------------------
-  useEffect(() => {
-    loadUser(); // ← carga inicial
+useEffect(() => {
+  const init = async () => {
+    const { data } = await supabase.auth.getSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event) => {
-        console.log("🔔 AUTH EVENT:", event);
+    if (data.session) {
+      await loadUser();
+    } else {
+      setUsuario(null);
+      setLoading(false);
+    }
+  };
 
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          await loadUser();
-          return;
-        }
+  init();
 
-        if (event === "SIGNED_OUT") {
-          setUsuario(null);
-          return;
-        }
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      console.log("AUTH EVENT:", event);
 
-        // NO HACEMOS NADA CON INITIAL_SESSION
-        // NO BORRAMOS NADA
-        // NO FORZAMOS LOGOUT
+      if (session) {
+        await loadUser();
+      } else {
+        setUsuario(null);
       }
-    );
+    }
+  );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+  return () => listener.subscription.unsubscribe();
+}, []);
 
   // ----------------------------
   // Logout manual
