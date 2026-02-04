@@ -64,7 +64,7 @@ export default function Layout() {
           </svg>
 
           <div>
-            <h1 className="text-xl font-bold text-slate-800">Stock Mantenimiento</h1>
+            <h1 className="text-xl font-bold text-slate-800">Systock</h1>
             <p className="text-sm text-gray-500 -mt-1">Control de inventario</p>
 
             {usuario?.nombre && (
