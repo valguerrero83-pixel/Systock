@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Cargar usuario desde la sesión actual
   const loadUser = async () => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -32,20 +33,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data: perfil, error } = await supabase
+      const { data: perfil } = await supabase
         .from("users")
         .select("*")
         .eq("id", session.user.id)
         .single();
 
-      if (error || !perfil) {
-        console.error("❌ Error obteniendo usuario:", error);
-        setUsuario(null);
-      } else {
-        setUsuario(perfil as Usuario);
-      }
-    } catch (e) {
-      console.error("❌ Error en loadUser:", e);
+      setUsuario(perfil ?? null);
+    } catch (error) {
+      console.error("Error en loadUser:", error);
       setUsuario(null);
     }
 
@@ -53,23 +49,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const init = async () => {
-      console.log("🔄 Iniciando AuthContext...");
-      await new Promise((r) => setTimeout(r, 200)); // Espera para que Supabase escriba sesión
-      await loadUser();
-    };
+    console.log("🔄 AuthContext cargando...");
+    loadUser();
 
-    init();
-
+    // Escuchar cambios de sesión reales (incluye refresh tokens)
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        console.log("📡 Cambió estado de sesión:", session);
+        console.log("🔔 Sesión cambió:", _event);
 
         if (!session) {
           setUsuario(null);
         } else {
-          await new Promise((r) => setTimeout(r, 200));
-          await loadUser();
+          await loadUser(); // SIEMPRE refrescar perfil
         }
       }
     );
@@ -79,18 +70,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Log interno
-  useEffect(() => {
-    console.log("AUTH STATE:", { usuario, loading });
-  }, [usuario, loading]);
-
   const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUsuario(null);
-    } catch (err) {
-      console.error("❌ Error cerrando sesión:", err);
-    }
+    await supabase.auth.signOut();
+    setUsuario(null);
   };
 
   return (
