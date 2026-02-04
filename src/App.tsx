@@ -10,18 +10,20 @@ import Login from "./pages/Login";
 import Empleados from "./pages/Empleados";
 import Usuarios from "./pages/Usuarios";
 
-// Solo verifica autenticación
 function ProtectedRoute() {
   const { usuario, loading } = useAuth();
 
+  // 🔄 SIEMPRE espera a Supabase antes de decidir
   if (loading) {
-    return <div className="p-6 text-center">Cargando...</div>;
+    return <div className="p-6 text-center">Cargando sesión...</div>;
   }
 
+  // ⛔ Si no hay usuario → ir al login
   if (!usuario) {
     return <Navigate to="/login" replace />;
   }
 
+  // ✔ Usuario OK → renderizar rutas internas
   return <Outlet />;
 }
 
@@ -31,10 +33,10 @@ export default function App() {
       <BrowserRouter>
         <Routes>
 
-          {/* 🔓 Ruta pública */}
+          {/* PÚBLICA */}
           <Route path="/login" element={<Login />} />
 
-          {/* 🔒 Rutas protegidas */}
+          {/* PROTEGIDAS */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
 
@@ -50,8 +52,8 @@ export default function App() {
             </Route>
           </Route>
 
-          {/* Default */}
-          <Route path="*" element={<Navigate to="/inventario" />} />
+          {/* DEFAULT */}
+          <Route path="*" element={<Navigate to="/inventario" replace />} />
 
         </Routes>
       </BrowserRouter>
