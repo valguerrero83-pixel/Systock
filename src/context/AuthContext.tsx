@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Cargar usuario desde la sesión actual
+  /** 🔥 Cargar usuario de la sesión actual */
   const loadUser = async () => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -29,43 +29,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!session) {
         setUsuario(null);
-        setLoading(false);
         return;
       }
 
-      const { data: perfil } = await supabase
+      const { data: perfil, error } = await supabase
         .from("users")
         .select("*")
         .eq("id", session.user.id)
         .single();
 
-      setUsuario(perfil ?? null);
-    } catch (error) {
-      console.error("Error en loadUser:", error);
+      if (error) {
+        console.error("Error cargando perfil:", error);
+        setUsuario(null);
+      } else {
+        setUsuario(perfil);
+      }
+    } catch (err) {
+      console.error("Error en loadUser:", err);
       setUsuario(null);
     }
-
-    setLoading(false);
   };
 
   useEffect(() => {
-    console.log("🔄 AuthContext cargando...");
-    loadUser();
+    let mounted = true;
 
-    // Escuchar cambios de sesión reales (incluye refresh tokens)
+    const init = async () => {
+      await loadUser();
+      if (mounted) setLoading(false);
+    };
+
+    init();
+
+    // Listener de sesión (maneja refresh tokens, logout, login)
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        console.log("🔔 Sesión cambió:", _event);
+        console.log("Auth event:", _event);
 
         if (!session) {
           setUsuario(null);
         } else {
-          await loadUser(); // SIEMPRE refrescar perfil
+          await loadUser();
         }
       }
     );
 
     return () => {
+      mounted = false;
       listener.subscription.unsubscribe();
     };
   }, []);
