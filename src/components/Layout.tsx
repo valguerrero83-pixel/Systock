@@ -34,6 +34,12 @@ export default function Layout() {
 
   useEffect(() => {
     cargarDashboard();
+
+    const interval = setInterval(() => {
+      cargarDashboard();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // ------------------- ROLES -------------------
