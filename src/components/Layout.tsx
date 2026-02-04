@@ -55,7 +55,7 @@ export default function Layout() {
 
         {/* LOGO + TÍTULO */}
         <div className="flex items-center gap-3">
-        <link rel="icon" type="image/png" href="/public/favicon.png" />
+        <img src="../public/favicon.png" alt="Systock logo" className="w-10 h-10 object-contain" />
 
           <div>
             <h1 className="text-xl font-bold text-slate-800">Systock</h1>
