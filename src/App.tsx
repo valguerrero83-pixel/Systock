@@ -10,21 +10,12 @@ import Login from "./pages/Login";
 import Empleados from "./pages/Empleados";
 import Usuarios from "./pages/Usuarios";
 
-// Solo verifica autenticación, NO roles
 function ProtectedRoute() {
   const { usuario, loading } = useAuth();
 
-  // ⏳ NO redirigir mientras carga
-  if (loading) {
-    return <div className="p-6 text-center">Cargando...</div>;
-  }
+  if (loading) return <div className="p-6 text-center">Cargando...</div>;
+  if (!usuario) return <Navigate to="/login" replace />;
 
-  // ❌ Si ya terminó y NO hay usuario
-  if (!usuario) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // ✔ Usuario listo → permitir
   return <Outlet />;
 }
 
@@ -34,29 +25,22 @@ export default function App() {
       <BrowserRouter>
         <Routes>
 
-          {/* Publica */}
+          {/* Pública */}
           <Route path="/login" element={<Login />} />
 
           {/* Protegidas */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
-
-              {/* TODAS SON VISIBLES PARA CUALQUIER ROL */}
               <Route path="/entradas" element={<Entradas />} />
               <Route path="/salidas" element={<Salidas />} />
-
               <Route path="/inventario" element={<Inventario />} />
               <Route path="/historial" element={<Historial />} />
-
-              {/* Empleados → pero la página misma decide si viewer puede ver o no */}
               <Route path="/empleados" element={<Empleados />} />
-
-              {/* Usuarios → igual */}
               <Route path="/usuarios" element={<Usuarios />} />
-
             </Route>
           </Route>
 
+          {/* Default */}
           <Route path="*" element={<Navigate to="/inventario" />} />
 
         </Routes>

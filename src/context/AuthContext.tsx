@@ -21,57 +21,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadUser = async () => {
-    try {
-      // Obtener sesión actual
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData.session;
+  const loadUserProfile = async () => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData.session;
 
-      if (!session) {
-        setUsuario(null);
-        setLoading(false);
-        return;
-      }
-
-      // 🔥 Obtener perfil desde la tabla usuarios
-      const { data: perfil, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      if (error || !perfil) {
-        console.error("❌ Error obteniendo usuario:", error);
-        setUsuario(null);
-      } else {
-        setUsuario(perfil as Usuario);
-      }
-    } catch (e) {
-      console.error("❌ Error en loadUser:", e);
+    if (!session) {
       setUsuario(null);
+      setLoading(false);
+      return;
     }
 
+    const { data: perfil } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+
+    setUsuario(perfil ?? null);
     setLoading(false);
   };
 
   useEffect(() => {
-    const init = async () => {
-      await new Promise(r => setTimeout(r, 200)); // ✨ Espera a que Supabase guarde sesión
-      await loadUser();
-    };
+    loadUserProfile();
 
-    init();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!session) {
-          setUsuario(null);
-        } else {
-          await new Promise(r => setTimeout(r, 200));  // ✨ Asegura sincronización
-          await loadUser();
-        }
-      }
-    );
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      loadUserProfile();
+    });
 
     return () => {
       listener.subscription.unsubscribe();
@@ -79,12 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUsuario(null);
-    } catch (err) {
-      console.error("❌ Error cerrando sesión:", err);
-    }
+    await supabase.auth.signOut();
+    setUsuario(null);
   };
 
   return (
