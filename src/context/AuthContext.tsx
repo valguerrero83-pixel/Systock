@@ -53,6 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    console.log("AUTH STATE:", { usuario, loading});
+    }, [usuario, loading]);
     const init = async () => {
       await new Promise((r) => setTimeout(r, 200));
       await loadUser();
@@ -74,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, []);
+   [];
 
   const logout = async () => {
     try {
