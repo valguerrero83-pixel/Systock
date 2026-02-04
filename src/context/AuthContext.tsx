@@ -21,37 +21,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // --------- FUNCION QUE LIMPIA TODO Y MUESTRA LOGIN ---------
   const hardLogout = async () => {
-    console.warn("⚠ Sesión inválida → Limpiando todo...");
-    await supabase.auth.signOut();
+    console.warn("⚠ Sesión inválida → cerrando todo");
     localStorage.clear();
     sessionStorage.clear();
+    await supabase.auth.signOut();
     setUsuario(null);
   };
 
   const loadUser = async () => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData.session;
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
 
+      // SESIÓN VACÍA → logout inmediato
       if (!session) {
-        setUsuario(null);
-        setLoading(false);
+        await hardLogout();
         return;
       }
 
-      // Verificar si el token ya es inválido
-      const jwt = session.access_token;
-      const payload = JSON.parse(atob(jwt.split(".")[1]));
+      // Validar expiración del token
+      const payload = JSON.parse(atob(session.access_token.split(".")[1]));
       const exp = payload.exp * 1000;
 
       if (Date.now() > exp) {
         await hardLogout();
-        setLoading(false);
         return;
       }
 
+      // Obtener perfil
       const { data: perfil, error } = await supabase
         .from("users")
         .select("*")
@@ -65,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUsuario(perfil);
     } catch (err) {
+      console.error("❌ Error cargando usuario:", err);
       await hardLogout();
     }
 
@@ -72,31 +71,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // cargar user inicial
     loadUser();
 
+    // escuchar login y logout
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth event:", event);
+        console.log("🔔 EVENT:", event);
+
+        if (event === "SIGNED_IN") {
+          await loadUser();
+          return;
+        }
 
         if (event === "SIGNED_OUT") {
           await hardLogout();
+          return;
         }
 
-        // Si el token se refrescó, recargar usuario
-        if (event === "TOKEN_REFRESHED" || event === "SIGNED_IN") {
-          await loadUser();
-        }
-
-        // Si no hay sesión pero tenía usuario
-        if (!session) {
-          await hardLogout();
-        }
+        // "INITIAL_SESSION" se ignora, no hacer nada
       }
     );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   const logout = async () => {
