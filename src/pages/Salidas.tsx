@@ -25,6 +25,14 @@ const Toast = ({ mensaje }: { mensaje: string }) => (
 export default function Salidas() {
   const { usuario } = useAuth();
 
+  // ---------------- PERMISOS ----------------
+  const rol = usuario?.rol_usuario;
+  const puedeRegistrar =
+    rol === "admin" || rol === "dev" || rol === "jefe"; // GERENTE y VIEWER NO
+
+  const esModoLectura = !puedeRegistrar;
+
+  // ---------------- STATES ----------------
   const [repuestos, setRepuestos] = useState<any[]>([]);
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [stock, setStock] = useState<any[]>([]);
@@ -83,6 +91,8 @@ export default function Salidas() {
   }
 
   async function handleSubmit() {
+    if (!puedeRegistrar) return; // seguridad extra
+
     if (!usuario?.id) {
       showToast("Error: usuario no autenticado.");
       return;
@@ -126,17 +136,66 @@ export default function Salidas() {
     minute: "2-digit",
     second: "2-digit",
   });
-  if (usuario?.rol_usuario === "viewer") {
-  return (
-    <PageTransition>
-      <div className="text-center text-gray-600 mt-20">
-        <h2 className="text-xl font-semibold">Modo Visor</h2>
-        <p>No tienes permisos para registrar salidas.</p>
-      </div>
-    </PageTransition>
-  );
-}
 
+  // ------------------- MODO SOLO LECTURA -------------------
+  if (esModoLectura) {
+    return (
+      <PageTransition>
+        <div className="max-w-7xl mx-auto mt-10 px-4">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Salidas (solo lectura)
+          </h2>
+
+          <p className="text-gray-600 mb-6">
+            Tu rol no permite registrar salidas, pero puedes ver el historial.
+          </p>
+
+          <motion.div
+            className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h2 className="text-xl font-semibold mb-4">Historial de Movimientos</h2>
+
+            <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100">
+              {historial.slice(0, 12).map((m, index) => (
+                <motion.div
+                  key={m.id}
+                  className="py-4 grid grid-cols-5 text-sm items-center gap-2"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
+                    </p>
+                  </div>
+
+                  <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
+                    -{m.cantidad} {m.repuestos?.unidad}
+                  </span>
+
+                  <span className="font-medium">{m.repuestos?.nombre}</span>
+
+                  <span className="text-gray-600">{m.empleado_entrega?.nombre}</span>
+
+                  <span className="text-gray-600">
+                    → {m.empleado_recibe?.nombre}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  // ------------------- FORMULARIO NORMAL (ADMIN / DEV / JEFE) -------------------
   return (
     <PageTransition>
       <motion.div
@@ -284,7 +343,9 @@ export default function Salidas() {
 
                 <span className="text-gray-600">{m.empleado_entrega?.nombre}</span>
 
-                <span className="text-gray-600">→ {m.empleado_recibe?.nombre}</span>
+                <span className="text-gray-600">
+                  → {m.empleado_recibe?.nombre}
+                </span>
               </motion.div>
             ))}
           </div>

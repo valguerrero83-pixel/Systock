@@ -13,7 +13,7 @@ import Usuarios from "./pages/Usuarios";
 function ProtectedRoute() {
   const { usuario, loading } = useAuth();
 
-  if (loading) return <div className="p-6 text-center">Cargando...</div>;
+  if (loading) return <div className="p-6">Cargando...</div>;
   if (!usuario) return <Navigate to="/login" replace />;
 
   return <Outlet />;
@@ -25,24 +25,25 @@ export default function App() {
       <BrowserRouter>
         <Routes>
 
-          {/* Pública */}
           <Route path="/login" element={<Login />} />
 
-          {/* Protegidas */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
+
+              {/* NO bloqueamos rutas aquí, sino dentro de cada página */}
               <Route path="/entradas" element={<Entradas />} />
               <Route path="/salidas" element={<Salidas />} />
+
               <Route path="/inventario" element={<Inventario />} />
               <Route path="/historial" element={<Historial />} />
+
               <Route path="/empleados" element={<Empleados />} />
               <Route path="/usuarios" element={<Usuarios />} />
+
             </Route>
           </Route>
 
-          {/* Default */}
           <Route path="*" element={<Navigate to="/inventario" />} />
-
         </Routes>
       </BrowserRouter>
     </AuthProvider>

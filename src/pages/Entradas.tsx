@@ -32,6 +32,14 @@ const Toast = ({ mensaje }: { mensaje: string }) => (
 export default function Entradas() {
   const { usuario } = useAuth();
 
+  // ---------------- PERMISOS ----------------
+  const rol = usuario?.rol_usuario;
+  const puedeRegistrar =
+    rol === "admin" || rol === "dev"; // únicos permitidos
+
+  const esModoLectura = !puedeRegistrar; // jefe, gerente, viewer
+
+  // ---------------- STATE ----------------
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [stock, setStock] = useState<StockActual[]>([]);
@@ -82,6 +90,8 @@ export default function Entradas() {
   }
 
   async function handleSubmit() {
+    if (!puedeRegistrar) return; // seguridad adicional
+
     if (!form.repuesto_id || !form.cantidad || !form.recibido_por) {
       showToast("Completa todos los campos obligatorios.");
       return;
@@ -111,17 +121,64 @@ export default function Entradas() {
     }
   }
 
-  if (usuario?.rol_usuario === "viewer") {
-  return (
-    <PageTransition>
-      <div className="text-center text-gray-600 mt-20">
-        <h2 className="text-xl font-semibold">Modo Visor</h2>
-        <p>No tienes permisos para registrar entradas.</p>
-      </div>
-    </PageTransition>
-  );
-}
+  // ---------------- MODO VISOR / SOLO LECTURA ----------------
+  if (esModoLectura) {
+    return (
+      <PageTransition>
+        <div className="max-w-7xl mx-auto mt-8 px-4">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Entradas (solo lectura)
+          </h2>
 
+          <p className="text-gray-600 mb-6">
+            Tu rol no permite registrar entradas, pero puedes ver el historial.
+          </p>
+
+          {/* HISTORIAL */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
+          >
+            <h2 className="text-xl font-semibold mb-4">Historial de Movimientos</h2>
+
+            <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              {historial.slice(0, 12).map((m, i) => (
+                <motion.div
+                  key={m.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="py-4 grid grid-cols-5 text-sm items-center gap-2"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
+                    </p>
+                  </div>
+
+                  <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
+                    +{m.cantidad} {m.repuestos?.unidad}
+                  </span>
+
+                  <span className="font-medium">{m.repuestos?.nombre}</span>
+
+                  <span className="text-gray-600">—</span>
+
+                  <span className="text-gray-600">{m.empleado_recibe?.nombre}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  // ---------------- FORMULARIO NORMAL (ADMIN / DEV) ----------------
   return (
     <PageTransition>
       <div className="w-full max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
@@ -136,7 +193,7 @@ export default function Entradas() {
             Registrar Entrada de Repuesto
           </h2>
 
-          {/* FECHA Y HORA DEL REGISTRO - VERSION VERDE */}
+          {/* FECHA */}
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
             <p className="text-xs text-green-700 font-semibold">FECHA Y HORA DEL REGISTRO</p>
             <p className="text-lg font-bold text-gray-900">
@@ -223,7 +280,7 @@ export default function Entradas() {
         >
           <h2 className="text-xl font-semibold mb-4">Historial de Movimientos</h2>
 
-          <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100">
             {historial.slice(0, 12).map((m, i) => (
               <motion.div
                 key={m.id}

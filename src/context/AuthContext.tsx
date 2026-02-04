@@ -21,32 +21,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadUserProfile = async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const session = sessionData.session;
+  const loadUser = async () => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData.session;
 
-    if (!session) {
+      if (!session) {
+        setUsuario(null);
+        setLoading(false);
+        return;
+      }
+
+      const { data: perfil, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error || !perfil) {
+        console.error("❌ Error obteniendo usuario:", error);
+        setUsuario(null);
+      } else {
+        setUsuario(perfil as Usuario);
+      }
+    } catch (e) {
+      console.error("❌ Error en loadUser:", e);
       setUsuario(null);
-      setLoading(false);
-      return;
     }
 
-    const { data: perfil } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    setUsuario(perfil ?? null);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadUserProfile();
+    const init = async () => {
+      await new Promise((r) => setTimeout(r, 200));
+      await loadUser();
+    };
 
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      loadUserProfile();
-    });
+    init();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!session) {
+          setUsuario(null);
+        } else {
+          await new Promise((r) => setTimeout(r, 200));
+          await loadUser();
+        }
+      }
+    );
 
     return () => {
       listener.subscription.unsubscribe();
@@ -54,8 +77,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUsuario(null);
+    try {
+      await supabase.auth.signOut();
+      setUsuario(null);
+    } catch (err) {
+      console.error("❌ Error cerrando sesión:", err);
+    }
   };
 
   return (

@@ -3,23 +3,21 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 
-import ModalNuevoRepuesto from "../components/ModalNuevoRepuesto";
+import ModalNuevoRepuesto from "./ModalNuevoRepuesto";
 import ModalNuevoEmpleado from "./ModalNuevoEmpleado";
 
 import {
   obtenerTotalRepuestos,
   obtenerStockBajo,
-  obtenerMovimientosHoy
+  obtenerMovimientosHoy,
 } from "../services/dashboardService";
-
-
 
 export default function Layout() {
   const { usuario, logout } = useAuth();
-  console.log("ROL USUARIO:",
-  usuario?.rol_usuario
-  );
 
+  console.log("ROL USUARIO:", usuario?.rol_usuario);
+
+  // ------------------- STATE -------------------
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalEmpleadoAbierto, setModalEmpleadoAbierto] = useState(false);
 
@@ -27,6 +25,7 @@ export default function Layout() {
   const [stockBajo, setStockBajo] = useState(0);
   const [movimientosHoy, setMovimientosHoy] = useState(0);
 
+  // ------------------- DASHBOARD DATA -------------------
   async function cargarDashboard() {
     setTotalRepuestos(await obtenerTotalRepuestos());
     setStockBajo(await obtenerStockBajo());
@@ -37,12 +36,16 @@ export default function Layout() {
     cargarDashboard();
   }, []);
 
+  // ------------------- ROLES -------------------
   const esAdmin =
-    usuario?.rol_usuario === "admin" || usuario?.rol_usuario === "dev";
+    usuario?.rol_usuario === "admin" ||
+    usuario?.rol_usuario === "dev";
 
-  // const esJefe = usuario?.rol_usuario === "jefe";
-
+  const esJefe = usuario?.rol_usuario === "jefe";
+  const esGerente = usuario?.rol_usuario === "gerente";
   const esViewer = usuario?.rol_usuario === "viewer";
+
+  // ------------------- RETURN -------------------
   return (
     <div className="min-h-screen bg-[#f5f7fa] flex flex-col">
 
@@ -55,8 +58,7 @@ export default function Layout() {
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2" strokeLinecap="round"
             strokeLinejoin="round" className="text-slate-800">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 
-            2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
             <polyline points="3.3 7.3 12 12 20.7 7.3" />
             <line x1="12" y1="22" x2="12" y2="12" />
           </svg>
@@ -64,20 +66,20 @@ export default function Layout() {
           <div>
             <h1 className="text-xl font-bold text-slate-800">Stock Mantenimiento</h1>
             <p className="text-sm text-gray-500 -mt-1">Control de inventario</p>
-          
-        {usuario?.nombre && (
-        <p className="text-sm text-gray-600 mt-1">
-          Hola, <span className="font-semibold text-gray-800">{usuario.nombre}</span> 👋
-        </p>
-      )}
-      </div>
+
+            {usuario?.nombre && (
+              <p className="text-sm text-gray-600 mt-1">
+                Hola, <span className="font-semibold text-gray-800">{usuario.nombre}</span> 👋
+              </p>
+            )}
+          </div>
         </div>
 
         {/* --------------------- NAV SUPERIOR --------------------- */}
         <nav className="flex items-center gap-3 flex-wrap justify-start md:justify-end">
 
           {/* Crear Empleado → SOLO ADMIN / DEV */}
-          {esAdmin && (
+          {esAdmin && !esViewer && !esGerente && (
             <>
               <TopButton
                 icon={userIcon()}
@@ -95,11 +97,10 @@ export default function Layout() {
           )}
 
           {/* Crear Repuesto → SOLO ADMIN / DEV */}
-          {esAdmin && (
+          {esAdmin && !esViewer && !esGerente && (
             <button
               onClick={() => setModalAbierto(true)}
-              className="px-4 py-2 rounded-lg flex items-center gap-2 border transition
-              bg-gray-600 text-white hover:bg-gray-700"
+              className="px-4 py-2 rounded-lg flex items-center gap-2 border transition bg-gray-600 text-white hover:bg-gray-700"
             >
               {packageIcon()}
               <span className="text-sm">Repuesto</span>
@@ -123,8 +124,7 @@ export default function Layout() {
       {/* ---------------- DASHBOARD CARDS ---------------- */}
       <section className="w-full px-4 md:px-6 mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          
-          {/* Total repuestos */}
+
           <DashboardCard
             title="TOTAL REPUESTOS"
             value={totalRepuestos}
@@ -133,7 +133,6 @@ export default function Layout() {
             icon={iconBox()}
           />
 
-          {/* Stock bajo */}
           <DashboardCard
             title="STOCK BAJO"
             value={stockBajo}
@@ -142,7 +141,6 @@ export default function Layout() {
             icon={iconWarning()}
           />
 
-          {/* Movimientos hoy */}
           <DashboardCard
             title="MOVIMIENTOS HOY"
             value={movimientosHoy}
@@ -161,13 +159,17 @@ export default function Layout() {
 
       {/* --------------------- MENÚ INFERIOR --------------------- */}
       <footer className="fixed bottom-0 left-0 w-full bg-white shadow-inner border-t 
-              flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
+        flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
 
-        {/* Salidas → visibles para todos */}
-        <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
+        {/* Salidas → ADMIN + JEFE */}
+        {(esAdmin || esJefe) && (
+          <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
+        )}
 
-        {/* Entradas → visibles para todos */}
-        <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
+        {/* Entradas → SOLO ADMIN */}
+        {esAdmin && (
+          <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
+        )}
 
         {/* Inventario → TODOS */}
         <MenuItem to="/inventario" icon={clipboardIcon()} label="Inventario" />
@@ -175,20 +177,19 @@ export default function Layout() {
         {/* Historial → TODOS */}
         <MenuItem to="/historial" icon={historyIcon()} label="Historial" />
 
-        {/* Empleados → solo admin/dev */}
-        {esAdmin && !esViewer && (
+        {/* Empleados → SOLO ADMIN */}
+        {esAdmin && (
           <MenuItem to="/empleados" icon={userIcon()} label="Empleados" />
         )}
 
       </footer>
 
-      {/* --------------------- MODAL NUEVO REPUESTO --------------------- */}
+      {/* MODALES */}
       <ModalNuevoRepuesto
         abierto={modalAbierto}
         onClose={() => setModalAbierto(false)}
         onCreated={() => {}}
       />
-
     </div>
   );
 }
@@ -199,7 +200,7 @@ function TopButton({ icon, label, primary, onClick }: any) {
     <button
       onClick={onClick}
       className={`px-4 py-2 rounded-lg flex items-center gap-2 border transition
-      ${primary ? "bg-gray-600 text-white hover:bg-gray-700"
+        ${primary ? "bg-gray-600 text-white hover:bg-gray-700"
         : "bg-gray-100 hover:bg-gray-200 text-slate-700"}`}
     >
       {icon}
@@ -214,7 +215,7 @@ function MenuItem({ to, icon, label }: any) {
       to={to}
       className={({ isActive }) =>
         `flex flex-col items-center gap-1 text-sm transition 
-        ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`
+          ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`
       }
     >
       {icon}
@@ -223,66 +224,30 @@ function MenuItem({ to, icon, label }: any) {
   );
 }
 
-/* ---------------------- TARJETAS MEJORADAS ---------------------- */
+/* ---------------------- TARJETAS ---------------------- */
 function DashboardCard({ title, value, subtitle, color, icon }: any) {
-  // 👇 Tailwind detectará estas clases porque están escritas literalmente
-  const bg =
-    color === "green"
-      ? "bg-green-100"
-      : color === "yellow"
-      ? "bg-yellow-100"
-      : "";
-
-  const border =
-    color === "green"
-      ? "border-green-300"
-      : color === "yellow"
-      ? "border-yellow-300"
-      : "";
-
-  const text =
-    color === "green"
-      ? "text-green-800"
-      : color === "yellow"
-      ? "text-yellow-800"
-      : "";
-
-  const iconBg =
-    color === "green"
-      ? "bg-green-300"
-      : color === "yellow"
-      ? "bg-yellow-300"
-      : "";
+  const bg = color === "green" ? "bg-green-100" : "bg-yellow-100";
+  const border = color === "green" ? "border-green-300" : "border-yellow-300";
+  const text = color === "green" ? "text-green-800" : "text-yellow-800";
+  const iconBg = color === "green" ? "bg-green-300" : "bg-yellow-300";
 
   return (
-    <div
-      className={`
-        ${bg} ${border}
+    <div className={`${bg} ${border}
         rounded-2xl p-6 flex justify-between items-center
-        border shadow-[0_4px_15px_rgba(0,0,0,0.07)]
-        transition-all duration-300 
-        hover:shadow-[0_6px_22px_rgba(0,0,0,0.12)]
-        hover:-translate-y-1
-      `}
+        border shadow-sm transition-all hover:shadow-md hover:-translate-y-1`}
     >
       <div>
         <h3 className={`text-sm font-semibold ${text}`}>{title}</h3>
-
-        <p className="text-4xl font-bold text-gray-900 mt-1">
-          {value}
-        </p>
-
+        <p className="text-4xl font-bold text-gray-900 mt-1">{value}</p>
         <p className={`${text} text-sm mt-1`}>{subtitle}</p>
       </div>
 
-      <div className={`${iconBg} p-4 rounded-2xl`}>
-        {icon}
-      </div>
+      <div className={`${iconBg} p-4 rounded-2xl`}>{icon}</div>
     </div>
   );
 }
 
-/* ---------------------- ICONOS SVG ---------------------- */
+/* ---------------------- ICONOS ---------------------- */
 function logoutIcon() {
   return (
     <svg width="22" height="22" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -292,7 +257,6 @@ function logoutIcon() {
     </svg>
   );
 }
-
 function userIcon() {
   return (
     <svg width="22" height="22" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -354,8 +318,8 @@ function iconBox() {
 function iconWarning() {
   return (
     <svg width="32" height="32" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-      <line x1="12" y1="9" x2="12" y2="13" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" strokeWidth="2" strokeLinecap="round" />
       <circle cx="12" cy="17" r="1" />
     </svg>
   );

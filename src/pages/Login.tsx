@@ -6,11 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Login() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState({ email: "", password: "" });
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +26,6 @@ export default function Login() {
       return;
     }
 
-    // Login OK → redirigir
     navigate("/inventario");
   }
 
@@ -46,25 +41,9 @@ export default function Login() {
         className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md"
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
+        transition={{ duration: 0.45 }}
       >
-        <motion.h1
-          className="text-2xl font-bold text-center mb-4"
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          Iniciar Sesión
-        </motion.h1>
-
-        <motion.p
-          className="text-center text-gray-600 mb-6"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          Accede a tu panel de inventario
-        </motion.p>
+        <h1 className="text-2xl font-bold text-center mb-4">Iniciar Sesión</h1>
 
         <label className="block text-sm font-semibold">Correo</label>
         <input
@@ -84,24 +63,18 @@ export default function Login() {
 
         <AnimatePresence>
           {errorMsg && (
-            <motion.p
-              className="text-red-500 text-sm mb-3 text-center"
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-            >
+            <motion.p className="text-red-500 text-sm mb-3 text-center">
               {errorMsg}
             </motion.p>
           )}
         </AnimatePresence>
 
-        <motion.button
+        <button
           type="submit"
-          whileTap={{ scale: 0.96 }}
-          className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm mt-2 transition"
+          className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm mt-2"
         >
           {loading ? "Ingresando..." : "Entrar"}
-        </motion.button>
+        </button>
       </motion.form>
     </motion.div>
   );
