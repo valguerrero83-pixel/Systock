@@ -21,9 +21,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ----------------------------
-  // Cargar usuario desde Supabase
-  // ----------------------------
+  // -------------------------------------------
+  // CARGAR USUARIO
+  // -------------------------------------------
   const loadUser = async () => {
     try {
       const { data } = await supabase.auth.getSession();
@@ -43,48 +43,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUsuario(perfil ?? null);
     } catch (error) {
-      console.error("Error en loadUser:", error);
+      console.error("⛔ loadUser error:", error);
       setUsuario(null);
     }
 
     setLoading(false);
   };
 
-  // ----------------------------
-  // Listener REAL sin romper nada
-  // ----------------------------
-useEffect(() => {
-  const init = async () => {
-    const { data } = await supabase.auth.getSession();
+  // -------------------------------------------
+  // LISTENER ESTABLE
+  // -------------------------------------------
+  useEffect(() => {
+    loadUser(); // carga inicial
 
-    if (data.session) {
-      await loadUser();
-    } else {
-      setUsuario(null);
-      setLoading(false);
-    }
-  };
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event) => {
+        console.log("🔔 AUTH EVENT:", event);
 
-  init();
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          await loadUser();
+        }
 
-  const { data: listener } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
-      console.log("AUTH EVENT:", event);
-
-      if (session) {
-        await loadUser();
-      } else {
-        setUsuario(null);
+        if (event === "SIGNED_OUT") {
+          setUsuario(null);
+        }
       }
-    }
-  );
+    );
 
-  return () => listener.subscription.unsubscribe();
-}, []);
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
-  // ----------------------------
-  // Logout manual
-  // ----------------------------
   const logout = async () => {
     await supabase.auth.signOut();
     setUsuario(null);

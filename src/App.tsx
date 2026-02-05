@@ -15,19 +15,13 @@ import Usuarios from "./pages/Usuarios";
 function ProtectedRoute() {
   const { usuario, loading } = useAuth();
 
-  // ⏳ Mientras cargamos la sesión (1 sola vez)
-  if (loading) {
-    return <div className="p-6 text-center">Cargando...</div>;
-  }
+  if (loading) return <div>Cargando...</div>;
 
-  // ❌ Si NO hay usuario → sesión expirada o inválida
-  if (!usuario) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!usuario) return <Navigate to="/login" replace />;
 
-  // ✔ Usuario cargado correctamente
   return <Outlet />;
 }
+
 
 export default function App() {
   return (
