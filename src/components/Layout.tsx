@@ -2,6 +2,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 import ModalNuevoRepuesto from "./ModalNuevoRepuesto";
 import ModalNuevoEmpleado from "./ModalNuevoEmpleado";
@@ -20,6 +21,7 @@ export default function Layout() {
   // ------------------- STATE -------------------
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalEmpleadoAbierto, setModalEmpleadoAbierto] = useState(false);
+  const location = useLocation();
 
   const [totalRepuestos, setTotalRepuestos] = useState(0);
   const [stockBajo, setStockBajo] = useState(0);
@@ -46,7 +48,7 @@ export default function Layout() {
   // 🔄 Actualizar al cambiar de página
   useEffect(() => {
     cargarDashboard();
-  }, [location.pathname]);
+  }, [location]);
 
   // 🔄 Actualizar cuando se registran entradas/salidas
   useEffect(() => {
