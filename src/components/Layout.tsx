@@ -1,5 +1,4 @@
-// src/components/Layout.tsx
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -15,6 +14,7 @@ import {
 
 export default function Layout() {
   const { usuario, logout } = useAuth();
+  const navigate = useNavigate();
 
   console.log("ROL USUARIO:", usuario?.rol_usuario);
 
@@ -37,7 +37,6 @@ export default function Layout() {
   useEffect(() => {
     cargarDashboard(); // carga inicial
 
-    // 🔄 Actualización automática cada 5 segundos
     const intervalo = setInterval(() => {
       cargarDashboard();
     }, 5000);
@@ -45,17 +44,16 @@ export default function Layout() {
     return () => clearInterval(intervalo);
   }, []);
 
-  // 🔄 Actualizar al cambiar de página
   useEffect(() => {
     cargarDashboard();
   }, [location]);
 
-  // 🔄 Actualizar cuando se registran entradas/salidas
   useEffect(() => {
     const listener = () => cargarDashboard();
     window.addEventListener("dashboard-update", listener);
     return () => window.removeEventListener("dashboard-update", listener);
   }, []);
+
   // ------------------- ROLES -------------------
   const esAdmin =
     usuario?.rol_usuario === "admin" ||
@@ -75,10 +73,11 @@ export default function Layout() {
 
         {/* LOGO + TÍTULO */}
         <div className="flex items-center gap-3">
-        <img 
-        src="/favicon.png" 
-        alt="Systock logo" 
-        className="w-8 h-8 object-contain rounded-md" />
+          <img 
+            src="/favicon.png" 
+            alt="Systock logo" 
+            className="w-8 h-8 object-contain rounded-md" 
+          />
 
           <div>
             <h1 className="text-xl font-bold text-slate-800">Systock</h1>
@@ -128,7 +127,7 @@ export default function Layout() {
           <button
             onClick={async () => {
               await logout();
-              window.location.href = "/login";
+              navigate("/login", { replace: true });
             }}
             className="p-2 rounded-md text-red-600 hover:bg-red-100 transition"
           >
@@ -178,23 +177,18 @@ export default function Layout() {
       <footer className="fixed bottom-0 left-0 w-full bg-white shadow-inner border-t 
         flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
 
-        {/* Salidas → ADMIN + JEFE */}
         {(esAdmin || esJefe) && (
           <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
         )}
 
-        {/* Entradas → SOLO ADMIN */}
         {esAdmin && (
           <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
         )}
 
-        {/* Inventario → TODOS */}
         <MenuItem to="/inventario" icon={clipboardIcon()} label="Inventario" />
 
-        {/* Historial → TODOS */}
         <MenuItem to="/historial" icon={historyIcon()} label="Historial" />
 
-        {/* Empleados → SOLO ADMIN */}
         {esAdmin && (
           <MenuItem to="/empleados" icon={userIcon()} label="Empleados" />
         )}
@@ -274,6 +268,7 @@ function logoutIcon() {
     </svg>
   );
 }
+
 function userIcon() {
   return (
     <svg width="22" height="22" stroke="currentColor" fill="none" viewBox="0 0 24 24">

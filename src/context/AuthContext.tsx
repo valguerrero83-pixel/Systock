@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
 type Usuario = {
@@ -22,9 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // -------------------------------------------
-  // CARGAR USUARIO
+  // CARGAR USUARIO (memoizado)
   // -------------------------------------------
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     try {
       const { data } = await supabase.auth.getSession();
       const session = data.session;
@@ -48,10 +48,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setLoading(false);
-  };
+  }, []);
 
   // -------------------------------------------
-  // LISTENER ESTABLE
+  // LISTENER AUTENTICACIÓN
   // -------------------------------------------
   useEffect(() => {
     loadUser(); // carga inicial
@@ -70,10 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+    return () => listener.subscription.unsubscribe();
+  }, [loadUser]);
 
   const logout = async () => {
     await supabase.auth.signOut();

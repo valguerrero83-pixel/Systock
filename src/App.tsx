@@ -10,47 +10,39 @@ import Login from "./pages/Login";
 import Empleados from "./pages/Empleados";
 import Usuarios from "./pages/Usuarios";
 
-// 🚨 YA NO USAMOS logout() AQUÍ ❌
-// Porque destruir la sesión rompe TODO el refresco de tokens.
 function ProtectedRoute() {
   const { usuario, loading } = useAuth();
 
   if (loading) return <div>Cargando...</div>;
-
   if (!usuario) return <Navigate to="/login" replace />;
 
   return <Outlet />;
 }
 
-
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <Routes>
-
           {/* PÚBLICA */}
           <Route path="/login" element={<Login />} />
 
           {/* PROTEGIDAS */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
-
               <Route path="/entradas" element={<Entradas />} />
               <Route path="/salidas" element={<Salidas />} />
               <Route path="/inventario" element={<Inventario />} />
               <Route path="/historial" element={<Historial />} />
               <Route path="/empleados" element={<Empleados />} />
               <Route path="/usuarios" element={<Usuarios />} />
-
             </Route>
           </Route>
 
           {/* DEFAULT */}
           <Route path="*" element={<Navigate to="/inventario" replace />} />
-
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
