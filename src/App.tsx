@@ -1,3 +1,4 @@
+// App.tsx
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
@@ -13,7 +14,8 @@ import Usuarios from "./pages/Usuarios";
 function ProtectedRoute() {
   const { usuario, loading } = useAuth();
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <div className="p-6">Cargando...</div>;
+
   if (!usuario) return <Navigate to="/login" replace />;
 
   return <Outlet />;
@@ -21,8 +23,8 @@ function ProtectedRoute() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
+    <AuthProvider>
+      <BrowserRouter>
         <Routes>
           {/* PÚBLICA */}
           <Route path="/login" element={<Login />} />
@@ -42,7 +44,7 @@ export default function App() {
           {/* DEFAULT */}
           <Route path="*" element={<Navigate to="/inventario" replace />} />
         </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
