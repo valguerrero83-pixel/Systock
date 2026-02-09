@@ -1,86 +1,116 @@
 import { supabase } from "../lib/supabase";
-import type {
-  Repuesto,
-  Empleado,
-  StockActual,
-  CrearSalidaDTO,
-  Movimiento
-} from "../types/index";
 
-export async function obtenerRepuestos(): Promise<Repuesto[]> {
+/* =============================
+   OBTENER REPUESTOS
+==============================*/
+export async function getRepuestos() {
   const { data, error } = await supabase
     .from("repuestos")
-    .select("id, codigo_corto, nombre, unidad")
-    .order("nombre");
+    .select("id, nombre, unidad, stock_actual");
 
-  if (error) throw error;
-  return data as Repuesto[];
+  if (error) {
+    console.error("Error cargando repuestos:", error);
+    return [];
+  }
+
+  return data || [];
 }
 
-export async function obtenerEmpleados(): Promise<Empleado[]> {
+/* =============================
+   OBTENER EMPLEADOS
+==============================*/
+export async function getEmpleados() {
   const { data, error } = await supabase
     .from("empleados")
-    .select("id, nombre")
-    .order("nombre");
+    .select("id, nombre");
 
-  if (error) throw error;
-  return data as Empleado[];
+  if (error) {
+    console.error("Error cargando empleados:", error);
+    return [];
+  }
+
+  return data || [];
 }
 
-export async function obtenerStockActual(): Promise<StockActual[]> {
-  const { data, error } = await supabase
-    .from("stock_actual")
-    .select("repuesto_id, stock");
+/* =============================
+   CREAR SALIDA
+==============================*/
+export async function crearSalida({
+  repuesto_id,
+  cantidad,
+  entregado_por,
+  recibido_por,
+  usuario_id,
+  unidad
+}: any) {
+  // 1. Verificar stock actual
+  const { data: repuesto } = await supabase
+    .from("repuestos")
+    .select("stock_actual")
+    .eq("id", repuesto_id)
+    .single();
 
-  if (error) throw error;
-  return data as StockActual[];
-}
+  if (!repuesto) {
+    return { error: "Repuesto no encontrado" };
+  }
 
-export async function registrarSalida(payload: CrearSalidaDTO): Promise<void> {
-  const { error } = await supabase.from("movimientos").insert({
-    tipo: "SALIDA",
-    repuesto_id: payload.repuesto_id,
-    cantidad: payload.cantidad,
-    empleado_entrega_id: payload.entregado_por,
-    empleado_recibe_id: payload.recibido_por,
-    notas: payload.notas ?? "",
-    registrado_por: payload.usuario_id,
+  if (cantidad > repuesto.stock_actual) {
+    return { error: "No puedes sacar más de lo que hay en stock" };
+  }
+
+  // 2. Guardar movimiento
+  const { error: movError } = await supabase.from("movimientos").insert({
+    repuesto_id,
+    cantidad: -cantidad, // salida siempre va en negativo
+    tipo: "Salida",
+    entregado_por,
+    recibido_por,
+    usuario_id,
+    created_at: new Date().toISOString(),
+    notas: `${cantidad} ${unidad} salieron del inventario`
   });
 
-  if (error) throw error;
+  if (movError) {
+    return { error: movError.message };
+  }
+
+  // 3. Actualizar inventario
+  const { error: updateError } = await supabase
+    .from("repuestos")
+    .update({
+      stock_actual: repuesto.stock_actual - cantidad
+    })
+    .eq("id", repuesto_id);
+
+  if (updateError) {
+    return { error: updateError.message };
+  }
+
+  return { success: true };
 }
 
-export async function obtenerHistorialSalidas(): Promise<Movimiento[]> {
+/* =============================
+   HISTORIAL DE SALIDAS
+==============================*/
+export async function getHistorialSalidas() {
   const { data, error } = await supabase
     .from("movimientos")
     .select(`
       id,
-      tipo,
       cantidad,
       created_at,
-      repuestos:repuesto_id (
-        id,
-        nombre,
-        unidad
-      ),
-      empleado_entrega:empleado_entrega_id (
-        id,
-        nombre
-      ),
-      empleado_recibe:empleado_recibe_id (
-        id,
-        nombre
-      )
+      repuestos:repuesto_id (nombre, unidad),
+      entregado_por (nombre),
+      recibido_por (nombre)
     `)
-    .eq("tipo", "SALIDA")
-    .order("created_at", { ascending: false });
+    .eq("tipo", "Salida")
+    .order("created_at", { ascending: false })
+    .limit(20);
 
-  if (error) throw error;
+  if (error) {
+    console.error("Error historial:", error);
+    return [];
+  }
 
-  return (data ?? []).map((m: any) => ({
-    ...m,
-    repuestos: m.repuestos ?? null,
-    empleado_entrega: m.empleado_entrega ?? null,
-    empleado_recibe: m.empleado_recibe ?? null,
-  })) as Movimiento[];
+  return data || [];
 }
