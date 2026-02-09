@@ -21,12 +21,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ----------------------------------
-  // CARGAR USUARIO DESDE TOKEN
-  // ----------------------------------
-  const loadUser = async () => {
+  // ---------------------------
+  // CARGAR PERFIL COMPLETO
+  // ---------------------------
+  const cargarPerfil = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
 
       if (!session) {
         setUsuario(null);
@@ -34,34 +35,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data: perfil } = await supabase
+      const { data: perfil, error } = await supabase
         .from("users")
         .select("*")
         .eq("id", session.user.id)
         .single();
 
-      setUsuario(perfil ?? null);
-    } catch (e) {
-      console.error("Auth error:", e);
+      if (error) {
+        console.error("Error cargando perfil:", error);
+        setUsuario(null);
+      } else {
+        setUsuario(perfil);
+      }
+
+    } catch (err) {
+      console.error("Auth error:", err);
       setUsuario(null);
     }
 
     setLoading(false);
   };
 
-
-  // ----------------------------------
-  // LISTENER REAL
-  // ----------------------------------
+  // ---------------------------
+  // ON MOUNT
+  // ---------------------------
   useEffect(() => {
-    loadUser();
+    cargarPerfil();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event) => {
         console.log("AUTH EVENT:", event);
 
         if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          await loadUser();
+          setLoading(true);
+          await cargarPerfil();
         }
 
         if (event === "SIGNED_OUT") {
@@ -73,10 +80,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  // ---------------------------
+  // LOGOUT
+  // ---------------------------
   const logout = async () => {
     await supabase.auth.signOut();
     setUsuario(null);
   };
+
+  // ---------------------------
+  // NO MOSTRAR LAYOUT HASTA CARGAR PERFIL
+  // ---------------------------
+  if (loading) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center text-gray-500">
+        Cargando...
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ usuario, loading, logout }}>
