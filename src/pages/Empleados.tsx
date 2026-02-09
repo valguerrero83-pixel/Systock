@@ -21,7 +21,6 @@ export default function Empleados() {
   const cargarEmpleados = async () => {
     setLoading(true);
 
-    // Traemos empleados
     const { data: lista, error } = await supabase
       .from("empleados")
       .select("id, nombre, cargo");
@@ -32,7 +31,7 @@ export default function Empleados() {
       return;
     }
 
-    // Movimientos reales
+    // Trae los movimientos donde aparece el empleado
     const { data: movimientos } = await supabase
       .from("movimientos")
       .select("entregado_por, recibido_por");
@@ -64,10 +63,10 @@ export default function Empleados() {
   }, []);
 
   // ==========================================
-  // 🔴 ELIMINAR EMPLEADO **SOLO SI NO TIENE MOVS**
+  // 🔴 ELIMINAR EMPLEADO DE VERDAD
   // ==========================================
   const eliminarEmpleado = async (id: string) => {
-    // Revisar movimientos
+    // Verificar si tiene movimientos
     const { data: movs, error: movErr } = await supabase
       .from("movimientos")
       .select("id")
@@ -79,33 +78,26 @@ export default function Empleados() {
     }
 
     if (movs.length > 0) {
-      alert("❌ No puedes eliminar un empleado con movimientos.");
+      alert("❌ No puedes eliminar este empleado porque tiene movimientos.");
       return;
     }
 
-    // Eliminar si no tiene movimientos
-    const { error } = await supabase.from("empleados").delete().eq("id", id);
+    // Eliminar en Supabase
+    const { error } = await supabase
+      .from("empleados")
+      .delete()
+      .eq("id", id);
 
     if (error) {
+      console.error(error);
       alert("Error eliminando empleado.");
       return;
     }
 
     alert("Empleado eliminado.");
+
+    // Recargar la lista
     cargarEmpleados();
-  };
-
-  // ==========================================
-  // 🟡 EDITAR EMPLEADO **SOLO SI NO TIENE MOVS**
-  // (Aquí solo mostramos alerta porque no sé tu modal)
-  // ==========================================
-  const editarEmpleado = async (empleado: Empleado) => {
-    if (empleado.total_movs > 0) {
-      alert("❌ Este empleado no se puede editar porque tiene movimientos.");
-      return;
-    }
-
-    alert("👉 Aquí iría tu modal de edición.");
   };
 
   return (
@@ -136,34 +128,17 @@ export default function Empleados() {
               <td className="text-center">
                 {(usuario?.rol_usuario === "dev" ||
                   usuario?.rol_usuario === "admin") && (
-                  <div className="flex gap-3 justify-center">
-
-                    {/* EDITAR */}
-                    <button
-                      onClick={() => editarEmpleado(e)}
-                      disabled={e.total_movs > 0}
-                      className={`${
-                        e.total_movs > 0
-                          ? "text-gray-400 cursor-not-allowed"
-                          : "text-blue-600 hover:underline"
-                      }`}
-                    >
-                      Editar
-                    </button>
-
-                    {/* ELIMINAR */}
-                    <button
-                      onClick={() => eliminarEmpleado(e.id)}
-                      disabled={e.total_movs > 0}
-                      className={`${
-                        e.total_movs > 0
-                          ? "text-gray-400 cursor-not-allowed"
-                          : "text-red-600 hover:underline"
-                      }`}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => eliminarEmpleado(e.id)}
+                    disabled={e.total_movs > 0}
+                    className={`${
+                      e.total_movs > 0
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-red-600 hover:underline"
+                    }`}
+                  >
+                    Eliminar
+                  </button>
                 )}
 
                 {(usuario?.rol_usuario === "viewer" ||
