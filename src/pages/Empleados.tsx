@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 interface Empleado {
   id: string;
   nombre: string;
-  cargo: string; // ← CORRECTO
+  cargo: string;
   total_movs: number;
 }
 
@@ -18,28 +18,43 @@ export default function Empleados() {
   const cargarEmpleados = async () => {
     setLoading(true);
 
-    const { data, error } = await supabase
+    // Traemos empleados
+    const { data: lista, error } = await supabase
       .from("empleados")
-      .select(`
-        id,
-        nombre,
-        cargo,      -- ← CAMPO CORRECTO
-        movimientos:movimientos(count)
-      `);
+      .select("id, nombre, cargo");
 
     if (error) {
-      console.error(error);
+      console.error("Error cargando empleados:", error);
+      setLoading(false);
       return;
     }
 
-    const formato = data.map((e: any) => ({
+    // Ahora traemos movimientos reales usando entregado_por y recibido_por
+    const { data: movimientos } = await supabase
+      .from("movimientos")
+      .select("entregado_por, recibido_por");
+
+    const movCount: Record<string, number> = {};
+
+    // Contamos todos los movimientos por empleado
+    movimientos?.forEach((m) => {
+      if (m.entregado_por) {
+        movCount[m.entregado_por] = (movCount[m.entregado_por] || 0) + 1;
+      }
+      if (m.recibido_por) {
+        movCount[m.recibido_por] = (movCount[m.recibido_por] || 0) + 1;
+      }
+    });
+
+    // Formamos el array final
+    const empleadosFormateados = lista.map((e) => ({
       id: e.id,
       nombre: e.nombre,
       cargo: e.cargo ?? "—",
-      total_movs: e.movimientos?.[0]?.count ?? 0,
+      total_movs: movCount[e.id] || 0
     }));
 
-    setEmpleados(formato);
+    setEmpleados(empleadosFormateados);
     setLoading(false);
   };
 
@@ -72,7 +87,6 @@ export default function Empleados() {
               <td>{e.cargo}</td>
               <td className="text-center">{e.total_movs}</td>
 
-              {/* ACCIONES SEGÚN ROL */}
               <td className="text-center">
                 {(usuario?.rol_usuario === "dev" ||
                   usuario?.rol_usuario === "admin") && (
@@ -81,7 +95,6 @@ export default function Empleados() {
                       Editar
                     </button>
 
-                    {/* ELIMINAR SOLO SI NO TIENE MOVIMIENTOS */}
                     {e.total_movs === 0 && (
                       <button className="text-red-600 hover:underline">
                         Eliminar
@@ -90,7 +103,6 @@ export default function Empleados() {
                   </div>
                 )}
 
-                {/* VIEWER / JEFE / GERENTE */}
                 {(usuario?.rol_usuario === "viewer" ||
                   usuario?.rol_usuario === "jefe" ||
                   usuario?.rol_usuario === "gerente") && (
