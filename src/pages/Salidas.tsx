@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+
 import {
   getRepuestos,
   getEmpleados,
@@ -6,189 +8,335 @@ import {
   getHistorialSalidas
 } from "../services/salidasService";
 
+import PageTransition from "../components/PageTransition.bak";
 import { motion } from "framer-motion";
-import { useAuth } from "../context/AuthContext";
+
+/* ===============================
+      TOAST
+=============================== */
+const Toast = ({ mensaje }: { mensaje: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 30 }}
+    className="fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-3 rounded-xl"
+  >
+    {mensaje}
+  </motion.div>
+);
 
 export default function Salidas() {
   const { usuario } = useAuth();
 
+  const rol = usuario?.rol_usuario;
+  const puedeRegistrar = rol === "admin" || rol === "dev";
+  const esModoLectura = !puedeRegistrar;
+
+  // STATE
   const [repuestos, setRepuestos] = useState<any[]>([]);
   const [empleados, setEmpleados] = useState<any[]>([]);
-  const [selectedRepuesto, setSelectedRepuesto] = useState<any | null>(null);
-  const [cantidad, setCantidad] = useState<string>("");
-  const [entregadoPor, setEntregadoPor] = useState<string>("");
-  const [recibidoPor, setRecibidoPor] = useState<string>("");
   const [historial, setHistorial] = useState<any[]>([]);
+  const [toast, setToast] = useState("");
+
+  const [form, setForm] = useState({
+    repuesto_id: "",
+    cantidad: "",
+    entregado_por: "",
+    recibido_por: "",
+  });
+
+  const repuestoSeleccionado = repuestos.find((r) => r.id === form.repuesto_id);
+  const stockDisponible = repuestoSeleccionado?.stock_actual ?? null;
+  const unidad = repuestoSeleccionado?.unidad ?? "";
 
   useEffect(() => {
-    async function load() {
-      setRepuestos(await getRepuestos());
-      setEmpleados(await getEmpleados());
-      setHistorial(await getHistorialSalidas());
-    }
-    load();
+    cargarDatos();
   }, []);
 
-  // VALIDACIÓN EN TIEMPO REAL
-  const cantidadNum = Number(cantidad);
-  const stockDisponible = selectedRepuesto?.stock_actual ?? 0;
-  const cantidadInvalida =
-    isNaN(cantidadNum) ||
-    cantidadNum <= 0 ||
-    cantidadNum > stockDisponible;
+  async function cargarDatos() {
+    try {
+      const [rep, emp, hist] = await Promise.all([
+        getRepuestos(),
+        getEmpleados(),
+        getHistorialSalidas(),
+      ]);
 
-  const handleSalida = async () => {
-    if (!selectedRepuesto || !entregadoPor || !recibidoPor) {
-      alert("Completa todos los campos");
-      return;
+      setRepuestos(rep);
+      setEmpleados(emp);
+      setHistorial(hist);
+    } catch {
+      showToast("Error cargando datos.");
     }
+  }
 
-    if (cantidadInvalida) {
-      alert("Cantidad inválida o mayor al stock disponible");
-      return;
-    }
-
-    const resp = await crearSalida({
-      repuesto_id: selectedRepuesto.id,
-      cantidad: cantidadNum,
-      entregado_por: entregadoPor,
-      recibido_por: recibidoPor,
-      usuario_id: (usuario as any).id,
-      unidad: selectedRepuesto.unidad
-    });
-
-    if (resp.error) {
-      alert(resp.error);
-      return;
-    }
-
-    alert("Salida registrada correctamente");
-
-    setRepuestos(await getRepuestos());
-    setHistorial(await getHistorialSalidas());
-    setCantidad("");
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 3000);
   };
 
-  return (
-    <motion.div className="p-6 bg-white rounded-xl shadow max-w-4xl mx-auto mt-8">
-      <h2 className="text-xl font-semibold mb-4">Registrar Salida</h2>
+  function handleChange(e: any) {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+  }
 
-      {/* REPUESTO */}
-      <div className="mb-3">
-        <label>Repuesto</label>
-        <select
-          className="w-full border p-2 rounded"
-          onChange={(e) => {
-            const rep = repuestos.find((r) => r.id === e.target.value);
-            setSelectedRepuesto(rep || null);
-            setCantidad("");
-          }}
-        >
-          <option value="">Seleccione un repuesto</option>
-          {repuestos.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
+  async function handleSubmit() {
+    if (!puedeRegistrar) return;
 
-      {selectedRepuesto && (
-        <p className="text-sm text-gray-600 mb-2">
-          Stock actual:{" "}
-          <b>{selectedRepuesto.stock_actual}</b>{" "}
-          {selectedRepuesto.unidad}
-        </p>
-      )}
+    if (
+      !form.repuesto_id ||
+      !form.cantidad ||
+      !form.entregado_por ||
+      !form.recibido_por
+    ) {
+      showToast("Completa todos los campos.");
+      return;
+    }
 
-      {/* CANTIDAD */}
-      <div className="mb-3">
-        <label>Cantidad</label>
-        <input
-          type="text"
-          className="w-full border p-2 rounded"
-          placeholder="Ingresa la cantidad"
-          value={cantidad}
-          onChange={(e) => setCantidad(e.target.value)}
-        />
-        {cantidad !== "" && cantidadInvalida && (
-          <p className="text-red-600 text-xs mt-1">
-            Cantidad mayor al stock o inválida
+    const cantidadNum = Number(form.cantidad);
+
+    if (isNaN(cantidadNum) || cantidadNum <= 0) {
+      showToast("Cantidad inválida.");
+      return;
+    }
+
+    if (cantidadNum > stockDisponible) {
+      showToast("No puedes sacar más de lo disponible.");
+      return;
+    }
+
+    try {
+      await crearSalida({
+        repuesto_id: form.repuesto_id,
+        cantidad: cantidadNum,
+        entregado_por: form.entregado_por,
+        recibido_por: form.recibido_por,
+        usuario_id: (usuario as any).id,
+        unidad,
+      });
+
+      showToast("Salida registrada ✓");
+
+      setForm({
+        repuesto_id: "",
+        cantidad: "",
+        entregado_por: "",
+        recibido_por: "",
+      });
+
+      cargarDatos();
+    } catch {
+      showToast("Error al registrar salida.");
+    }
+  }
+
+  /* ===============================
+        MODO SOLO LECTURA
+  =============================== */
+  if (esModoLectura) {
+    return (
+      <PageTransition>
+        <div className="max-w-7xl mx-auto mt-8 px-4">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Salidas (solo lectura)
+          </h2>
+
+          <p className="text-gray-600 mb-6">
+            Tu rol no permite registrar salidas, pero puedes ver el historial.
           </p>
-        )}
-      </div>
 
-      {/* ENTREGADO POR */}
-      <div className="mb-3">
-        <label>Entregado por</label>
-        <select
-          className="w-full border p-2 rounded"
-          onChange={(e) => setEntregadoPor(e.target.value)}
-        >
-          <option value="">Seleccione</option>
-          {empleados.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* RECIBIDO POR */}
-      <div className="mb-4">
-        <label>Recibido por</label>
-        <select
-          className="w-full border p-2 rounded"
-          onChange={(e) => setRecibidoPor(e.target.value)}
-        >
-          <option value="">Seleccione</option>
-          {empleados.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* BOTÓN */}
-      <button
-        disabled={cantidadInvalida || !selectedRepuesto}
-        className={`w-full py-2 rounded text-white ${
-          cantidadInvalida || !selectedRepuesto
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
-        }`}
-        onClick={handleSalida}
-      >
-        Registrar salida
-      </button>
-
-      {/* HISTORIAL */}
-      <h2 className="text-xl font-semibold mt-8 mb-3">Historial de Salidas</h2>
-
-      <div className="max-h-72 overflow-y-auto pr-2">
-        {historial.slice(0, 5).map((mov) => (
-          <div
-            key={mov.id}
-            className="border p-3 rounded mb-3 bg-gray-50 text-sm shadow-sm"
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
           >
-            <p>
-              <b>{mov.repuestos?.nombre}</b>{" "}
-              <span className="text-red-600 ml-2">
-                -{Math.abs(mov.cantidad)} {mov.repuestos?.unidad}
-              </span>
-            </p>
+            <h2 className="text-xl font-semibold mb-4">
+              Historial de Salidas
+            </h2>
 
-            <p className="text-xs text-gray-600 mt-1">
-              {new Date(mov.created_at).toLocaleString()}
-            </p>
+            <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              {historial.slice(0, 12).map((m, i) => (
+                <motion.div
+                  key={m.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="py-4 grid grid-cols-5 text-sm items-center gap-2"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {new Date(m.created_at).toLocaleDateString("es-CO")}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(m.created_at).toLocaleTimeString("es-CO")}
+                    </p>
+                  </div>
 
-            <p className="text-xs mt-1">
-              {mov.entregado_por?.nombre} → {mov.recibido_por?.nombre}
+                  <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
+                    -{Math.abs(m.cantidad)} {m.repuestos?.unidad}
+                  </span>
+
+                  <span className="font-medium">{m.repuestos?.nombre}</span>
+
+                  <span className="text-gray-600">{m.entregado_por?.nombre}</span>
+
+                  <span className="text-gray-600">{m.recibido_por?.nombre}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  /* ===============================
+        FORMULARIO NORMAL
+=============================== */
+  return (
+    <PageTransition>
+      <div className="w-full max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
+        
+        {/* FORM */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
+        >
+          <h2 className="text-xl font-semibold mb-4">
+            Registrar Salida de Repuesto
+          </h2>
+
+          {/* Fecha */}
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+            <p className="text-xs text-red-700 font-semibold">
+              FECHA Y HORA DEL REGISTRO
+            </p>
+            <p className="text-lg font-bold text-gray-900">
+              {new Date().toLocaleDateString("es-CO")} •{" "}
+              {new Date().toLocaleTimeString("es-CO", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
             </p>
           </div>
-        ))}
+
+          {/* Repuesto */}
+          <label className="text-sm font-semibold">Repuesto</label>
+          <select
+            name="repuesto_id"
+            value={form.repuesto_id}
+            onChange={handleChange}
+            className="w-full mt-1 py-2 px-3 border border-gray-200 rounded-lg mb-2"
+          >
+            <option value="">Buscar repuesto...</option>
+            {repuestos.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.nombre}
+              </option>
+            ))}
+          </select>
+
+          {stockDisponible !== null && (
+            <p className="text-xs text-gray-600 mb-4">
+              Disponible: <b>{stockDisponible}</b> {unidad}
+            </p>
+          )}
+
+          {/* Cantidad */}
+          <label className="text-sm font-semibold">Cantidad a sacar</label>
+          <input
+            type="text"
+            name="cantidad"
+            value={form.cantidad}
+            onChange={handleChange}
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-4"
+            placeholder="Ej: 5"
+          />
+
+          {/* Entregado por */}
+          <label className="text-sm font-semibold">Entregado por</label>
+          <select
+            name="entregado_por"
+            value={form.entregado_por}
+            onChange={handleChange}
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-4"
+          >
+            <option value="">Seleccione...</option>
+            {empleados.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nombre}
+              </option>
+            ))}
+          </select>
+
+          {/* Recibido por */}
+          <label className="text-sm font-semibold">Recibido por</label>
+          <select
+            name="recibido_por"
+            value={form.recibido_por}
+            onChange={handleChange}
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-4"
+          >
+            <option value="">Seleccione...</option>
+            {empleados.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nombre}
+              </option>
+            ))}
+          </select>
+
+          {/* Botón */}
+          <button
+            onClick={handleSubmit}
+            className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg shadow-sm transition"
+          >
+            Registrar Salida
+          </button>
+        </motion.div>
+
+        {/* HISTORIAL */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
+        >
+          <h2 className="text-xl font-semibold mb-4">Historial de Salidas</h2>
+
+          <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100">
+            {historial.slice(0, 12).map((m, i) => (
+              <motion.div
+                key={m.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="py-4 grid grid-cols-5 text-sm items-center gap-2"
+              >
+                <div>
+                  <p className="font-semibold text-gray-800">
+                    {new Date(m.created_at).toLocaleDateString("es-CO")}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(m.created_at).toLocaleTimeString("es-CO")}
+                  </p>
+                </div>
+
+                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
+                  -{Math.abs(m.cantidad)} {m.repuestos?.unidad}
+                </span>
+
+                <span className="font-medium">{m.repuestos?.nombre}</span>
+
+                <span className="text-gray-600">{m.entregado_por?.nombre}</span>
+
+                <span className="text-gray-600">{m.recibido_por?.nombre}</span>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {toast && <Toast mensaje={toast} />}
       </div>
-    </motion.div>
+    </PageTransition>
   );
 }
