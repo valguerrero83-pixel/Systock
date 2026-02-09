@@ -15,9 +15,6 @@ export default function Empleados() {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ==========================================
-  // 🔵 CARGAR EMPLEADOS + MOVIMIENTOS
-  // ==========================================
   const cargarEmpleados = async () => {
     setLoading(true);
 
@@ -31,7 +28,6 @@ export default function Empleados() {
       return;
     }
 
-    // Trae los movimientos donde aparece el empleado
     const { data: movimientos } = await supabase
       .from("movimientos")
       .select("entregado_por, recibido_por");
@@ -62,27 +58,24 @@ export default function Empleados() {
     cargarEmpleados();
   }, []);
 
-  // ==========================================
-  // 🔴 ELIMINAR EMPLEADO DE VERDAD
-  // ==========================================
   const eliminarEmpleado = async (id: string) => {
-    // Verificar si tiene movimientos
+    // Revisar movimientos con UUID entre comillas
     const { data: movs, error: movErr } = await supabase
       .from("movimientos")
       .select("id")
-      .or(`entregado_por.eq.${id},recibido_por.eq.${id}`);
+      .or(`entregado_por.eq."${id}",recibido_por.eq."${id}"`);
 
     if (movErr) {
+      console.error(movErr);
       alert("Error verificando movimientos.");
       return;
     }
 
     if (movs.length > 0) {
-      alert("❌ No puedes eliminar este empleado porque tiene movimientos.");
+      alert("❌ No puedes eliminar un empleado con movimientos.");
       return;
     }
 
-    // Eliminar en Supabase
     const { error } = await supabase
       .from("empleados")
       .delete()
@@ -94,9 +87,7 @@ export default function Empleados() {
       return;
     }
 
-    alert("Empleado eliminado.");
-
-    // Recargar la lista
+    alert("Empleado eliminado correctamente.");
     cargarEmpleados();
   };
 
@@ -128,17 +119,21 @@ export default function Empleados() {
               <td className="text-center">
                 {(usuario?.rol_usuario === "dev" ||
                   usuario?.rol_usuario === "admin") && (
-                  <button
-                    onClick={() => eliminarEmpleado(e.id)}
-                    disabled={e.total_movs > 0}
-                    className={`${
-                      e.total_movs > 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-red-600 hover:underline"
-                    }`}
-                  >
-                    Eliminar
-                  </button>
+                  <div className="flex gap-3 justify-center">
+
+                    {/* SOLO ELIMINAR */}
+                    <button
+                      onClick={() => eliminarEmpleado(e.id)}
+                      disabled={e.total_movs > 0}
+                      className={`${
+                        e.total_movs > 0
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-red-600 hover:underline"
+                      }`}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 )}
 
                 {(usuario?.rol_usuario === "viewer" ||
