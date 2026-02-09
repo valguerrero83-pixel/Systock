@@ -21,9 +21,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // --------------------------------------
+  // CARGAR USUARIO CORRECTAMENTE
+  // --------------------------------------
   const loadUser = async () => {
-    const { data } = await supabase.auth.getSession();
-    const session = data.session;
+    setLoading(true);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData.session;
 
     if (!session) {
       setUsuario(null);
@@ -41,11 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   };
 
+  // --------------------------------------
+  // LISTENER DE AUTENTICACIÓN
+  // --------------------------------------
   useEffect(() => {
     loadUser();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async () => {
-      await loadUser();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      loadUser();
     });
 
     return () => listener.subscription.unsubscribe();
@@ -55,6 +62,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setUsuario(null);
   };
+
+  // --------------------------------------
+  // 🚨 BLOQUEAR RENDER HASTA TENER USUARIO
+  // --------------------------------------
+  if (loading) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <p className="text-gray-600">Cargando...</p>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ usuario, loading, logout }}>
