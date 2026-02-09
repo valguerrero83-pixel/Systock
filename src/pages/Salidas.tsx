@@ -39,10 +39,11 @@ export default function Salidas() {
   const [toast, setToast] = useState("");
 
   const [form, setForm] = useState({
-    repuesto_id: "",
-    cantidad: "",
-    entregado_por: "",
-    recibido_por: "",
+  repuesto_id: "",
+  cantidad: "",
+  entregado_por: "",
+  recibido_por: "",
+  notas: "",
   });
 
   const repuestoSeleccionado = repuestos.find((r) => r.id === form.repuesto_id);
@@ -79,55 +80,58 @@ export default function Salidas() {
     setForm({ ...form, [name]: value });
   }
 
-  async function handleSubmit() {
-    if (!puedeRegistrar) return;
+    async function handleSubmit() {
+      if (!puedeRegistrar) return;
 
-    if (
-      !form.repuesto_id ||
-      !form.cantidad ||
-      !form.entregado_por ||
-      !form.recibido_por
-    ) {
-      showToast("Completa todos los campos.");
-      return;
+      const cantidadNum = Number(form.cantidad);
+
+      if (
+        !form.repuesto_id ||
+        !form.cantidad ||
+        !form.entregado_por ||
+        !form.recibido_por
+      ) {
+        showToast("Completa todos los campos.");
+        return;
+      }
+
+      if (isNaN(cantidadNum) || cantidadNum <= 0) {
+        showToast("Cantidad inválida.");
+        return;
+      }
+
+      if (cantidadNum > stockDisponible) {
+        showToast(`No puedes sacar más de lo disponible (${stockDisponible} ${unidad})`);
+        return;
+      }
+
+      try {
+        await crearSalida({
+          repuesto_id: form.repuesto_id,
+          cantidad: cantidadNum,
+          entregado_por: form.entregado_por,
+          recibido_por: form.recibido_por,
+          usuario_id: (usuario as any).id,
+          unidad,
+          notas: form.notas, // <--- YA SE GUARDA
+        });
+
+        showToast("Salida registrada ✓");
+
+        setForm({
+          repuesto_id: "",
+          cantidad: "",
+          entregado_por: "",
+          recibido_por: "",
+          notas: "",
+        });
+
+        cargarDatos();
+      } catch {
+        showToast("Error al registrar salida.");
+      }
     }
 
-    const cantidadNum = Number(form.cantidad);
-
-    if (isNaN(cantidadNum) || cantidadNum <= 0) {
-      showToast("Cantidad inválida.");
-      return;
-    }
-
-    if (cantidadNum > stockDisponible) {
-      showToast("No puedes sacar más de lo disponible.");
-      return;
-    }
-
-    try {
-      await crearSalida({
-        repuesto_id: form.repuesto_id,
-        cantidad: cantidadNum,
-        entregado_por: form.entregado_por,
-        recibido_por: form.recibido_por,
-        usuario_id: (usuario as any).id,
-        unidad,
-      });
-
-      showToast("Salida registrada ✓");
-
-      setForm({
-        repuesto_id: "",
-        cantidad: "",
-        entregado_por: "",
-        recibido_por: "",
-      });
-
-      cargarDatos();
-    } catch {
-      showToast("Error al registrar salida.");
-    }
-  }
 
   /* ===============================
         MODO SOLO LECTURA
@@ -254,6 +258,12 @@ export default function Salidas() {
             placeholder="Ej: 5"
           />
 
+          {form.cantidad && Number(form.cantidad) > stockDisponible && (
+            <p className="text-red-600 text-xs mt-1">
+              No puedes sacar más de lo disponible ({stockDisponible} {unidad})
+            </p>
+          )}
+
           {/* Entregado por */}
           <label className="text-sm font-semibold">Entregado por</label>
           <select
@@ -285,14 +295,34 @@ export default function Salidas() {
               </option>
             ))}
           </select>
+            {/* Notas */}
+          <label className="text-sm font-semibold">Notas</label>
+          <textarea
+            name="notas"
+            rows={3}
+            value={form.notas}
+            onChange={handleChange}
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-2"
+            placeholder="Detalles adicionales..."
+          />
 
           {/* Botón */}
-          <button
-            onClick={handleSubmit}
-            className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg shadow-sm transition"
-          >
-            Registrar Salida
-          </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!form.repuesto_id || !form.cantidad || !form.entregado_por || !form.recibido_por || Number(form.cantidad) > stockDisponible}
+              className={`w-full mt-6 text-white py-3 rounded-lg shadow-sm transition 
+                ${
+                  Number(form.cantidad) > stockDisponible ||
+                  !form.cantidad ||
+                  !form.repuesto_id
+                    ? "bg-red-300 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
+            >
+              Registrar Salida
+            </button>
+
+
         </motion.div>
 
         {/* HISTORIAL */}
