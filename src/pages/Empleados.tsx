@@ -1,136 +1,112 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
-import PageTransition from "../components/PageTransition.bak"; // ya estaba, solo lo activé
-import type { Empleado } from "../types/index";
+import { useAuth } from "../context/AuthContext";
 
-interface EmpleadoConMovimientos extends Empleado {
-  movimientos: number;
+interface Empleado {
+  id: string;
+  nombre: string;
+  cargo: string; // ← CORRECTO
+  total_movs: number;
 }
 
 export default function Empleados() {
   const { usuario } = useAuth();
-
-  const [empleados, setEmpleados] = useState<EmpleadoConMovimientos[]>([]);
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Cargar empleados + contar movimientos real
-  async function cargarEmpleados() {
+  const cargarEmpleados = async () => {
     setLoading(true);
 
-    // 1️⃣ Obtener empleados
-    const { data: empleadosData, error: empError } = await supabase
+    const { data, error } = await supabase
       .from("empleados")
-      .select("*")
-      .order("nombre", { ascending: true });
+      .select(`
+        id,
+        nombre,
+        cargo,      -- ← CAMPO CORRECTO
+        movimientos:movimientos(count)
+      `);
 
-    if (empError || !empleadosData) {
-      console.error("Error cargando empleados:", empError);
-      setLoading(false);
+    if (error) {
+      console.error(error);
       return;
     }
 
-    // 2️⃣ Obtener movimientos
-    const { data: movData } = await supabase
-      .from("movimientos")
-      .select("empleado_entrega_id, empleado_recibe_id");
-
-    const movCount: Record<string, number> = {};
-
-    (movData ?? []).forEach((m) => {
-      if (m?.empleado_entrega_id)
-        movCount[m.empleado_entrega_id!] = (movCount[m.empleado_entrega_id!] || 0) + 1;
-
-      if (m?.empleado_recibe_id)
-        movCount[m.empleado_recibe_id!] = (movCount[m.empleado_recibe_id!] || 0) + 1;
-    });
-
-    // 3️⃣ Unir
-    const empleadosFinal: EmpleadoConMovimientos[] = empleadosData.map((e) => ({
+    const formato = data.map((e: any) => ({
       id: e.id,
       nombre: e.nombre,
-      area: e.area ?? null,
-      movimientos: movCount[e.id] || 0,
+      cargo: e.cargo ?? "—",
+      total_movs: e.movimientos?.[0]?.count ?? 0,
     }));
 
-    setEmpleados(empleadosFinal);
+    setEmpleados(formato);
     setLoading(false);
-  }
+  };
 
   useEffect(() => {
     cargarEmpleados();
   }, []);
 
-  async function eliminarEmpleado(id: string) {
-    const confirmar = confirm("¿Seguro que deseas eliminar este empleado?");
-    if (!confirmar) return;
-
-    // 1️⃣ Verificar movimientos
-    const { count: movCount } = await supabase
-      .from("movimientos")
-      .select("*", { count: "exact", head: true })
-      .or(`empleado_entrega_id.eq.${id},empleado_recibe_id.eq.${id}`);
-
-    if ((movCount ?? 0) > 0) {
-      alert("❌ No puedes eliminar este empleado: tiene movimientos.");
-      return;
-    }
-
-    // 2️⃣ Eliminar
-    await supabase.from("empleados").delete().eq("id", id);
-
-    alert("Empleado eliminado ✓");
-    cargarEmpleados();
-  }
-
   return (
-    <PageTransition>
-      <motion.div
-        className="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow mt-6"
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <h1 className="text-2xl font-bold mb-6">Empleados</h1>
+    <motion.div
+      className="max-w-5xl mx-auto mt-8 bg-white p-6 rounded-2xl shadow"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <h2 className="text-xl font-semibold mb-6">Empleados</h2>
 
-        {loading ? (
-          <p>Cargando…</p>
-        ) : (
-          <table className="w-full text-sm border-separate border-spacing-y-1">
-            <thead>
-              <tr className="text-gray-700">
-                <th>Nombre</th>
-                <th>Cargo</th>
-                <th>Movs</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
+      <table className="w-full text-sm">
+        <thead className="border-b">
+          <tr>
+            <th className="py-2 text-left">Nombre</th>
+            <th className="py-2 text-left">Cargo</th>
+            <th className="py-2 text-center">Movs</th>
+            <th className="py-2 text-center">Acciones</th>
+          </tr>
+        </thead>
 
-            <tbody>
-              {empleados.map((e) => (
-                <tr key={e.id} className="bg-gray-50 hover:bg-gray-100">
-                  <td className="py-3 px-2 font-medium">{e.nombre}</td>
-                  <td className="py-3 px-2">{e.area || "—"}</td>
-                  <td className="py-3 px-2">{e.movimientos}</td>
+        <tbody>
+          {empleados.map((e) => (
+            <tr key={e.id} className="border-b">
+              <td className="py-3">{e.nombre}</td>
+              <td>{e.cargo}</td>
+              <td className="text-center">{e.total_movs}</td>
 
-                  <td className="py-3 px-2">
-                    {usuario?.rol_usuario === "admin" ? (
-                      <button
-                        onClick={() => eliminarEmpleado(e.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded"
-                      >
+              {/* ACCIONES SEGÚN ROL */}
+              <td className="text-center">
+                {(usuario?.rol_usuario === "dev" ||
+                  usuario?.rol_usuario === "admin") && (
+                  <div className="flex gap-3 justify-center">
+                    <button className="text-blue-600 hover:underline">
+                      Editar
+                    </button>
+
+                    {/* ELIMINAR SOLO SI NO TIENE MOVIMIENTOS */}
+                    {e.total_movs === 0 && (
+                      <button className="text-red-600 hover:underline">
                         Eliminar
                       </button>
-                    ) : (
-                      <p className="text-gray-500 text-xs">Sin permisos</p>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </motion.div>
-    </PageTransition>
+                  </div>
+                )}
+
+                {/* VIEWER / JEFE / GERENTE */}
+                {(usuario?.rol_usuario === "viewer" ||
+                  usuario?.rol_usuario === "jefe" ||
+                  usuario?.rol_usuario === "gerente") && (
+                  <span className="text-gray-500 text-xs">Sin permisos</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {loading && (
+        <p className="text-center text-gray-500 mt-4 animate-pulse">
+          Cargando empleados…
+        </p>
+      )}
+    </motion.div>
   );
 }
