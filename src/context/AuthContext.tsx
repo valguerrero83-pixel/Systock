@@ -26,9 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ----------------------------------
   const loadUser = async () => {
     try {
-      const { data } = await supabase.auth.getSession();
-
-      const session = data.session;
+      const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
         setUsuario(null);
@@ -36,28 +34,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      console.log("sesion user id:",
-        session.user.id
-      );
-
-
-      const { data: perfil, error: perfilError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    console.log("Perfil ERROR:", perfilError);
-    console.log("Perfil DATA:", perfil);
+      const { data: perfil } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
 
       setUsuario(perfil ?? null);
-    } catch (error) {
-      console.error("Auth error:", error);
+    } catch (e) {
+      console.error("Auth error:", e);
       setUsuario(null);
     }
 
     setLoading(false);
   };
+
 
   // ----------------------------------
   // LISTENER REAL
