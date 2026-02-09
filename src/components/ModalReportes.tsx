@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { obtenerEmpleados } from "../services/salidasService";
+import { getEmpleados } from "../services/salidasService";
 import { obtenerRepuestos } from "../services/entradasService";
 import { obtenerHistorialMovimientos } from "../services/reportesService";
 
@@ -31,7 +31,7 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
 
   async function cargarFiltros() {
     const [emp, rep] = await Promise.all([
-      obtenerEmpleados(),
+      getEmpleados(),
       obtenerRepuestos(),
     ]);
 
