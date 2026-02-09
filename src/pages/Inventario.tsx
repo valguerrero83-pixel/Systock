@@ -18,6 +18,9 @@ export default function Inventario() {
   const [items, setItems] = useState<ItemInventario[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // -------------------------------------------------
+  // CARGAR INVENTARIO
+  // -------------------------------------------------
   const cargarInventario = async () => {
     setLoading(true);
 
@@ -36,6 +39,9 @@ export default function Inventario() {
     setLoading(false);
   };
 
+  // -------------------------------------------------
+  // REALTIME LISTENERS
+  // -------------------------------------------------
   useEffect(() => {
     cargarInventario();
 
@@ -43,17 +49,13 @@ export default function Inventario() {
       .channel("rt_inventario")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "movimientos" },
-        () => {
-          cargarInventario();
-        }
+        { event: "*", schema: "public", table: "repuestos" },
+        () => cargarInventario()
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "repuestos" },
-        () => {
-          cargarInventario();
-        }
+        { event: "*", schema: "public", table: "movimientos" },
+        () => cargarInventario()
       )
       .subscribe();
 
@@ -62,6 +64,9 @@ export default function Inventario() {
     };
   }, []);
 
+  // -------------------------------------------------
+  // RENDER
+  // -------------------------------------------------
   return (
     <PageTransition>
       <motion.div
@@ -103,7 +108,7 @@ export default function Inventario() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03 }}
                   >
-                    <td className="py-3">{i.codigo_corto}</td>
+                    <td className="py-3 font-semibold">{i.codigo_corto}</td>
                     <td>{i.nombre}</td>
                     <td className="font-semibold">
                       {i.stock} {i.unidad}
