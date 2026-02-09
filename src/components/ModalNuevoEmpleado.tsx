@@ -1,33 +1,72 @@
 import { useState } from "react";
+import { crearRepuesto } from "../services/repuestosService";
+import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { crearEmpleado } from "../services/empleadosService";
 
-export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any) {
-  const [nombre, setNombre] = useState("");
-  const [cargo, setCargo] = useState("");
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState("");
+interface ModalNuevoRepuestoProps {
+  abierto: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}
 
-  async function handleSubmit(e: any) {
-    e.preventDefault();
-    setError("");
+export default function ModalNuevoRepuesto({
+  abierto,
+  onClose,
+  onCreated,
+}: ModalNuevoRepuestoProps) {
+  const { usuario } = useAuth();
 
-    if (!nombre.trim()) return setError("El nombre es obligatorio");
-    if (!cargo.trim()) return setError("El cargo es obligatorio");
+  const [form, setForm] = useState({
+    nombre: "",
+    cantidad_inicial: "",
+    unidad: "Unidades",
+    stock_minimo: "",
+  });
 
-    setCargando(true);
+  const [loading, setLoading] = useState(false);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+  }
+
+  async function handleSubmit() {
+    if (!form.nombre || !form.cantidad_inicial || !form.unidad || !form.stock_minimo) {
+      alert("Completa todos los campos");
+      return;
+    }
+
+    if (!usuario?.id) {
+      alert("Error: el usuario no está autenticado.");
+      return;
+    }
 
     try {
-      await crearEmpleado({ nombre, cargo });
-      setNombre("");
-      setCargo("");
+      setLoading(true);
+
+      await crearRepuesto({
+        nombre: form.nombre,
+        unidad: form.unidad,
+        stock_minimo: Number(form.stock_minimo),
+        cantidad_inicial: Number(form.cantidad_inicial),
+        usuario_id: usuario.id, // YA NO DA ERROR
+      });
+
+      // Limpiar formulario
+      setForm({
+        nombre: "",
+        cantidad_inicial: "",
+        unidad: "Unidades",
+        stock_minimo: "",
+      });
+
       onCreated();
       onClose();
-    } catch (err: any) {
-      console.error(err);
-      setError("Ocurrió un error al guardar el empleado.");
+    } catch (error) {
+      console.error(error);
+      alert("Error al registrar el repuesto");
     } finally {
-      setCargando(false);
+      setLoading(false);
     }
   }
 
@@ -35,85 +74,103 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
     <AnimatePresence>
       {abierto && (
         <motion.div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50"
+          className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex justify-center items-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
         >
-          {/* MODAL */}
           <motion.div
             className="bg-white w-[90%] max-w-lg rounded-2xl shadow-xl p-8"
-            initial={{ opacity: 0, scale: 0.85, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.85, y: 20 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.25 }}
           >
             {/* HEADER */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <svg width="22" height="22" stroke="currentColor" fill="none">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M5.5 21a7 7 0 0 1 13 0" />
+                <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="7" width="18" height="13" rx="2" />
+                  <polyline points="3 7 12 2 21 7" />
                 </svg>
-                Nuevo Empleado
+                Nuevo Repuesto
               </h2>
 
-              <button
-                onClick={onClose}
-                className="text-gray-600 hover:text-gray-800 text-xl"
-              >
+              <button onClick={onClose} className="text-gray-600 text-lg hover:text-gray-800">
                 ✕
               </button>
             </div>
 
-            {/* FORMULARIO */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* NOMBRE */}
+            {/* FORM */}
+            <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="text-sm font-semibold text-gray-700">Nombre Completo</label>
+                <label className="text-sm font-semibold text-gray-700">Nombre del Repuesto</label>
                 <input
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Ej: Juan Pérez"
-                  className="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  name="nombre"
+                  value={form.nombre}
+                  onChange={handleChange}
+                  className="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 outline-none"
+                  placeholder="Ej: Aceite hidráulico 10W40"
                 />
               </div>
 
-              {/* CARGO */}
-              <div>
-                <label className="text-sm font-semibold text-gray-700">Cargo</label>
-                <input
-                  type="text"
-                  value={cargo}
-                  onChange={(e) => setCargo(e.target.value)}
-                  placeholder="Ej: Técnico, Operario, Jefe..."
-                  className="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">Cantidad</label>
+                  <input
+                    type="number"
+                    name="cantidad_inicial"
+                    value={form.cantidad_inicial}
+                    onChange={handleChange}
+                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">Unidad</label>
+                  <select
+                    name="unidad"
+                    value={form.unidad}
+                    onChange={handleChange}
+                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                  >
+                    <option>Unidades</option>
+                    <option>Litros</option>
+                    <option>Metros</option>
+                    <option>Kilos</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">Stock mínimo</label>
+                  <input
+                    type="number"
+                    name="stock_minimo"
+                    value={form.stock_minimo}
+                    onChange={handleChange}
+                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                  />
+                </div>
               </div>
+            </div>
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+            {/* BOTONES */}
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg border hover:bg-gray-100"
+              >
+                Cancelar
+              </button>
 
-              {/* BOTONES */}
-              <div className="flex justify-end gap-3 mt-5">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 rounded-lg border hover:bg-gray-100"
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={cargando}
-                  className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 flex items-center gap-2"
-                >
-                  {cargando ? "Guardando..." : "Agregar Empleado"}
-                </button>
-              </div>
-            </form>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
+              >
+                {loading ? "Guardando..." : "Agregar Repuesto"}
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       )}

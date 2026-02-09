@@ -41,7 +41,7 @@ export default function Layout() {
     if (!usuario) return;
 
     setRole({
-      esAdmin: usuario.rol_usuario === "admin" || usuario.rol_usuario === "dev",
+      esAdmin: usuario.rol_usuario === "dev",
       esJefe: usuario.rol_usuario === "jefe",
       esGerente: usuario.rol_usuario === "gerente",
       esViewer: usuario.rol_usuario === "viewer",
