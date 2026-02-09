@@ -63,6 +63,8 @@ export default function Layout() {
   const esGerente = usuario?.rol_usuario === "gerente";
   const esViewer = usuario?.rol_usuario === "viewer";
 
+    console.log("LAYOUT USUARIO:", usuario);
+
   // ------------------- RETURN -------------------
   return (
     <div className="min-h-screen bg-[#f5f7fa] flex flex-col">
