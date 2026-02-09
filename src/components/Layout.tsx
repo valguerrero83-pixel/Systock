@@ -17,9 +17,9 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ----------------------------------------------
+  // ------------------------------------------
   // STATE
-  // ----------------------------------------------
+  // ------------------------------------------
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalEmpleadoAbierto, setModalEmpleadoAbierto] = useState(false);
 
@@ -27,36 +27,30 @@ export default function Layout() {
   const [stockBajo, setStockBajo] = useState(0);
   const [movimientosHoy, setMovimientosHoy] = useState(0);
 
-  // ----------------------------------------------
-  // ROLES — versión CORRECTA Y REACTIVA
-  // ----------------------------------------------
+  // ------------------------------------------
+  // ROLES
+  // ------------------------------------------
   const [role, setRole] = useState({
     esAdmin: false,
     esJefe: false,
     esGerente: false,
     esViewer: false,
   });
-  console.log("ROL EXACTO:", usuario?.rol_usuario);
-
 
   useEffect(() => {
     if (!usuario) return;
 
     setRole({
-      esAdmin:
-        usuario.rol_usuario === "admin" ||
-        usuario.rol_usuario === "dev",
-
+      esAdmin: usuario.rol_usuario === "admin" || usuario.rol_usuario === "dev",
       esJefe: usuario.rol_usuario === "jefe",
       esGerente: usuario.rol_usuario === "gerente",
       esViewer: usuario.rol_usuario === "viewer",
     });
-
   }, [usuario]);
 
-  // ----------------------------------------------
-  // DASHBOARD DATA
-  // ----------------------------------------------
+  // ------------------------------------------
+  // DASHBOARD
+  // ------------------------------------------
   async function cargarDashboard() {
     setTotalRepuestos(await obtenerTotalRepuestos());
     setStockBajo(await obtenerStockBajo());
@@ -64,25 +58,24 @@ export default function Layout() {
   }
 
   useEffect(() => {
-  cargarDashboard();
-  const intervalo = setInterval(cargarDashboard, 5000);
-  return () => clearInterval(intervalo);
-}, []);
+    cargarDashboard();
+    const intervalo = setInterval(cargarDashboard, 5000);
+    return () => clearInterval(intervalo);
+  }, []);
 
-useEffect(() => {
-  cargarDashboard();
-}, [location]);
+  useEffect(() => {
+    cargarDashboard();
+  }, [location]);
 
-useEffect(() => {
-  const listener = () => cargarDashboard();
-  window.addEventListener("dashboard-update", listener);
-  return () => window.removeEventListener("dashboard-update", listener);
-}, []);
+  useEffect(() => {
+    const listener = () => cargarDashboard();
+    window.addEventListener("dashboard-update", listener);
+    return () => window.removeEventListener("dashboard-update", listener);
+  }, []);
 
-
-  // ----------------------------------------------
-  // RENDER
-  // ----------------------------------------------
+  // ------------------------------------------
+  // RETURN
+  // ------------------------------------------
   return (
     <div className="min-h-screen bg-[#f5f7fa] flex flex-col">
 
@@ -109,10 +102,9 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* ------------------ BUTTONS TOP ------------------ */}
+        {/* ------------------ NAV TOP ------------------ */}
         <nav className="flex items-center gap-3 flex-wrap justify-start md:justify-end">
 
-          {/* ➤ Crear empleado: Admin / Dev */}
           {role.esAdmin && (
             <>
               <TopButton
@@ -130,7 +122,6 @@ useEffect(() => {
             </>
           )}
 
-          {/* ➤ Crear repuesto: Admin / Dev */}
           {role.esAdmin && (
             <button
               onClick={() => setModalAbierto(true)}
@@ -141,7 +132,6 @@ useEffect(() => {
             </button>
           )}
 
-          {/* ➤ Logout */}
           <button
             onClick={async () => {
               await logout();
@@ -204,24 +194,30 @@ useEffect(() => {
         )}
 
         <MenuItem to="/inventario" icon={clipboardIcon()} label="Inventario" />
-
         <MenuItem to="/historial" icon={historyIcon()} label="Historial" />
 
         {role.esAdmin && (
           <MenuItem to="/empleados" icon={userIcon()} label="Empleados" />
         )}
-
       </footer>
 
-      {/* Modals */}
+      {/* ------------------ MODALS ------------------ */}
+
       <ModalNuevoRepuesto
         abierto={modalAbierto}
         onClose={() => setModalAbierto(false)}
+      />
+
+      <ModalNuevoEmpleado
+        abierto={modalEmpleadoAbierto}
+        onClose={() => setModalEmpleadoAbierto(false)}
         onCreated={() => {}}
       />
+
     </div>
   );
 }
+
 
 /* ---------------------- COMPONENTES AUXILIARES ---------------------- */
 
@@ -245,8 +241,7 @@ function MenuItem({ to, icon, label }: any) {
       to={to}
       className={({ isActive }) =>
         `flex flex-col items-center gap-1 text-sm transition 
-          ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`
-      }
+          ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
     >
       {icon}
       <span>{label}</span>
@@ -254,7 +249,6 @@ function MenuItem({ to, icon, label }: any) {
   );
 }
 
-/* ---------------------- TARJETAS ---------------------- */
 function DashboardCard({ title, value, subtitle, color, icon }: any) {
   const bg = color === "green" ? "bg-green-100" : "bg-yellow-100";
   const border = color === "green" ? "border-green-300" : "border-yellow-300";
@@ -277,7 +271,8 @@ function DashboardCard({ title, value, subtitle, color, icon }: any) {
   );
 }
 
-/* ---------------------- ICONOS (SIN CAMBIOS) ---------------------- */
+/* ---------------------- ICONOS ---------------------- */
+
 function logoutIcon() {
   return (
     <svg width="22" height="22" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -364,5 +359,3 @@ function iconRepeat() {
     </svg>
   );
 }
-
-
