@@ -36,6 +36,8 @@ export default function Layout() {
     esGerente: false,
     esViewer: false,
   });
+  console.log("ROL EXACTO:", usuario?.rol_usuario);
+
 
   useEffect(() => {
     if (!usuario) return;
