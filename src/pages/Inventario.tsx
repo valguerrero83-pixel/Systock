@@ -136,7 +136,7 @@ export default function Inventario() {
 
         {!loading && items.length === 0 && (
           <p className="text-center text-gray-500 mt-6">
-            No hay repuestos registrados.
+            No hay repuestos.
           </p>
         )}
 
