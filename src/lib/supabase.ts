@@ -5,17 +5,12 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: true,         // Mantener sesión guardada
-    autoRefreshToken: true,       // Refrescar token automáticamente
-    detectSessionInUrl: false,    // Evita problemas con Vercel
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
   },
 });
 
-// -------------------------------------------------------
-// ⭐ OPCIONAL (solo para depurar en navegador)
-//    Permite usar supabase desde DevTools:
-//    supabase.from("users").select("*")
-// -------------------------------------------------------
 if (typeof window !== "undefined") {
   // @ts-ignore
   window.supabase = supabase;
