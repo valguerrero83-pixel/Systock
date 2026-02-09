@@ -16,10 +16,10 @@ import Usuarios from "./pages/Usuarios";
 function ProtectedRoute() {
   const { usuario, loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) return <div>Cargando...</div>;
   if (!usuario) return <Navigate to="/login" replace />;
 
-  return <Outlet />; // Permite rutas anidadas
+  return <Outlet />;
 }
 
 // --------------------------------------

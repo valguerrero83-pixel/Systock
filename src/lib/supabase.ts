@@ -6,12 +6,8 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
+    storage: localStorage,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: true,
   },
 });
-
-if (typeof window !== "undefined") {
-  // @ts-ignore
-  window.supabase = supabase;
-}
