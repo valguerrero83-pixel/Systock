@@ -116,7 +116,7 @@ export default function Empleados() {
 
       {loading && (
         <p className="text-center text-gray-500 mt-4 animate-pulse">
-          Cargando empleados…
+          Cargando empleados
         </p>
       )}
     </motion.div>
