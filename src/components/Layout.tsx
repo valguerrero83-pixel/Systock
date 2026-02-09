@@ -15,19 +15,46 @@ import {
 export default function Layout() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  console.log("ROL USUARIO:", usuario?.rol_usuario);
-
-  // ------------------- STATE -------------------
+  // ----------------------------------------------
+  // STATE
+  // ----------------------------------------------
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalEmpleadoAbierto, setModalEmpleadoAbierto] = useState(false);
-  const location = useLocation();
 
   const [totalRepuestos, setTotalRepuestos] = useState(0);
   const [stockBajo, setStockBajo] = useState(0);
   const [movimientosHoy, setMovimientosHoy] = useState(0);
 
-  // ------------------- DASHBOARD DATA -------------------
+  // ----------------------------------------------
+  // ROLES — versión CORRECTA Y REACTIVA
+  // ----------------------------------------------
+  const [role, setRole] = useState({
+    esAdmin: false,
+    esJefe: false,
+    esGerente: false,
+    esViewer: false,
+  });
+
+  useEffect(() => {
+    if (!usuario) return;
+
+    setRole({
+      esAdmin:
+        usuario.rol_usuario === "admin" ||
+        usuario.rol_usuario === "dev",
+
+      esJefe: usuario.rol_usuario === "jefe",
+      esGerente: usuario.rol_usuario === "gerente",
+      esViewer: usuario.rol_usuario === "viewer",
+    });
+
+  }, [usuario]);
+
+  // ----------------------------------------------
+  // DASHBOARD DATA
+  // ----------------------------------------------
   async function cargarDashboard() {
     setTotalRepuestos(await obtenerTotalRepuestos());
     setStockBajo(await obtenerStockBajo());
@@ -35,45 +62,32 @@ export default function Layout() {
   }
 
   useEffect(() => {
-    cargarDashboard(); // carga inicial
+  cargarDashboard();
+  const intervalo = setInterval(cargarDashboard, 5000);
+  return () => clearInterval(intervalo);
+}, []);
 
-    const intervalo = setInterval(() => {
-      cargarDashboard();
-    }, 5000);
+useEffect(() => {
+  cargarDashboard();
+}, [location]);
 
-    return () => clearInterval(intervalo);
-  }, []);
+useEffect(() => {
+  const listener = () => cargarDashboard();
+  window.addEventListener("dashboard-update", listener);
+  return () => window.removeEventListener("dashboard-update", listener);
+}, []);
 
-  useEffect(() => {
-    cargarDashboard();
-  }, [location]);
 
-  useEffect(() => {
-    const listener = () => cargarDashboard();
-    window.addEventListener("dashboard-update", listener);
-    return () => window.removeEventListener("dashboard-update", listener);
-  }, []);
-
-  // ------------------- ROLES -------------------
-  const esAdmin =
-    usuario?.rol_usuario === "admin" ||
-    usuario?.rol_usuario === "dev";
-
-  const esJefe = usuario?.rol_usuario === "jefe";
-  const esGerente = usuario?.rol_usuario === "gerente";
-  const esViewer = usuario?.rol_usuario === "viewer";
-
-    console.log("LAYOUT USUARIO:", usuario);
-
-  // ------------------- RETURN -------------------
+  // ----------------------------------------------
+  // RENDER
+  // ----------------------------------------------
   return (
     <div className="min-h-screen bg-[#f5f7fa] flex flex-col">
 
-      {/* --------------------- BARRA SUPERIOR --------------------- */}
+      {/* ------------------ TOP BAR ------------------ */}
       <header className="w-full bg-white shadow-sm px-4 md:px-8 py-4 
         flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b">
 
-        {/* LOGO + TÍTULO */}
         <div className="flex items-center gap-3">
           <img 
             src="/favicon.png" 
@@ -93,11 +107,11 @@ export default function Layout() {
           </div>
         </div>
 
-        {/* --------------------- NAV SUPERIOR --------------------- */}
+        {/* ------------------ BUTTONS TOP ------------------ */}
         <nav className="flex items-center gap-3 flex-wrap justify-start md:justify-end">
 
-          {/* Crear Empleado → SOLO ADMIN / DEV */}
-          {esAdmin && !esViewer && !esGerente && (
+          {/* ➤ Crear empleado: Admin / Dev */}
+          {role.esAdmin && (
             <>
               <TopButton
                 icon={userIcon()}
@@ -114,8 +128,8 @@ export default function Layout() {
             </>
           )}
 
-          {/* Crear Repuesto → SOLO ADMIN / DEV */}
-          {esAdmin && !esViewer && !esGerente && (
+          {/* ➤ Crear repuesto: Admin / Dev */}
+          {role.esAdmin && (
             <button
               onClick={() => setModalAbierto(true)}
               className="px-4 py-2 rounded-lg flex items-center gap-2 border transition bg-gray-600 text-white hover:bg-gray-700"
@@ -125,7 +139,7 @@ export default function Layout() {
             </button>
           )}
 
-          {/* Logout */}
+          {/* ➤ Logout */}
           <button
             onClick={async () => {
               await logout();
@@ -139,7 +153,7 @@ export default function Layout() {
         </nav>
       </header>
 
-      {/* ---------------- DASHBOARD CARDS ---------------- */}
+      {/* ------------------ DASHBOARD CARDS ------------------ */}
       <section className="w-full px-4 md:px-6 mt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
 
@@ -170,20 +184,20 @@ export default function Layout() {
         </div>
       </section>
 
-      {/* --------------------- CONTENIDO --------------------- */}
+      {/* ------------------ PAGE CONTENT ------------------ */}
       <main className="flex-1 px-6 py-6 pb-24">
         <Outlet />
       </main>
 
-      {/* --------------------- MENÚ INFERIOR --------------------- */}
+      {/* ------------------ FOOTER MENU ------------------ */}
       <footer className="fixed bottom-0 left-0 w-full bg-white shadow-inner border-t 
         flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
 
-        {(esAdmin || esJefe) && (
+        {(role.esAdmin || role.esJefe) && (
           <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
         )}
 
-        {esAdmin && (
+        {role.esAdmin && (
           <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
         )}
 
@@ -191,13 +205,13 @@ export default function Layout() {
 
         <MenuItem to="/historial" icon={historyIcon()} label="Historial" />
 
-        {esAdmin && (
+        {role.esAdmin && (
           <MenuItem to="/empleados" icon={userIcon()} label="Empleados" />
         )}
 
       </footer>
 
-      {/* MODALES */}
+      {/* Modals */}
       <ModalNuevoRepuesto
         abierto={modalAbierto}
         onClose={() => setModalAbierto(false)}
@@ -207,7 +221,8 @@ export default function Layout() {
   );
 }
 
-/* ---------------------- COMPONENTES ---------------------- */
+/* ---------------------- COMPONENTES AUXILIARES ---------------------- */
+
 function TopButton({ icon, label, primary, onClick }: any) {
   return (
     <button
@@ -260,7 +275,7 @@ function DashboardCard({ title, value, subtitle, color, icon }: any) {
   );
 }
 
-/* ---------------------- ICONOS ---------------------- */
+/* ---------------------- ICONOS (SIN CAMBIOS) ---------------------- */
 function logoutIcon() {
   return (
     <svg width="22" height="22" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -347,3 +362,5 @@ function iconRepeat() {
     </svg>
   );
 }
+
+
