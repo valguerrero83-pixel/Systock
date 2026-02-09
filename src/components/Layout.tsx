@@ -206,6 +206,7 @@ export default function Layout() {
       <ModalNuevoRepuesto
         abierto={modalAbierto}
         onClose={() => setModalAbierto(false)}
+        onCreated={() => {}}
       />
 
       <ModalNuevoEmpleado
@@ -213,6 +214,7 @@ export default function Layout() {
         onClose={() => setModalEmpleadoAbierto(false)}
         onCreated={() => {}}
       />
+
 
     </div>
   );
