@@ -1,4 +1,3 @@
-// AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -22,9 +21,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ----------------------------------
+  // CARGAR USUARIO DESDE TOKEN
+  // ----------------------------------
   const loadUser = async () => {
     try {
       const { data } = await supabase.auth.getSession();
+
       const session = data.session;
 
       if (!session) {
@@ -33,21 +36,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data: perfil } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
+      console.log("sesion user id:",
+        session.user.id
+      );
+
+
+      const { data: perfil, error: perfilError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+
+    console.log("Perfil ERROR:", perfilError);
+    console.log("Perfil DATA:", perfil);
 
       setUsuario(perfil ?? null);
-    } catch (e) {
-      console.error("Auth error:", e);
+    } catch (error) {
+      console.error("Auth error:", error);
       setUsuario(null);
     }
 
     setLoading(false);
   };
 
+  // ----------------------------------
+  // LISTENER REAL
+  // ----------------------------------
   useEffect(() => {
     loadUser();
 
@@ -55,11 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event) => {
         console.log("AUTH EVENT:", event);
 
-        if (
-          event === "INITIAL_SESSION" ||
-          event === "SIGNED_IN" ||
-          event === "TOKEN_REFRESHED"
-        ) {
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
           await loadUser();
         }
 
@@ -69,9 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   const logout = async () => {
@@ -81,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ usuario, loading, logout }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

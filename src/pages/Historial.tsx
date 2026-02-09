@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { obtenerHistorialMovimientos } from "../services/historialService";
 import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
-import PageTransition from "../components/PageTransition";
+// import PageTransition from "../components/PageTransition.bak";
 
 import type { Movimiento, Empleado, Repuesto } from "../types/index";
 
@@ -120,120 +120,120 @@ export default function Historial() {
     a.click();
   }
 
-  return (
-    <PageTransition>
-      <motion.div
-        className="max-w-7xl mx-auto bg-white p-6 rounded-3xl shadow-lg"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        {/* TÍTULO */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl font-semibold text-gray-800">
-            Historial de Movimientos
-          </h1>
+  // return (
+  //   // <PageTransition>
+  //     <motion.div
+  //       className="max-w-7xl mx-auto bg-white p-6 rounded-3xl shadow-lg"
+  //       initial={{ opacity: 0, y: 20 }}
+  //       animate={{ opacity: 1, y: 0 }}
+  //     >
+  //       {/* TÍTULO */}
+  //       <div className="flex justify-between items-center mb-6">
+  //         <h1 className="text-xl font-semibold text-gray-800">
+  //           Historial de Movimientos
+  //         </h1>
 
 
-          <button
-            onClick={exportarCSV}
-            className="bg-gray-800 text-white px-4 py-2 rounded-xl shadow hover:bg-gray-900"
-          >
-            Exportar CSV
-          </button>
-        </div>
+  //         <button
+  //           onClick={exportarCSV}
+  //           className="bg-gray-800 text-white px-4 py-2 rounded-xl shadow hover:bg-gray-900"
+  //         >
+  //           Exportar CSV
+  //         </button>
+  //       </div>
 
-        {/* FILTROS */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-          <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
-            <option value="">Todos</option>
-            {empleados.map((e) => (
-              <option key={e.id} value={e.id}>{e.nombre}</option>
-            ))}
-          </Filtro>
+  //       {/* FILTROS */}
+  //       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+  //         <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
+  //           <option value="">Todos</option>
+  //           {empleados.map((e) => (
+  //             <option key={e.id} value={e.id}>{e.nombre}</option>
+  //           ))}
+  //         </Filtro>
 
-          <Filtro label="Repuesto" name="repuesto" value={filtros.repuesto} onChange={handleFiltro}>
-            <option value="">Todos</option>
-            {repuestos.map((r) => (
-              <option key={r.id} value={r.id}>{r.nombre}</option>
-            ))}
-          </Filtro>
+  //         <Filtro label="Repuesto" name="repuesto" value={filtros.repuesto} onChange={handleFiltro}>
+  //           <option value="">Todos</option>
+  //           {repuestos.map((r) => (
+  //             <option key={r.id} value={r.id}>{r.nombre}</option>
+  //           ))}
+  //         </Filtro>
 
-          <Filtro label="Tipo" name="tipo" value={filtros.tipo} onChange={handleFiltro}>
-            <option value="">Todos</option>
-            <option value="ENTRADA">Entrada</option>
-            <option value="SALIDA">Salida</option>
-          </Filtro>
+  //         <Filtro label="Tipo" name="tipo" value={filtros.tipo} onChange={handleFiltro}>
+  //           <option value="">Todos</option>
+  //           <option value="ENTRADA">Entrada</option>
+  //           <option value="SALIDA">Salida</option>
+  //         </Filtro>
 
-          <FiltroFecha label="Desde" name="desde" value={filtros.desde} onChange={handleFiltro} />
-          <FiltroFecha label="Hasta" name="hasta" value={filtros.hasta} onChange={handleFiltro} />
-        </div>
+  //         <FiltroFecha label="Desde" name="desde" value={filtros.desde} onChange={handleFiltro} />
+  //         <FiltroFecha label="Hasta" name="hasta" value={filtros.hasta} onChange={handleFiltro} />
+  //       </div>
 
-        {/* TABLA */}
-        <div className="max-h-[550px] overflow-y-auto pr-2">
-          <table className="w-full text-sm border-separate border-spacing-y-1">
-            <thead className="sticky top-0 bg-white shadow-sm rounded-lg">
-              <tr className="text-gray-600">
-                <Th>Fecha/Hora</Th>
-                <Th>Tipo</Th>
-                <Th className="text-left pl-8">Repuesto</Th>
-                <Th>Cantidad</Th>
-                <Th>Transacción</Th>
-              </tr>
-            </thead>
+  //       {/* TABLA */}
+  //       <div className="max-h-[550px] overflow-y-auto pr-2">
+  //         <table className="w-full text-sm border-separate border-spacing-y-1">
+  //           <thead className="sticky top-0 bg-white shadow-sm rounded-lg">
+  //             <tr className="text-gray-600">
+  //               <Th>Fecha/Hora</Th>
+  //               <Th>Tipo</Th>
+  //               <Th className="text-left pl-8">Repuesto</Th>
+  //               <Th>Cantidad</Th>
+  //               <Th>Transacción</Th>
+  //             </tr>
+  //           </thead>
 
-            <tbody>
-              {movimientos.map((m, index) => (
-                <motion.tr
-                  key={m.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg"
-                >
-                  <Td>
-                    <div className="ml-2">
-                      {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
-                      <br />
-                      <span className="text-xs text-gray-500">
-                        {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
-                      </span>
-                    </div>
-                  </Td>
+  //           <tbody>
+  //             {movimientos.map((m, index) => (
+  //               <motion.tr
+  //                 key={m.id}
+  //                 initial={{ opacity: 0, y: 10 }}
+  //                 animate={{ opacity: 1, y: 0 }}
+  //                 transition={{ delay: index * 0.03 }}
+  //                 className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg"
+  //               >
+  //                 <Td>
+  //                   <div className="ml-2">
+  //                     {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
+  //                     <br />
+  //                     <span className="text-xs text-gray-500">
+  //                       {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
+  //                     </span>
+  //                   </div>
+  //                 </Td>
 
-                  <Td>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-semibold ${
-                        m.tipo === "ENTRADA"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {m.tipo}
-                    </span>
-                  </Td>
+  //                 <Td>
+  //                   <span
+  //                     className={`px-2 py-1 rounded text-xs font-semibold ${
+  //                       m.tipo === "ENTRADA"
+  //                         ? "bg-green-100 text-green-700"
+  //                         : "bg-red-100 text-red-700"
+  //                     }`}
+  //                   >
+  //                     {m.tipo}
+  //                   </span>
+  //                 </Td>
 
-                  <Td className="pl-8">{m.repuestos?.nombre ?? "—"}</Td>
+  //                 <Td className="pl-8">{m.repuestos?.nombre ?? "—"}</Td>
 
-                  <Td>
-                    {m.tipo === "ENTRADA" ? "+" : "-"}
-                    {m.cantidad} {m.repuestos?.unidad ?? ""}
-                  </Td>
+  //                 <Td>
+  //                   {m.tipo === "ENTRADA" ? "+" : "-"}
+  //                   {m.cantidad} {m.repuestos?.unidad ?? ""}
+  //                 </Td>
 
-                  <Td>
-                    <div className="flex items-center gap-2">
-                      {m.empleado_entrega?.nombre ?? "—"}
-                      <ArrowIcon />
-                      {m.empleado_recibe?.nombre ?? "—"}
-                    </div>
-                  </Td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
-    </PageTransition>
-  );
+  //                 <Td>
+  //                   <div className="flex items-center gap-2">
+  //                     {m.empleado_entrega?.nombre ?? "—"}
+  //                     <ArrowIcon />
+  //                     {m.empleado_recibe?.nombre ?? "—"}
+  //                   </div>
+  //                 </Td>
+  //               </motion.tr>
+  //             ))}
+  //           </tbody>
+  //         </table>
+  //       </div>
+  //     </motion.div>
+  //   </PageTransition>
+  // );
 }
 
 /* SUBCOMPONENTES */

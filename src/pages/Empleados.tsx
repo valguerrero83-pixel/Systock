@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
-import PageTransition from "../components/PageTransition";
+// import PageTransition from "../components/PageTransition.bak";
 import type { Empleado } from "../types/index";
 
 interface EmpleadoConMovimientos extends Empleado {
@@ -84,53 +84,53 @@ export default function Empleados() {
     cargarEmpleados();
   }
 
-  return (
-    <PageTransition>
-      <motion.div
-        className="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow mt-6"
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <h1 className="text-2xl font-bold mb-6">Empleados</h1>
+  // return (
+  //   <PageTransition>
+  //     <motion.div
+  //       className="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow mt-6"
+  //       initial={{ opacity: 0, y: 15 }}
+  //       animate={{ opacity: 1, y: 0 }}
+  //     >
+  //       <h1 className="text-2xl font-bold mb-6">Empleados</h1>
 
-        {loading ? (
-          <p>Cargando…</p>
-        ) : (
-          <table className="w-full text-sm border-separate border-spacing-y-1">
-            <thead>
-              <tr className="text-gray-700">
-                <th>Nombre</th>
-                <th>Cargo</th>
-                <th>Movs</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
+  //       {loading ? (
+  //         <p>Cargando…</p>
+  //       ) : (
+  //         <table className="w-full text-sm border-separate border-spacing-y-1">
+  //           <thead>
+  //             <tr className="text-gray-700">
+  //               <th>Nombre</th>
+  //               <th>Cargo</th>
+  //               <th>Movs</th>
+  //               <th>Acciones</th>
+  //             </tr>
+  //           </thead>
 
-            <tbody>
-              {empleados.map((e) => (
-                <tr key={e.id} className="bg-gray-50 hover:bg-gray-100">
-                  <td className="py-3 px-2 font-medium">{e.nombre}</td>
-                  <td className="py-3 px-2">{e.area || "—"}</td>
-                  <td className="py-3 px-2">{e.movimientos}</td>
+  //           <tbody>
+  //             {empleados.map((e) => (
+  //               <tr key={e.id} className="bg-gray-50 hover:bg-gray-100">
+  //                 <td className="py-3 px-2 font-medium">{e.nombre}</td>
+  //                 <td className="py-3 px-2">{e.area || "—"}</td>
+  //                 <td className="py-3 px-2">{e.movimientos}</td>
 
-                  <td className="py-3 px-2">
-                    {usuario?.rol_usuario === "admin" ? (
-                      <button
-                        onClick={() => eliminarEmpleado(e.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded"
-                      >
-                        Eliminar
-                      </button>
-                    ) : (
-                      <p className="text-gray-500 text-xs">Sin permisos</p>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </motion.div>
-    </PageTransition>
-  );
+  //                 <td className="py-3 px-2">
+  //                   {usuario?.rol_usuario === "admin" ? (
+  //                     <button
+  //                       onClick={() => eliminarEmpleado(e.id)}
+  //                       className="px-3 py-1 bg-red-500 text-white rounded"
+  //                     >
+  //                       Eliminar
+  //                     </button>
+  //                   ) : (
+  //                     <p className="text-gray-500 text-xs">Sin permisos</p>
+  //                   )}
+  //                 </td>
+  //               </tr>
+  //             ))}
+  //           </tbody>
+  //         </table>
+  //       )}
+  //     </motion.div>
+  //   </PageTransition>
+  // );
 }
