@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { useEffect, useState } from "react";
 import {
   getRepuestos,
@@ -14,13 +12,13 @@ import { useAuth } from "../context/AuthContext";
 export default function Salidas() {
   const { usuario } = useAuth();
 
-  const [repuestos, setRepuestos] = useState([]);
-  const [empleados, setEmpleados] = useState([]);
-  const [selectedRepuesto, setSelectedRepuesto] = useState(null);
-  const [cantidad, setCantidad] = useState(0);
-  const [entregadoPor, setEntregadoPor] = useState("");
-  const [recibidoPor, setRecibidoPor] = useState("");
-  const [historial, setHistorial] = useState([]);
+  const [repuestos, setRepuestos] = useState<any[]>([]);
+  const [empleados, setEmpleados] = useState<any[]>([]);
+  const [selectedRepuesto, setSelectedRepuesto] = useState<any | null>(null);
+  const [cantidad, setCantidad] = useState<string>("");
+  const [entregadoPor, setEntregadoPor] = useState<string>("");
+  const [recibidoPor, setRecibidoPor] = useState<string>("");
+  const [historial, setHistorial] = useState<any[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -31,18 +29,31 @@ export default function Salidas() {
     load();
   }, []);
 
+  // VALIDACIÓN EN TIEMPO REAL
+  const cantidadNum = Number(cantidad);
+  const stockDisponible = selectedRepuesto?.stock_actual ?? 0;
+  const cantidadInvalida =
+    isNaN(cantidadNum) ||
+    cantidadNum <= 0 ||
+    cantidadNum > stockDisponible;
+
   const handleSalida = async () => {
-    if (!selectedRepuesto || !cantidad || !entregadoPor || !recibidoPor) {
+    if (!selectedRepuesto || !entregadoPor || !recibidoPor) {
       alert("Completa todos los campos");
+      return;
+    }
+
+    if (cantidadInvalida) {
+      alert("Cantidad inválida o mayor al stock disponible");
       return;
     }
 
     const resp = await crearSalida({
       repuesto_id: selectedRepuesto.id,
-      cantidad,
+      cantidad: cantidadNum,
       entregado_por: entregadoPor,
       recibido_por: recibidoPor,
-      usuario_id: usuario.id,
+      usuario_id: (usuario as any).id,
       unidad: selectedRepuesto.unidad
     });
 
@@ -53,15 +64,13 @@ export default function Salidas() {
 
     alert("Salida registrada correctamente");
 
-    // actualizar datos
     setRepuestos(await getRepuestos());
     setHistorial(await getHistorialSalidas());
-    setCantidad(0);
+    setCantidad("");
   };
 
   return (
     <motion.div className="p-6 bg-white rounded-xl shadow max-w-4xl mx-auto mt-8">
-
       <h2 className="text-xl font-semibold mb-4">Registrar Salida</h2>
 
       {/* REPUESTO */}
@@ -72,6 +81,7 @@ export default function Salidas() {
           onChange={(e) => {
             const rep = repuestos.find((r) => r.id === e.target.value);
             setSelectedRepuesto(rep || null);
+            setCantidad("");
           }}
         >
           <option value="">Seleccione un repuesto</option>
@@ -83,10 +93,11 @@ export default function Salidas() {
         </select>
       </div>
 
-      {/* Mostrar stock */}
       {selectedRepuesto && (
         <p className="text-sm text-gray-600 mb-2">
-          Stock actual: <b>{selectedRepuesto.stock_actual}</b> {selectedRepuesto.unidad}
+          Stock actual:{" "}
+          <b>{selectedRepuesto.stock_actual}</b>{" "}
+          {selectedRepuesto.unidad}
         </p>
       )}
 
@@ -94,12 +105,17 @@ export default function Salidas() {
       <div className="mb-3">
         <label>Cantidad</label>
         <input
-          type="number"
+          type="text"
           className="w-full border p-2 rounded"
-          min={1}
+          placeholder="Ingresa la cantidad"
           value={cantidad}
-          onChange={(e) => setCantidad(Number(e.target.value))}
+          onChange={(e) => setCantidad(e.target.value)}
         />
+        {cantidad !== "" && cantidadInvalida && (
+          <p className="text-red-600 text-xs mt-1">
+            Cantidad mayor al stock o inválida
+          </p>
+        )}
       </div>
 
       {/* ENTREGADO POR */}
@@ -134,8 +150,14 @@ export default function Salidas() {
         </select>
       </div>
 
+      {/* BOTÓN */}
       <button
-        className="w-full bg-blue-600 text-white py-2 rounded"
+        disabled={cantidadInvalida || !selectedRepuesto}
+        className={`w-full py-2 rounded text-white ${
+          cantidadInvalida || !selectedRepuesto
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
+        }`}
         onClick={handleSalida}
       >
         Registrar salida
@@ -151,7 +173,7 @@ export default function Salidas() {
             className="border p-3 rounded mb-3 bg-gray-50 text-sm shadow-sm"
           >
             <p>
-              <b>{mov.repuestos?.nombre}</b>
+              <b>{mov.repuestos?.nombre}</b>{" "}
               <span className="text-red-600 ml-2">
                 -{Math.abs(mov.cantidad)} {mov.repuestos?.unidad}
               </span>
@@ -167,7 +189,6 @@ export default function Salidas() {
           </div>
         ))}
       </div>
-
     </motion.div>
   );
 }
