@@ -15,6 +15,9 @@ export default function Empleados() {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ==========================================
+  // 🔵 CARGAR EMPLEADOS + MOVIMIENTOS
+  // ==========================================
   const cargarEmpleados = async () => {
     setLoading(true);
 
@@ -29,14 +32,13 @@ export default function Empleados() {
       return;
     }
 
-    // Ahora traemos movimientos reales usando entregado_por y recibido_por
+    // Movimientos reales
     const { data: movimientos } = await supabase
       .from("movimientos")
       .select("entregado_por, recibido_por");
 
     const movCount: Record<string, number> = {};
 
-    // Contamos todos los movimientos por empleado
     movimientos?.forEach((m) => {
       if (m.entregado_por) {
         movCount[m.entregado_por] = (movCount[m.entregado_por] || 0) + 1;
@@ -46,7 +48,6 @@ export default function Empleados() {
       }
     });
 
-    // Formamos el array final
     const empleadosFormateados = lista.map((e) => ({
       id: e.id,
       nombre: e.nombre,
@@ -61,6 +62,51 @@ export default function Empleados() {
   useEffect(() => {
     cargarEmpleados();
   }, []);
+
+  // ==========================================
+  // 🔴 ELIMINAR EMPLEADO **SOLO SI NO TIENE MOVS**
+  // ==========================================
+  const eliminarEmpleado = async (id: string) => {
+    // Revisar movimientos
+    const { data: movs, error: movErr } = await supabase
+      .from("movimientos")
+      .select("id")
+      .or(`entregado_por.eq.${id},recibido_por.eq.${id}`);
+
+    if (movErr) {
+      alert("Error verificando movimientos.");
+      return;
+    }
+
+    if (movs.length > 0) {
+      alert("❌ No puedes eliminar un empleado con movimientos.");
+      return;
+    }
+
+    // Eliminar si no tiene movimientos
+    const { error } = await supabase.from("empleados").delete().eq("id", id);
+
+    if (error) {
+      alert("Error eliminando empleado.");
+      return;
+    }
+
+    alert("Empleado eliminado.");
+    cargarEmpleados();
+  };
+
+  // ==========================================
+  // 🟡 EDITAR EMPLEADO **SOLO SI NO TIENE MOVS**
+  // (Aquí solo mostramos alerta porque no sé tu modal)
+  // ==========================================
+  const editarEmpleado = async (empleado: Empleado) => {
+    if (empleado.total_movs > 0) {
+      alert("❌ Este empleado no se puede editar porque tiene movimientos.");
+      return;
+    }
+
+    alert("👉 Aquí iría tu modal de edición.");
+  };
 
   return (
     <motion.div
@@ -91,15 +137,32 @@ export default function Empleados() {
                 {(usuario?.rol_usuario === "dev" ||
                   usuario?.rol_usuario === "admin") && (
                   <div className="flex gap-3 justify-center">
-                    <button className="text-blue-600 hover:underline">
+
+                    {/* EDITAR */}
+                    <button
+                      onClick={() => editarEmpleado(e)}
+                      disabled={e.total_movs > 0}
+                      className={`${
+                        e.total_movs > 0
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-blue-600 hover:underline"
+                      }`}
+                    >
                       Editar
                     </button>
 
-                    {e.total_movs === 0 && (
-                      <button className="text-red-600 hover:underline">
-                        Eliminar
-                      </button>
-                    )}
+                    {/* ELIMINAR */}
+                    <button
+                      onClick={() => eliminarEmpleado(e.id)}
+                      disabled={e.total_movs > 0}
+                      className={`${
+                        e.total_movs > 0
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-red-600 hover:underline"
+                      }`}
+                    >
+                      Eliminar
+                    </button>
                   </div>
                 )}
 
