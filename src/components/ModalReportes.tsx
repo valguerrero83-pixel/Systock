@@ -3,11 +3,7 @@ import { getEmpleados } from "../services/salidasService";
 import { obtenerRepuestos } from "../services/entradasService";
 import { obtenerHistorialMovimientos } from "../services/reportesService";
 
-import type {
-  Empleado,
-  Repuesto,
-  Movimiento
-} from "../types";
+import type { Empleado, Repuesto, Movimiento } from "../types";
 
 interface PropsModal {
   abierto: boolean;
@@ -30,11 +26,7 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
   }, [abierto]);
 
   async function cargarFiltros() {
-    const [emp, rep] = await Promise.all([
-      getEmpleados(),
-      obtenerRepuestos(),
-    ]);
-
+    const [emp, rep] = await Promise.all([getEmpleados(), obtenerRepuestos()]);
     setEmpleados(emp);
     setRepuestos(rep);
     filtrarMovimientos("30");
@@ -67,13 +59,9 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
     }));
 
     const encabezados = Object.keys(filas[0]).join(",");
-    const contenido = filas
-      .map((f) => Object.values(f).join(","))
-      .join("\n");
+    const contenido = filas.map((f) => Object.values(f).join(",")).join("\n");
 
-    const blob = new Blob([encabezados + "\n" + contenido], {
-      type: "text/csv",
-    });
+    const blob = new Blob([encabezados + "\n" + contenido], { type: "text/csv" });
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -85,30 +73,48 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
   if (!abierto) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex justify-center items-start pt-10 z-50">
-      <div className="bg-white w-[90%] max-w-6xl rounded-2xl shadow-xl p-8">
-
+    <div
+      className="
+        fixed inset-0 bg-black/40 backdrop-blur-sm 
+        flex justify-center items-center 
+        p-4 z-50
+      "
+    >
+      <div
+        className="
+          bg-white w-full max-w-6xl rounded-2xl shadow-xl 
+          p-6 sm:p-8 
+          max-h-[90vh] overflow-y-auto
+        "
+      >
         {/* HEADER */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
             Historial de Movimientos
           </h2>
 
-          <button
-            onClick={exportarCSV}
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900"
-          >
-            Exportar CSV
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={exportarCSV}
+              className="
+                bg-gray-800 text-white px-4 py-2 rounded-lg shadow 
+                hover:bg-gray-900 text-sm sm:text-base
+              "
+            >
+              Exportar CSV
+            </button>
 
-          <button onClick={onClose} className="text-gray-600 text-lg px-3 hover:text-gray-800">
-            ✕
-          </button>
+            <button
+              onClick={onClose}
+              className="text-gray-600 text-2xl px-3 hover:text-gray-800"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* FILTROS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          
           {/* Empleado */}
           <div>
             <label className="text-sm font-semibold">Empleado</label>
@@ -120,7 +126,9 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
             >
               <option value="">Todos</option>
               {empleados.map((e) => (
-                <option key={e.id} value={e.id}>{e.nombre}</option>
+                <option key={e.id} value={e.id}>
+                  {e.nombre}
+                </option>
               ))}
             </select>
           </div>
@@ -136,7 +144,9 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
             >
               <option value="">Todos</option>
               {repuestos.map((r) => (
-                <option key={r.id} value={r.id}>{r.nombre}</option>
+                <option key={r.id} value={r.id}>
+                  {r.nombre}
+                </option>
               ))}
             </select>
           </div>
@@ -156,13 +166,12 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
               <option value="365">Último año</option>
             </select>
           </div>
-
         </div>
 
         {/* TABLA */}
         <div className="border rounded-xl overflow-hidden">
-          <div className="max-h-[60vh] overflow-y-auto">
-            <table className="w-full text-sm">
+          <div className="max-h-[60vh] overflow-y-auto overflow-x-auto">
+            <table className="w-full text-sm min-w-[750px]">
               <thead className="bg-gray-100 text-gray-600">
                 <tr>
                   <th className="px-4 py-3">Fecha/Hora</th>
@@ -178,16 +187,19 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
                 {historial.map((m: Movimiento) => (
                   <tr key={m.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      {new Date(m.created_at_tz + "Z").toLocaleDateString("es-CO")}<br />
+                      {new Date(m.created_at_tz + "Z").toLocaleDateString("es-CO")}
+                      <br />
                       <span className="text-xs text-gray-500">
                         {new Date(m.created_at_tz + "Z").toLocaleTimeString("es-CO")}
                       </span>
                     </td>
 
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-white text-xs ${
-                        m.tipo === "entrada" ? "bg-green-500" : "bg-red-500"
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-white text-xs ${
+                          m.tipo === "entrada" ? "bg-green-500" : "bg-red-500"
+                        }`}
+                      >
                         {m.tipo}
                       </span>
                     </td>
@@ -196,7 +208,8 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
 
                     <td className="px-4 py-3">
                       {m.tipo === "entrada" ? "+" : "-"}
-                      {m.cantidad} <span className="text-gray-500">{m.repuestos?.unidad}</span>
+                      {m.cantidad}{" "}
+                      <span className="text-gray-500">{m.repuestos?.unidad}</span>
                     </td>
 
                     <td className="px-4 py-3">{m.empleado_entrega?.nombre ?? "-"}</td>
@@ -204,11 +217,9 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
                   </tr>
                 ))}
               </tbody>
-
             </table>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -70,21 +70,25 @@ export default function Usuarios() {
 
   return (
     <PageTransition>
-      <div className="max-w-5xl mx-auto mt-8 bg-white p-6 rounded-2xl shadow-lg">
-        <h2 className="text-xl font-bold mb-4">Gestión de Usuarios</h2>
+      <div className="max-w-5xl mx-auto mt-6 md:mt-8 bg-white p-4 md:p-6 rounded-2xl shadow-lg">
+        <h2 className="text-lg md:text-xl font-bold mb-4">
+          Gestión de Usuarios
+        </h2>
 
         {cargando ? (
-          <p className="text-center text-gray-500">Cargando...</p>
+          <p className="text-center text-gray-500 text-sm md:text-base">
+            Cargando...
+          </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-lg">
+            <table className="w-full min-w-[650px] text-xs md:text-sm">
               <thead>
                 <tr className="border-b bg-gray-50 text-gray-700">
-                  <th className="py-3">Nombre</th>
-                  <th>Email</th>
-                  <th>Rol</th>
-                  <th>Área</th>
-                  <th>Acciones</th>
+                  <th className="py-3 px-2 text-left">Nombre</th>
+                  <th className="text-left px-2">Email</th>
+                  <th className="text-left px-2">Rol</th>
+                  <th className="text-left px-2">Área</th>
+                  <th className="text-left px-2">Acciones</th>
                 </tr>
               </thead>
 
@@ -94,18 +98,18 @@ export default function Usuarios() {
                     key={u.id}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    className="border-b"
+                    transition={{ delay: index * 0.04 }}
+                    className="border-b hover:bg-gray-50"
                   >
-                    <td className="py-3 font-semibold">{u.nombre}</td>
-                    <td>{u.email}</td>
+                    <td className="py-3 px-2 font-semibold">{u.nombre}</td>
+                    <td className="px-2">{u.email}</td>
 
                     {/* ROL */}
-                    <td>
+                    <td className="px-2">
                       <select
                         value={u.rol_usuario || ""}
                         onChange={(e) => cambiarRol(u.id, e.target.value)}
-                        className="border rounded-lg px-2 py-1 bg-white"
+                        className="border rounded-lg px-2 py-1 bg-white text-xs md:text-sm"
                       >
                         {roles.map((r) => (
                           <option key={r} value={r}>
@@ -116,19 +120,19 @@ export default function Usuarios() {
                     </td>
 
                     {/* ÁREA */}
-                    <td>
+                    <td className="px-2">
                       <input
                         type="text"
-                        className="border px-2 py-1 rounded-lg bg-white w-full"
+                        className="border px-2 py-1 rounded-lg bg-white w-full text-xs md:text-sm"
                         value={u.area || ""}
                         placeholder="Área..."
                         onChange={(e) => cambiarArea(u.id, e.target.value)}
                       />
                     </td>
 
-                    <td>
+                    <td className="px-2">
                       <button
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-600 hover:underline text-xs md:text-sm"
                         onClick={cargarUsuarios}
                       >
                         Refrescar
@@ -146,7 +150,7 @@ export default function Usuarios() {
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
-            className="fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl"
+            className="fixed bottom-6 right-6 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl text-xs md:text-sm max-w-[80%]"
           >
             {toast}
           </motion.div>

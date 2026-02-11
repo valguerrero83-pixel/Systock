@@ -38,19 +38,21 @@ export default function Login() {
     >
       <motion.form
         onSubmit={handleLogin}
-        className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md"
+        className="bg-white p-6 md:p-8 rounded-2xl shadow-lg w-full max-w-sm md:max-w-md"
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.45 }}
       >
-        <h1 className="text-2xl font-bold text-center mb-4">Iniciar Sesión</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-center mb-4">
+          Iniciar Sesión
+        </h1>
 
         <label className="block text-sm font-semibold">Correo</label>
         <input
           type="email"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="w-full px-3 py-2 border rounded-lg mt-1 mb-4"
+          className="w-full px-3 py-2 border rounded-lg mt-1 mb-4 text-sm"
         />
 
         <label className="block text-sm font-semibold">Contraseña</label>
@@ -58,12 +60,18 @@ export default function Login() {
           type="password"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className="w-full px-3 py-2 border rounded-lg mt-1 mb-4"
+          className="w-full px-3 py-2 border rounded-lg mt-1 mb-4 text-sm"
         />
 
         <AnimatePresence>
           {errorMsg && (
-            <motion.p className="text-red-500 text-sm mb-3 text-center">
+            <motion.p
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-red-500 text-sm mb-3 text-center"
+            >
               {errorMsg}
             </motion.p>
           )}
@@ -71,7 +79,7 @@ export default function Login() {
 
         <button
           type="submit"
-          className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm mt-2"
+          className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm md:text-base mt-2"
         >
           {loading ? "Ingresando..." : "Entrar"}
         </button>

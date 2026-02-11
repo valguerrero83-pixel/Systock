@@ -47,7 +47,7 @@ export default function Empleados() {
       id: e.id,
       nombre: e.nombre,
       cargo: e.cargo ?? "—",
-      total_movs: movCount[e.id] || 0
+      total_movs: movCount[e.id] || 0,
     }));
 
     setEmpleados(empleadosFormateados);
@@ -59,7 +59,6 @@ export default function Empleados() {
   }, []);
 
   const eliminarEmpleado = async (id: string) => {
-    // Revisar movimientos con UUID entre comillas
     const { data: movs, error: movErr } = await supabase
       .from("movimientos")
       .select("id")
@@ -93,59 +92,65 @@ export default function Empleados() {
 
   return (
     <motion.div
-      className="max-w-5xl mx-auto mt-8 bg-white p-6 rounded-2xl shadow"
+      className="max-w-5xl mx-auto mt-4 md:mt-8 bg-white p-4 md:p-6 rounded-2xl shadow"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <h2 className="text-xl font-semibold mb-6">Empleados</h2>
+      <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">
+        Empleados
+      </h2>
 
-      <table className="w-full text-sm">
-        <thead className="border-b">
-          <tr>
-            <th className="py-2 text-left">Nombre</th>
-            <th className="py-2 text-left">Cargo</th>
-            <th className="py-2 text-center">Movs</th>
-            <th className="py-2 text-center">Acciones</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {empleados.map((e) => (
-            <tr key={e.id} className="border-b">
-              <td className="py-3">{e.nombre}</td>
-              <td>{e.cargo}</td>
-              <td className="text-center">{e.total_movs}</td>
-
-              <td className="text-center">
-                {(usuario?.rol_usuario === "dev" ||
-                  usuario?.rol_usuario === "admin") && (
-                  <div className="flex gap-3 justify-center">
-
-                    {/* SOLO ELIMINAR */}
-                    <button
-                      onClick={() => eliminarEmpleado(e.id)}
-                      disabled={e.total_movs > 0}
-                      className={`${
-                        e.total_movs > 0
-                          ? "text-gray-400 cursor-not-allowed"
-                          : "text-red-600 hover:underline"
-                      }`}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                )}
-
-                {(usuario?.rol_usuario === "viewer" ||
-                  usuario?.rol_usuario === "jefe" ||
-                  usuario?.rol_usuario === "gerente") && (
-                  <span className="text-gray-500 text-xs">Sin permisos</span>
-                )}
-              </td>
+      {/* CONTENEDOR SCROLL PARA LA TABLA EN MÓVIL */}
+      <div className="overflow-x-auto rounded-lg">
+        <table className="w-full text-sm min-w-[600px]">
+          <thead className="border-b bg-gray-50">
+            <tr>
+              <th className="py-2 px-2 text-left">Nombre</th>
+              <th className="py-2 px-2 text-left">Cargo</th>
+              <th className="py-2 px-2 text-center">Movs</th>
+              <th className="py-2 px-2 text-center">Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {empleados.map((e) => (
+              <tr key={e.id} className="border-b">
+                <td className="py-3 px-2">{e.nombre}</td>
+                <td className="px-2">{e.cargo}</td>
+                <td className="text-center px-2">{e.total_movs}</td>
+
+                <td className="text-center px-2">
+                  {(usuario?.rol_usuario === "dev" ||
+                    usuario?.rol_usuario === "admin") && (
+                    <div className="flex gap-3 justify-center">
+
+                      <button
+                        onClick={() => eliminarEmpleado(e.id)}
+                        disabled={e.total_movs > 0}
+                        className={`${
+                          e.total_movs > 0
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-red-600 hover:underline"
+                        }`}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
+
+                  {(usuario?.rol_usuario === "viewer" ||
+                    usuario?.rol_usuario === "jefe" ||
+                    usuario?.rol_usuario === "gerente") && (
+                    <span className="text-gray-500 text-xs">
+                      Sin permisos
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {loading && (
         <p className="text-center text-gray-500 mt-4 animate-pulse">

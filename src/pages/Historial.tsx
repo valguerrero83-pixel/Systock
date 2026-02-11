@@ -157,13 +157,13 @@ export default function Historial() {
   ============================= */
 
   return (
-    <div className="max-w-7xl mx-auto mt-8 px-4">
-      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+    <div className="max-w-7xl mx-auto mt-6 md:mt-8 px-4">
+      <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
         <ArrowIcon /> Historial de Movimientos
       </h2>
 
       {/* FILTROS */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
           <option value="">Todos</option>
           {empleados.map((e) => (
@@ -188,10 +188,10 @@ export default function Historial() {
         <FiltroFecha label="Hasta" name="hasta" value={filtros.hasta} onChange={handleFiltro} />
       </div>
 
-      {/* TABLA */}
-      <div className="overflow-hidden bg-white rounded-2xl shadow">
-        <div className="max-h-[460px] overflow-y-auto">
-          <table className="w-full text-sm border-separate border-spacing-y-1">
+      {/* TABLA RESPONSIVE */}
+      <div className="overflow-x-auto rounded-2xl shadow bg-white">
+        <div className="max-h-[420px] md:max-h-[460px] overflow-y-auto">
+          <table className="w-full text-xs md:text-sm min-w-[700px] border-separate border-spacing-y-1">
             <thead className="bg-gray-100 text-gray-700 sticky top-0 z-10">
               <tr>
                 <Th>Fecha</Th>
@@ -217,17 +217,18 @@ export default function Historial() {
                   >
                     <Td>
                       <div className="font-medium">{fecha}</div>
-                      <div className="text-xs text-gray-500">{hora}</div>
+                      <div className="text-[10px] md:text-xs text-gray-500">{hora}</div>
                     </Td>
 
                     <Td>
                       <span
-                        className={`px-2 py-1 rounded-lg text-white text-xs font-semibold
+                        className={`px-2 py-1 rounded-lg text-white text-[10px] md:text-xs font-semibold
                         ${m.tipo === "entrada" ? "bg-green-400" : "bg-red-400"}`}
                       >
                         {m.tipo}
                       </span>
                     </Td>
+
 
                     <Td>{m.repuestos?.nombre}</Td>
 
@@ -240,7 +241,7 @@ export default function Historial() {
                         {m.tipo === "entrada" ? "+" : "-"}
                         {m.cantidad}
                       </span>{" "}
-                      <span className="text-gray-700 text-xs">
+                      <span className="text-gray-700 text-[10px] md:text-xs">
                         {m.repuestos?.unidad}
                       </span>
                     </Td>
@@ -258,7 +259,7 @@ export default function Historial() {
       {/* BOTÓN EXPORTAR */}
       <button
         onClick={exportarCSV}
-        className="mt-6 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700"
+        className="mt-6 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 text-sm md:text-base"
       >
         Exportar CSV
       </button>
@@ -278,7 +279,7 @@ function Filtro({ label, name, value, onChange, children }: any) {
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full mt-1 px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm bg-white"
+        className="w-full mt-1 px-3 py-2.5 border border-gray-300 rounded-xl shadow-sm bg-white text-sm"
       >
         {children}
       </select>
@@ -295,7 +296,7 @@ function FiltroFecha({ label, name, value, onChange }: any) {
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full mt-1 px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm bg-white"
+        className="w-full mt-1 px-3 py-2.5 border border-gray-300 rounded-xl shadow-sm bg-white text-sm"
       />
     </div>
   );
@@ -311,6 +312,8 @@ function Th({ children }: any) {
 
 function Td({ children }: any) {
   return (
-    <td className="py-3 px-2 text-gray-800">{children}</td>
+    <td className="py-3 px-2 text-gray-800">
+      {children}
+    </td>
   );
 }

@@ -49,10 +49,9 @@ export default function ModalNuevoRepuesto({
         unidad: form.unidad,
         stock_minimo: Number(form.stock_minimo),
         cantidad_inicial: Number(form.cantidad_inicial),
-        usuario_id: usuario.id, // YA NO DA ERROR
+        usuario_id: usuario.id,
       });
 
-      // Limpiar formulario
       setForm({
         nombre: "",
         cantidad_inicial: "",
@@ -74,13 +73,19 @@ export default function ModalNuevoRepuesto({
     <AnimatePresence>
       {abierto && (
         <motion.div
-          className="fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm flex justify-center items-center"
+          className="
+            fixed inset-0 z-[99999] bg-black/40 backdrop-blur-sm 
+            flex justify-center items-center p-3
+          "
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white w-[90%] max-w-lg rounded-2xl shadow-xl p-8"
+            className="
+              bg-white w-full max-w-lg rounded-2xl shadow-xl 
+              p-6 sm:p-8 max-h-[88vh] overflow-y-auto
+            "
             initial={{ scale: 0.8, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0 }}
@@ -88,7 +93,7 @@ export default function ModalNuevoRepuesto({
           >
             {/* HEADER */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
                 <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="7" width="18" height="13" rx="2" />
                   <polyline points="3 7 12 2 21 7" />
@@ -109,12 +114,15 @@ export default function ModalNuevoRepuesto({
                   name="nombre"
                   value={form.nombre}
                   onChange={handleChange}
-                  className="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300 outline-none"
+                  className="
+                    w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 
+                    focus:ring-blue-300 outline-none text-sm
+                  "
                   placeholder="Ej: Aceite hidráulico 10W40"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-sm font-semibold text-gray-700">Cantidad</label>
                   <input
@@ -122,7 +130,7 @@ export default function ModalNuevoRepuesto({
                     name="cantidad_inicial"
                     value={form.cantidad_inicial}
                     onChange={handleChange}
-                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                    className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
                   />
                 </div>
 
@@ -132,7 +140,7 @@ export default function ModalNuevoRepuesto({
                     name="unidad"
                     value={form.unidad}
                     onChange={handleChange}
-                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                    className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
                   >
                     <option>Unidades</option>
                     <option>Litros</option>
@@ -148,17 +156,17 @@ export default function ModalNuevoRepuesto({
                     name="stock_minimo"
                     value={form.stock_minimo}
                     onChange={handleChange}
-                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                    className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
                   />
                 </div>
               </div>
             </div>
 
             {/* BOTONES */}
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
               <button
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg border hover:bg-gray-100"
+                className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-sm"
               >
                 Cancelar
               </button>
@@ -166,7 +174,10 @@ export default function ModalNuevoRepuesto({
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 flex items-center gap-2"
+                className="
+                  px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 
+                  flex items-center gap-2 text-sm disabled:opacity-70
+                "
               >
                 {loading ? "Guardando..." : "Agregar Repuesto"}
               </button>

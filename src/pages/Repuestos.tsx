@@ -41,38 +41,45 @@ export default function Repuestos() {
 
   return (
     <motion.div
-      className="max-w-5xl mx-auto p-6"
+      className="max-w-5xl mx-auto px-4 md:px-6 py-6"
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold">Repuestos</h1>
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <h1 className="text-lg md:text-xl font-bold">Repuestos</h1>
 
         <button
           onClick={() => setModalAbierto(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
+          className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition text-sm md:text-base w-full sm:w-auto"
         >
           Nuevo Repuesto
         </button>
       </div>
 
+      {/* TABLA */}
       {loading ? (
-        <p className="animate-pulse text-gray-500">Cargando...</p>
+        <p className="animate-pulse text-gray-500 text-sm md:text-base">
+          Cargando...
+        </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-lg">
+          <table className="w-full min-w-[500px] text-xs md:text-sm">
             <thead className="bg-gray-100 text-left border-b">
               <tr>
-                <th className="p-2">Nombre</th>
-                <th className="p-2">Unidad</th>
-                <th className="p-2">Stock mínimo</th>
+                <th className="p-2 font-semibold">Nombre</th>
+                <th className="p-2 font-semibold">Unidad</th>
+                <th className="p-2 font-semibold">Stock mínimo</th>
               </tr>
             </thead>
 
             <tbody>
               {repuestos.map((r) => (
-                <tr key={r.id} className="border-b hover:bg-gray-50">
+                <tr
+                  key={r.id}
+                  className="border-b hover:bg-gray-50 transition"
+                >
                   <td className="p-2">{r.nombre}</td>
                   <td className="p-2">{r.unidad}</td>
                   <td className="p-2">{r.stock_minimo}</td>

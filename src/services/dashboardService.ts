@@ -21,15 +21,23 @@ export async function obtenerStockBajo(): Promise<number> {
 }
 
 export async function obtenerMovimientosHoy(): Promise<number> {
-  const hoy = new Date().toISOString().slice(0, 10);
+  // Fecha actual en formato YYYY-MM-DD
+  const hoy = new Date()
+    .toLocaleDateString("sv-SE", { timeZone: "America/Bogota" });
+
+  const desde = `${hoy}T00:00:00-05:00`;
+  const hasta = `${hoy}T23:59:59-05:00`;
 
   const { count, error } = await supabase
     .from("movimientos")
-    .select("*", { count: "exact" })
-    .gte("created_at", `${hoy}T00:00:00`)
-    .lte("created_at", `${hoy}T23:59:59`);
+    .select("*", { count: "exact", head: false })
+    .gte("created_at_tz", desde)
+    .lte("created_at_tz", hasta);
 
-  if (error) return 0;
+  if (error) {
+    console.error("Error movimientos hoy:", error);
+    return 0;
+  }
 
   return count ?? 0;
 }

@@ -20,7 +20,7 @@ const Toast = ({ mensaje }: { mensaje: string }) => (
     initial={{ opacity: 0, y: 40 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 40 }}
-    className="fixed bottom-6 right-6 bg-red-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-semibold z-50"
+    className="fixed bottom-6 right-6 bg-red-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-semibold z-50 max-w-[80%]"
   >
     {mensaje}
   </motion.div>
@@ -157,37 +157,39 @@ export default function Salidas() {
   if (esModoLectura) {
     return (
       <PageTransition>
-        <div className="max-w-7xl mx-auto mt-8 px-4">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+        <div className="max-w-7xl mx-auto mt-6 md:mt-8 px-4">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-700 mb-4">
             Salidas (solo lectura)
           </h2>
 
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl p-6 shadow-md border border-gray-100 flex flex-col"
+            className="bg-white rounded-2xl p-4 md:p-6 shadow-md border border-gray-100"
           >
-            <h2 className="text-xl font-semibold mb-4">Historial de Salidas</h2>
+            <h2 className="text-lg md:text-xl font-semibold mb-4">
+              Historial de Salidas
+            </h2>
 
-            <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100">
+            <div className="max-h-[420px] md:max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100">
               {historial.map((m, i) => (
                 <motion.div
                   key={m.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="py-4 grid grid-cols-5 text-sm items-center gap-2"
+                  className="py-3 md:py-4 grid grid-cols-2 sm:grid-cols-5 text-xs md:text-sm items-center gap-2"
                 >
                   <div>
                     <p className="font-semibold text-gray-800">
                       {new Date(m.created_at_tz).toLocaleDateString("es-CO")}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-[10px] md:text-xs text-gray-500">
                       {new Date(m.created_at_tz).toLocaleTimeString("es-CO")}
                     </p>
                   </div>
 
-                  <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
+                  <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold text-[10px] md:text-xs w-fit">
                     -{Math.abs(m.cantidad)} {m.repuestos?.unidad}
                   </span>
 
@@ -197,7 +199,7 @@ export default function Salidas() {
                   <span className="text-gray-600">{m.recibido?.nombre}</span>
 
                   {m.notas && (
-                    <p className="col-span-5 text-xs text-gray-500 italic mt-1">
+                    <p className="col-span-2 sm:col-span-5 text-[10px] md:text-xs text-gray-500 italic mt-1">
                       {m.notas}
                     </p>
                   )}
@@ -206,6 +208,7 @@ export default function Salidas() {
             </div>
           </motion.div>
         </div>
+
         {toast && <Toast mensaje={toast} />}
       </PageTransition>
     );
@@ -216,19 +219,23 @@ export default function Salidas() {
   =============================== */
   return (
     <PageTransition>
-      <div className="w-full max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
+      <div className="w-full max-w-7xl mx-auto mt-6 md:mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 px-4">
 
         {/* FORMULARIO */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
+          className="bg-white rounded-2xl p-4 md:p-6 shadow-md border border-gray-100"
         >
-          <h2 className="text-xl font-semibold mb-4">Registrar Salida de Repuesto</h2>
+          <h2 className="text-lg md:text-xl font-semibold mb-4">
+            Registrar Salida de Repuesto
+          </h2>
 
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-            <p className="text-xs text-red-700 font-semibold">FECHA Y HORA DEL REGISTRO</p>
-            <p className="text-lg font-bold text-gray-900">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3 md:p-4 mb-6">
+            <p className="text-[11px] md:text-xs text-red-700 font-semibold">
+              FECHA Y HORA DEL REGISTRO
+            </p>
+            <p className="text-base md:text-lg font-bold text-gray-900">
               {new Date().toLocaleDateString("es-CO")} •{" "}
               {new Date().toLocaleTimeString("es-CO", {
                 hour: "2-digit",
@@ -238,12 +245,13 @@ export default function Salidas() {
             </p>
           </div>
 
+          {/* REPUESTO */}
           <label className="text-sm font-semibold">Repuesto</label>
           <select
             name="repuesto_id"
             value={form.repuesto_id}
             onChange={handleChange}
-            className="w-full mt-1 py-2 px-3 border border-gray-200 rounded-lg mb-2"
+            className="w-full mt-1 py-2 px-3 border border-gray-200 rounded-lg mb-2 text-sm md:text-base"
           >
             <option value="">Buscar repuesto...</option>
             {repuestos.map((r) => (
@@ -259,13 +267,14 @@ export default function Salidas() {
             </p>
           )}
 
+          {/* CANTIDAD */}
           <label className="text-sm font-semibold">Cantidad a sacar</label>
           <input
             type="text"
             name="cantidad"
             value={form.cantidad}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-1"
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-1 text-sm md:text-base"
             placeholder="Ej: 5"
           />
 
@@ -275,12 +284,13 @@ export default function Salidas() {
             </p>
           )}
 
+          {/* ENTREGADO POR */}
           <label className="text-sm font-semibold mt-3">Entregado por</label>
           <select
             name="entregado_por"
             value={form.entregado_por}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-3"
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-3 text-sm md:text-base"
           >
             <option value="">Seleccione...</option>
             {empleados.map((e) => (
@@ -290,12 +300,13 @@ export default function Salidas() {
             ))}
           </select>
 
+          {/* RECIBIDO POR */}
           <label className="text-sm font-semibold">Recibido por</label>
           <select
             name="recibido_por"
             value={form.recibido_por}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-3"
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-3 text-sm md:text-base"
           >
             <option value="">Seleccione...</option>
             {empleados.map((e) => (
@@ -305,16 +316,18 @@ export default function Salidas() {
             ))}
           </select>
 
+          {/* NOTAS */}
           <label className="text-sm font-semibold">Notas</label>
           <textarea
             name="notas"
             rows={2}
             value={form.notas}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-2"
+            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-2 text-sm md:text-base"
             placeholder="Detalles adicionales..."
           />
 
+          {/* BOTÓN */}
           <button
             onClick={handleSubmit}
             disabled={
@@ -324,7 +337,7 @@ export default function Salidas() {
               !form.recibido_por ||
               Number(form.cantidad) > (stockActual ?? 0)
             }
-            className={`w-full mt-4 text-white py-3 rounded-lg shadow-sm transition ${
+            className={`w-full mt-4 text-white py-3 rounded-lg shadow-sm transition text-sm md:text-base ${
               Number(form.cantidad) > (stockActual ?? 0) ||
               !form.cantidad ||
               !form.repuesto_id
@@ -340,39 +353,40 @@ export default function Salidas() {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
+          className="bg-white rounded-2xl p-4 md:p-6 shadow-md border border-gray-100"
         >
-          <h2 className="text-xl font-semibold mb-4">Historial de Salidas</h2>
+          <h2 className="text-lg md:text-xl font-semibold mb-4">
+            Historial de Salidas
+          </h2>
 
-          <div className="max-h-[580px] overflow-y-auto pr-2 divide-y divide-gray-100">
+          <div className="max-h-[420px] md:max-h-[580px] overflow-y-auto pr-2 divide-y divide-gray-100">
             {historial.map((m, i) => (
               <motion.div
-                key={m.id}
+                key={m?.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="py-4 grid grid-cols-5 text-sm items-center gap-2"
+                className="py-3 md:py-4 grid grid-cols-2 sm:grid-cols-5 text-xs md:text-sm items-center gap-2"
               >
                 <div>
                   <p className="font-semibold text-gray-800">
                     {new Date(m.created_at_tz).toLocaleDateString("es-CO")}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[10px] md:text-xs text-gray-500">
                     {new Date(m.created_at_tz).toLocaleTimeString("es-CO")}
                   </p>
                 </div>
 
-                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
+                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold text-[10px] md:text-xs w-fit">
                   -{Math.abs(m.cantidad)} {m.repuestos?.unidad}
                 </span>
 
                 <span className="font-medium">{m.repuestos?.nombre}</span>
-
                 <span className="text-gray-600">{m.entregado?.nombre}</span>
                 <span className="text-gray-600">{m.recibido?.nombre}</span>
 
                 {m.notas && (
-                  <p className="col-span-5 text-xs text-gray-500 italic mt-1">
+                  <p className="col-span-2 sm:col-span-5 text-[10px] md:text-xs text-gray-500 italic mt-1">
                     {m.notas}
                   </p>
                 )}
