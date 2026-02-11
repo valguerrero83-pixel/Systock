@@ -186,7 +186,7 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
 
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-white text-xs ${
-                        m.tipo === "ENTRADA" ? "bg-green-500" : "bg-red-500"
+                        m.tipo === "entrada" ? "bg-green-500" : "bg-red-500"
                       }`}>
                         {m.tipo}
                       </span>
@@ -195,7 +195,7 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
                     <td className="px-4 py-3">{m.repuestos?.nombre}</td>
 
                     <td className="px-4 py-3">
-                      {m.tipo === "ENTRADA" ? "+" : "-"}
+                      {m.tipo === "entrada" ? "+" : "-"}
                       {m.cantidad} <span className="text-gray-500">{m.repuestos?.unidad}</span>
                     </td>
 

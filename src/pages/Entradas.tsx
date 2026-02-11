@@ -18,6 +18,38 @@ import type {
   Movimiento,
 } from "../types/index";
 
+// ===============================
+//   FORMATEAR FECHA — SEGURO
+// ===============================
+
+function formatearFechaColombia(fechaStr?: string | null) {
+  if (!fechaStr || typeof fechaStr !== "string") {
+    return { fecha: "Sin fecha", hora: "00:00:00" };
+  }
+
+  // Aceptar formatos tipo:
+  // "2026-02-11 13:44:10-05:00"
+  // "2026-02-11T13:44:10"
+  const fechaNormalizada = fechaStr.replace(" ", "T");
+
+  let fechaObj = new Date(fechaNormalizada);
+
+  if (isNaN(fechaObj.getTime())) {
+    return { fecha: "Fecha inválida", hora: "00:00:00" };
+  }
+
+  const fecha = fechaObj.toLocaleDateString("es-CO", {
+    timeZone: "America/Bogota",
+  });
+
+  const hora = fechaObj.toLocaleTimeString("es-CO", {
+    timeZone: "America/Bogota",
+    hour12: false,
+  });
+
+  return { fecha, hora };
+}
+
 // --- TOAST ---
 const Toast = ({ mensaje }: { mensaje: string }) => (
   <motion.div
@@ -33,12 +65,10 @@ const Toast = ({ mensaje }: { mensaje: string }) => (
 export default function Entradas() {
   const { usuario } = useAuth();
 
-  // ---------------- PERMISOS ----------------
   const rol = usuario?.rol_usuario;
-  const puedeRegistrar = rol === "admin" || rol === "dev"; // únicos permitidos
-  const esModoLectura = !puedeRegistrar; // jefe, gerente, viewer
+  const puedeRegistrar = rol === "admin" || rol === "dev";
+  const esModoLectura = !puedeRegistrar;
 
-  // ---------------- STATE ----------------
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [stock, setStock] = useState<StockActual[]>([]);
@@ -52,22 +82,19 @@ export default function Entradas() {
     notas: "",
   });
 
-  const repuestoSeleccionado = repuestos.find((r) => r.id === form.repuesto_id);
-  const stockDisponible =
-    stock.find((s) => s.repuesto_id === form.repuesto_id)?.stock ?? null;
+  const repuestoSeleccionado = repuestos.find((r: any) => r.id === form.repuesto_id);
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
+  const stockDisponible =
+    stock.find((s: any) => s.repuesto_id === form.repuesto_id)?.stock ?? null;
 
   async function cargarDatos() {
     try {
-      const [rep, emp, hist, stk] = await Promise.all([
+      const [rep, emp, hist, stk] = (await Promise.all([
         obtenerRepuestos(),
         obtenerEmpleados(),
         obtenerHistorialEntradas(),
         obtenerStockActual(),
-      ]);
+      ])) as any;
 
       setRepuestos(rep);
       setEmpleados(emp);
@@ -78,9 +105,13 @@ export default function Entradas() {
     }
   }
 
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
   const showToast = (msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(""), 3000);
+    setTimeout(() => setToast(""), 2500);
   };
 
   function handleChange(e: any) {
@@ -89,7 +120,7 @@ export default function Entradas() {
   }
 
   async function handleSubmit() {
-    if (!puedeRegistrar) return; // seguridad adicional
+    if (!puedeRegistrar) return;
 
     if (!form.repuesto_id || !form.cantidad || !form.recibido_por) {
       showToast("Completa todos los campos obligatorios.");
@@ -120,7 +151,7 @@ export default function Entradas() {
     }
   }
 
-  // ---------------- MODO VISOR / SOLO LECTURA ----------------
+  // ---------------- SOLO LECTURA ----------------
   if (esModoLectura) {
     return (
       <PageTransition>
@@ -133,58 +164,68 @@ export default function Entradas() {
             Tu rol no permite registrar entradas, pero puedes ver el historial.
           </p>
 
-          {/* HISTORIAL */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
           >
-            <h2 className="text-xl font-semibold mb-4">
-              Historial de Movimientos
-            </h2>
+            <h2 className="text-xl font-semibold mb-4">Historial de Movimientos</h2>
 
-            <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              {historial.slice(0, 12).map((m, i) => (
-                <motion.div
-                  key={m.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="py-4 grid grid-cols-5 text-sm items-center gap-2"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
-                    </p>
-                  </div>
+            <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100">
+              {historial.slice(0, 12).map((m, i) => {
+                const { fecha, hora } = formatearFechaColombia(
+                  m.created_at_tz || m.created_at_tz
+                );
 
-                  <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
-                    +{m.cantidad} {m.repuestos?.unidad}
-                  </span>
+                return (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="py-4 text-sm"
+                  >
+                    <div className="grid grid-cols-5 items-center gap-2">
+                      <div>
+                        <p className="font-semibold text-gray-800">{fecha}</p>
+                        <p className="text-xs text-gray-500">{hora}</p>
+                      </div>
 
-                  <span className="font-medium">{m.repuestos?.nombre}</span>
+                      <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
+                        +{m.cantidad} {m.repuestos?.unidad}
+                      </span>
 
-                  <span className="text-gray-600">—</span>
+                      <span className="font-medium">{m.repuestos?.nombre}</span>
 
-                  <span className="text-gray-600">
-                    {m.empleado_recibe?.nombre}
-                  </span>
-                </motion.div>
-              ))}
+                      <span className="text-gray-600">—</span>
+
+                      <span className="text-gray-600">
+                        {m.empleado_recibe?.nombre}
+                      </span>
+                    </div>
+
+                    {m.notas && (
+                      <p className="text-xs text-gray-500 italic mt-1 ml-1">
+                        {m.notas}
+                      </p>
+                    )}
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         </div>
+
+        {toast && <Toast mensaje={toast} />}
       </PageTransition>
     );
   }
 
-  // ---------------- FORMULARIO NORMAL (ADMIN / DEV) ----------------
+  // ---------------- FORMULARIO NORMAL ----------------
   return (
     <PageTransition>
       <div className="w-full max-w-7xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
+        
         {/* FORM */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -195,7 +236,6 @@ export default function Entradas() {
             Registrar Entrada de Repuesto
           </h2>
 
-          {/* FECHA */}
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
             <p className="text-xs text-green-700 font-semibold">
               FECHA Y HORA DEL REGISTRO
@@ -210,7 +250,6 @@ export default function Entradas() {
             </p>
           </div>
 
-          {/* Repuesto */}
           <label className="text-sm font-semibold">Repuesto</label>
           <select
             name="repuesto_id"
@@ -233,7 +272,6 @@ export default function Entradas() {
             </p>
           )}
 
-          {/* Cantidad */}
           <label className="text-sm font-semibold">Cantidad</label>
           <input
             type="number"
@@ -243,7 +281,6 @@ export default function Entradas() {
             className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-4"
           />
 
-          {/* Empleado */}
           <label className="text-sm font-semibold">Recibido por</label>
           <select
             name="recibido_por"
@@ -259,7 +296,6 @@ export default function Entradas() {
             ))}
           </select>
 
-          {/* Notas */}
           <label className="text-sm font-semibold">Notas</label>
           <textarea
             name="notas"
@@ -269,7 +305,6 @@ export default function Entradas() {
             className="w-full py-2 px-3 border border-gray-200 rounded-lg"
           />
 
-          {/* Botón */}
           <button
             onClick={handleSubmit}
             className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg shadow-sm transition"
@@ -284,41 +319,49 @@ export default function Entradas() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl p-6 shadow-md border border-gray-100"
         >
-          <h2 className="text-xl font-semibold mb-4">
-            Historial de Movimientos
-          </h2>
+          <h2 className="text-xl font-semibold mb-4">Historial de Movimientos</h2>
 
           <div className="max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100">
-            {historial.slice(0, 12).map((m, i) => (
-              <motion.div
-                key={m.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="py-4 grid grid-cols-5 text-sm items-center gap-2"
-              >
-                <div>
-                  <p className="font-semibold text-gray-800">
-                    {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(m.created_at + "Z").toLocaleTimeString("es-CO")}
-                  </p>
-                </div>
+            {historial.slice(0, 12).map((m, i) => {
+              const { fecha, hora } = formatearFechaColombia(
+                m.created_at_tz || m.created_at_tz
+              );
 
-                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
-                  +{m.cantidad} {m.repuestos?.unidad}
-                </span>
+              return (
+                <motion.div
+                  key={m.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="py-4 text-sm"
+                >
+                  <div className="grid grid-cols-5 items-center gap-2">
+                    <div>
+                      <p className="font-semibold text-gray-800">{fecha}</p>
+                      <p className="text-xs text-gray-500">{hora}</p>
+                    </div>
 
-                <span className="font-medium">{m.repuestos?.nombre}</span>
+                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-semibold text-xs w-fit">
+                      +{m.cantidad} {m.repuestos?.unidad}
+                    </span>
 
-                <span className="text-gray-600">—</span>
+                    <span className="font-medium">{m.repuestos?.nombre}</span>
 
-                <span className="text-gray-600">
-                  {m.empleado_recibe?.nombre}
-                </span>
-              </motion.div>
-            ))}
+                    <span className="text-gray-600">—</span>
+
+                    <span className="text-gray-600">
+                      {m.empleado_recibe?.nombre}
+                    </span>
+                  </div>
+
+                  {m.notas && (
+                    <p className="text-xs text-gray-500 italic mt-1 ml-1">
+                      {m.notas}
+                    </p>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
 

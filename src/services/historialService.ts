@@ -15,9 +15,9 @@ export async function obtenerHistorialMovimientos(
 
   if (!Array.isArray(data)) return [];
 
-  // Normalizar por si algún join viene null
   return data.map((m: any) => ({
     ...m,
+    created_at_tz: m.created_at_tz ?? null,
     repuestos: m.repuestos ?? null,
     empleado_entrega: m.empleado_entrega ?? null,
     empleado_recibe: m.empleado_recibe ?? null,

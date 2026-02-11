@@ -1,116 +1,127 @@
 import { supabase } from "../lib/supabase";
 
-/* =============================
-   OBTENER REPUESTOS
-==============================*/
-export async function getRepuestos() {
-  const { data, error } = await supabase
-    .from("repuestos")
-    .select("id, nombre, unidad, stock_actual");
+/* ============================
+      FECHA COLOMBIA REAL
+============================ */
+function fechaColombia() {
+  const opciones = {
+    timeZone: "America/Bogota",
+    hour12: false,
+  };
 
-  if (error) {
-    console.error("Error cargando repuestos:", error);
-    return [];
-  }
+  const fechaLocal = new Date()
+    .toLocaleString("sv-SE", opciones) // "2026-02-11 11:23:59"
+    .replace(" ", "T"); // <-- ESTA ES LA CLAVE
 
-  return data || [];
+  return `${fechaLocal}-05:00`;
 }
 
-/* =============================
-   OBTENER EMPLEADOS
-==============================*/
+
+
+/* ============================
+      OBTENER REPUESTOS
+============================ */
+export async function getRepuestos() {
+  const { data, error } = await supabase
+    .from("stock_actual")
+    .select("repuesto_id, nombre, unidad, stock")
+    .order("nombre");
+
+  if (error) return [];
+  return data.map((r) => ({
+    id: r.repuesto_id,
+    nombre: r.nombre,
+    unidad: r.unidad,
+    stock: r.stock,
+  }));
+}
+
+/* ============================
+      OBTENER EMPLEADOS
+============================ */
 export async function getEmpleados() {
   const { data, error } = await supabase
     .from("empleados")
-    .select("id, nombre");
+    .select("id, nombre")
+    .order("nombre");
 
-  if (error) {
-    console.error("Error cargando empleados:", error);
-    return [];
-  }
-
-  return data || [];
+  if (error) return [];
+  return data;
 }
 
-/* =============================
-   CREAR SALIDA
-==============================*/
+/* ============================
+      OBTENER STOCK POR ID
+============================ */
+export async function getStockActualById(id: string) {
+  const { data, error } = await supabase
+    .from("stock_actual")
+    .select("stock")
+    .eq("repuesto_id", id)
+    .single();
+
+  if (error) return null;
+  return data?.stock ?? null;
+}
+
+/* ============================
+       CREAR SALIDA
+============================ */
 export async function crearSalida({
   repuesto_id,
   cantidad,
   entregado_por,
   recibido_por,
   usuario_id,
-  unidad
+  notas,
 }: any) {
-  // 1. Verificar stock actual
-  const { data: repuesto } = await supabase
-    .from("repuestos")
-    .select("stock_actual")
-    .eq("id", repuesto_id)
+  
+  const { data: stockRow, error: stockError } = await supabase
+    .from("stock_actual")
+    .select("stock")
+    .eq("repuesto_id", repuesto_id)
     .single();
 
-  if (!repuesto) {
-    return { error: "Repuesto no encontrado" };
+  if (stockError) return { error: "No se pudo obtener stock actual." };
+
+  if (cantidad > stockRow.stock) {
+    return { error: "No puedes sacar más de lo disponible." };
   }
 
-  if (cantidad > repuesto.stock_actual) {
-    return { error: "No puedes sacar más de lo que hay en stock" };
-  }
-
-  // 2. Guardar movimiento
   const { error: movError } = await supabase.from("movimientos").insert({
     repuesto_id,
-    cantidad: -cantidad, // salida siempre va en negativo
-    tipo: "Salida",
+    cantidad: -Math.abs(cantidad),
+    tipo: "salida",
     entregado_por,
     recibido_por,
     usuario_id,
-    created_at: new Date().toISOString(),
-    notas: `${cantidad} ${unidad} salieron del inventario`
+    notas: notas || "",
+    created_at_tz: fechaColombia(), // FECHA COLOMBIA REAL
   });
 
-  if (movError) {
-    return { error: movError.message };
-  }
-
-  // 3. Actualizar inventario
-  const { error: updateError } = await supabase
-    .from("repuestos")
-    .update({
-      stock_actual: repuesto.stock_actual - cantidad
-    })
-    .eq("id", repuesto_id);
-
-  if (updateError) {
-    return { error: updateError.message };
-  }
+  if (movError) return { error: movError.message };
 
   return { success: true };
 }
 
-/* =============================
-   HISTORIAL DE SALIDAS
-==============================*/
+/* ============================
+       HISTORIAL
+============================ */
 export async function getHistorialSalidas() {
   const { data, error } = await supabase
     .from("movimientos")
     .select(`
       id,
       cantidad,
-      created_at,
+      created_at_tz,
+      notas,
       repuestos:repuesto_id (nombre, unidad),
-      entregado_por (nombre),
-      recibido_por (nombre)
+      entregado:entregado_por (nombre),
+      recibido:recibido_por (nombre)
     `)
-    .eq("tipo", "Salida")
-    .order("created_at", { ascending: false })
-    .limit(20);
+    .eq("tipo", "salida")
+    .order("created_at_tz", { ascending: false })
+    .limit(50);
 
-  if (error) {
-    console.error("Error historial:", error);
-    return [];
-  }
-
-  return data || [];
+  if (error) return [];
+  return data;
 }

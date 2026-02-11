@@ -2,9 +2,27 @@ import { useEffect, useState } from "react";
 import { obtenerHistorialMovimientos } from "../services/historialService";
 import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
-// import PageTransition from "../components/PageTransition.bak";
-
 import type { Movimiento, Empleado, Repuesto } from "../types/index";
+
+/* ============================
+   FORMATEAR FECHA / HORA
+============================ */
+function formatearFecha(fecha: string | null | undefined) {
+  if (!fecha) return { fecha: "—", hora: "" };
+
+  try {
+    const f = new Date(fecha);
+    return {
+      fecha: f.toLocaleDateString("es-CO", { timeZone: "America/Bogota" }),
+      hora: f.toLocaleTimeString("es-CO", {
+        timeZone: "America/Bogota",
+        hour12: false,
+      }),
+    };
+  } catch {
+    return { fecha: "—", hora: "" };
+  }
+}
 
 /* ICONO */
 const ArrowIcon = () => (
@@ -36,6 +54,9 @@ export default function Historial() {
     cargarDatos();
   }, []);
 
+  /* ============================
+         CARGAR DATOS
+  ============================= */
   async function cargarDatos() {
     const hist = await obtenerHistorialMovimientos("365");
 
@@ -55,32 +76,32 @@ export default function Historial() {
     setRepuestos(rep ?? []);
   }
 
+  /* ============================
+         FILTROS
+  ============================= */
   function aplicarFiltros(n = filtros) {
     let lista = [...histOriginal];
 
     if (n.empleado) {
       lista = lista.filter(
         (m) =>
-          m.empleado_entrega?.id == n.empleado ||
-          m.empleado_recibe?.id == n.empleado
+          m.empleado_entrega?.id === n.empleado ||
+          m.empleado_recibe?.id === n.empleado
       );
     }
 
-    if (n.repuesto) lista = lista.filter((m) => m.repuesto_id == n.repuesto);
+    if (n.repuesto) lista = lista.filter((m) => m.repuesto_id === n.repuesto);
     if (n.tipo) lista = lista.filter((m) => m.tipo === n.tipo);
 
     if (n.desde) {
-      lista = lista.filter(
-        (m) => new Date(m.created_at + "Z") >= new Date(n.desde)
-      );
+      const d = new Date(n.desde);
+      lista = lista.filter((m) => new Date(m.created_at_tz) >= d);
     }
 
     if (n.hasta) {
-      const fechaTope = new Date(n.hasta);
-      fechaTope.setHours(23, 59, 59);
-      lista = lista.filter(
-        (m) => new Date(m.created_at + "Z") <= fechaTope
-      );
+      const h = new Date(n.hasta);
+      h.setHours(23, 59, 59);
+      lista = lista.filter((m) => new Date(m.created_at_tz) <= h);
     }
 
     setMovimientos(lista);
@@ -93,19 +114,28 @@ export default function Historial() {
     aplicarFiltros(nuevos);
   }
 
+  /* ============================
+       EXPORTAR CSV
+  ============================= */
   function exportarCSV() {
     if (!movimientos.length) return;
 
-    const filas = movimientos.map((m) => ({
-      Fecha: new Date(m.created_at + "Z").toLocaleDateString("es-CO"),
-      Tipo: m.tipo,
-      Repuesto: m.repuestos?.nombre ?? "",
-      Cantidad: `${m.tipo === "ENTRADA" ? "+" : "-"}${m.cantidad} ${
-        m.repuestos?.unidad ?? ""
-      }`,
-      EntregadoPor: m.empleado_entrega?.nombre ?? "",
-      RecibidoPor: m.empleado_recibe?.nombre ?? "",
-    }));
+    const filas = movimientos.map((m) => {
+      const { fecha, hora } = formatearFecha(m.created_at_tz);
+
+      return {
+        Fecha: `${fecha} ${hora}`,
+        Tipo: m.tipo,
+        Repuesto: m.repuestos?.nombre ?? "",
+        Cantidad:
+          (m.tipo === "entrada" ? "+" : "-") +
+          m.cantidad +
+          " " +
+          (m.repuestos?.unidad ?? ""),
+        Entrega: m.empleado_entrega?.nombre ?? "",
+        Recibe: m.empleado_recibe?.nombre ?? "",
+      };
+    });
 
     const encabezado = Object.keys(filas[0]).join(";");
     const contenido = filas
@@ -122,103 +152,110 @@ export default function Historial() {
     a.click();
   }
 
+  /* ============================
+        RENDER
+  ============================= */
+
   return (
     <div className="max-w-7xl mx-auto mt-8 px-4">
-      <h2 className="text-xl font-bold mb-4">
-        <ArrowIcon/> Historial de Movimientos</h2>
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <ArrowIcon /> Historial de Movimientos
+      </h2>
 
       {/* FILTROS */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <Filtro
-          label="Empleado"
-          name="empleado"
-          value={filtros.empleado}
-          onChange={handleFiltro}
-        >
+        <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
           <option value="">Todos</option>
           {empleados.map((e) => (
             <option key={e.id} value={e.id}>{e.nombre}</option>
           ))}
         </Filtro>
 
-        <Filtro
-          label="Repuesto"
-          name="repuesto"
-          value={filtros.repuesto}
-          onChange={handleFiltro}
-        >
+        <Filtro label="Repuesto" name="repuesto" value={filtros.repuesto} onChange={handleFiltro}>
           <option value="">Todos</option>
           {repuestos.map((r) => (
             <option key={r.id} value={r.id}>{r.nombre}</option>
           ))}
         </Filtro>
 
-        <Filtro
-          label="Tipo"
-          name="tipo"
-          value={filtros.tipo}
-          onChange={handleFiltro}
-        >
+        <Filtro label="Tipo" name="tipo" value={filtros.tipo} onChange={handleFiltro}>
           <option value="">Todos</option>
-          <option value="ENTRADA">Entrada</option>
-          <option value="SALIDA">Salida</option>
+          <option value="entrada">Entrada</option>
+          <option value="salida">Salida</option>
         </Filtro>
 
-        <FiltroFecha
-          label="Desde"
-          name="desde"
-          value={filtros.desde}
-          onChange={handleFiltro}
-        />
-
-        <FiltroFecha
-          label="Hasta"
-          name="hasta"
-          value={filtros.hasta}
-          onChange={handleFiltro}
-        />
+        <FiltroFecha label="Desde" name="desde" value={filtros.desde} onChange={handleFiltro} />
+        <FiltroFecha label="Hasta" name="hasta" value={filtros.hasta} onChange={handleFiltro} />
       </div>
 
       {/* TABLA */}
-      <div className="overflow-x-auto bg-white rounded-2xl shadow">
-        <table className="w-full text-sm border-separate border-spacing-y-1">
-          <thead className="bg-gray-100 text-gray-700">
-            <tr>
-              <Th>Fecha</Th>
-              <Th>Tipo</Th>
-              <Th>Repuesto</Th>
-              <Th>Cantidad</Th>
-              <Th>Entrega</Th>
-              <Th>Recibe</Th>
-            </tr>
-          </thead>
+      <div className="overflow-hidden bg-white rounded-2xl shadow">
+        <div className="max-h-[460px] overflow-y-auto">
+          <table className="w-full text-sm border-separate border-spacing-y-1">
+            <thead className="bg-gray-100 text-gray-700 sticky top-0 z-10">
+              <tr>
+                <Th>Fecha</Th>
+                <Th>Tipo</Th>
+                <Th>Repuesto</Th>
+                <Th>Cantidad</Th>
+                <Th>Entrega</Th>
+                <Th>Recibe</Th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {movimientos.map((m, i) => (
-              <motion.tr
-                key={m.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="bg-gray-50 hover:bg-gray-100 rounded-lg"
-              >
-                <Td>
-                  {new Date(m.created_at + "Z").toLocaleDateString("es-CO")}{" "}
-                </Td>
-                <Td>{m.tipo}</Td>
-                <Td>{m.repuestos?.nombre}</Td>
-                <Td>
-                  {m.tipo === "ENTRADA" ? "+" : "-"}
-                  {m.cantidad} {m.repuestos?.unidad}
-                </Td>
-                <Td>{m.empleado_entrega?.nombre ?? "—"}</Td>
-                <Td>{m.empleado_recibe?.nombre ?? "—"}</Td>
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
+            <tbody>
+              {movimientos.map((m, i) => {
+                const { fecha, hora } = formatearFecha(m.created_at_tz);
+
+                return (
+                  <motion.tr
+                    key={m.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="bg-gray-50 hover:bg-gray-100 rounded-lg"
+                  >
+                    <Td>
+                      <div className="font-medium">{fecha}</div>
+                      <div className="text-xs text-gray-500">{hora}</div>
+                    </Td>
+
+                    <Td>
+                      <span
+                        className={`px-2 py-1 rounded-lg text-white text-xs font-semibold
+                        ${m.tipo === "entrada" ? "bg-green-400" : "bg-red-400"}`}
+                      >
+                        {m.tipo}
+                      </span>
+                    </Td>
+
+                    <Td>{m.repuestos?.nombre}</Td>
+
+                    <Td>
+                      <span
+                        className={`font-semibold ${
+                          m.tipo === "entrada" ? "text-green-500" : "text-red-500"
+                        }`}
+                      >
+                        {m.tipo === "entrada" ? "+" : "-"}
+                        {m.cantidad}
+                      </span>{" "}
+                      <span className="text-gray-700 text-xs">
+                        {m.repuestos?.unidad}
+                      </span>
+                    </Td>
+
+                    <Td>{m.empleado_entrega?.nombre ?? "—"}</Td>
+                    <Td>{m.empleado_recibe?.nombre ?? "—"}</Td>
+                  </motion.tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
+      {/* BOTÓN EXPORTAR */}
       <button
         onClick={exportarCSV}
         className="mt-6 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700"
@@ -229,43 +266,27 @@ export default function Historial() {
   );
 }
 
-/* SUBCOMPONENTES */
+/* ============================
+    SUBCOMPONENTES
+============================ */
 
-interface FiltroProps {
-  label: string;
-  name?: string;
-  value?: string;
-  onChange?: (e: any) => void;
-  children: React.ReactNode;
-}
-
-function Filtro({ label, name, value, onChange, children }: FiltroProps) {
+function Filtro({ label, name, value, onChange, children }: any) {
   return (
     <div>
       <label className="text-sm font-semibold text-gray-700">{label}</label>
-
-      <div className="relative">
-        <select
-          name={name}
-          value={value}
-          onChange={onChange}
-          className="w-full mt-1 px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm bg-white"
-        >
-          {children}
-        </select>
-      </div>
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full mt-1 px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm bg-white"
+      >
+        {children}
+      </select>
     </div>
   );
 }
 
-interface FiltroFechaProps {
-  label: string;
-  name?: string;
-  value?: string;
-  onChange?: (e: any) => void;
-}
-
-function FiltroFecha({ label, name, value, onChange }: FiltroFechaProps) {
+function FiltroFecha({ label, name, value, onChange }: any) {
   return (
     <div>
       <label className="text-sm font-semibold text-gray-700">{label}</label>
@@ -280,10 +301,16 @@ function FiltroFecha({ label, name, value, onChange }: FiltroFechaProps) {
   );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
-  return <th className="py-3 font-semibold text-gray-700">{children}</th>;
+function Th({ children }: any) {
+  return (
+    <th className="py-3 px-2 font-semibold text-gray-700 text-left">
+      {children}
+    </th>
+  );
 }
 
-function Td({ children }: { children: React.ReactNode }) {
-  return <td className="py-3 text-gray-800">{children}</td>;
+function Td({ children }: any) {
+  return (
+    <td className="py-3 px-2 text-gray-800">{children}</td>
+  );
 }

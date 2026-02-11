@@ -29,15 +29,20 @@ export interface Repuesto {
 // Movimiento (entradas/salidas)
 export interface Movimiento {
   id: string;
-  tipo: "ENTRADA" | "SALIDA";
+  tipo: "entrada" | "salida";
   cantidad: number;
-  created_at: string;
 
-  repuesto_id: string;
-  empleado_entrega_id?: string | null;
-  empleado_recibe_id?: string | null;
-  registrado_por: string;
+  // Usamos solo la fecha correcta del sistema
+  created_at_tz: string;
 
+  // columnas reales
+  repuesto_id?: string | null;
+  usuario_id?: string | null;
+  notas?: string | null;
+  entregado_por?: string | null;
+  recibido_por?: string | null;
+
+  // relaciones (joins)
   repuestos?: Repuesto | null;
   empleado_entrega?: Empleado | null;
   empleado_recibe?: Empleado | null;
