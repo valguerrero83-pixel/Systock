@@ -90,73 +90,107 @@ export default function Empleados() {
     cargarEmpleados();
   };
 
-  return (
-    <motion.div
-      className="max-w-5xl mx-auto mt-4 md:mt-8 bg-white p-4 md:p-6 rounded-2xl shadow"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">
-        Empleados
-      </h2>
+return (
+  <motion.div
+    className="
+      max-w-6xl mx-auto mt-6 md:mt-8 px-6
+      bg-white dark:bg-slate-900
+      border border-slate-200 dark:border-slate-800
+      rounded-3xl p-6
+      shadow-lg dark:shadow-black/40
+    "
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+  >
+    <h2 className="text-xl md:text-2xl font-semibold mb-6 
+      text-slate-800 dark:text-slate-100">
+      Empleados
+    </h2>
 
-      {/* CONTENEDOR SCROLL PARA LA TABLA EN MÓVIL */}
-      <div className="overflow-x-auto rounded-lg">
-        <table className="w-full text-sm min-w-[600px]">
-          <thead className="border-b bg-gray-50">
-            <tr>
-              <th className="py-2 px-2 text-left">Nombre</th>
-              <th className="py-2 px-2 text-left">Cargo</th>
-              <th className="py-2 px-2 text-center">Movs</th>
-              <th className="py-2 px-2 text-center">Acciones</th>
-            </tr>
-          </thead>
+    {/* TABLA RESPONSIVE */}
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm min-w-[650px]">
+        <thead className="border-b border-slate-200 dark:border-slate-800">
+          <tr className="text-left text-slate-500 dark:text-slate-400">
+            <th className="py-3 px-3 font-semibold">Nombre</th>
+            <th className="px-3 font-semibold">Cargo</th>
+            <th className="px-3 text-center font-semibold">Movimientos</th>
+            <th className="px-3 text-center font-semibold">Acciones</th>
+          </tr>
+        </thead>
 
-          <tbody>
-            {empleados.map((e) => (
-              <tr key={e.id} className="border-b">
-                <td className="py-3 px-2">{e.nombre}</td>
-                <td className="px-2">{e.cargo}</td>
-                <td className="text-center px-2">{e.total_movs}</td>
+        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+          {empleados.map((e, index) => (
+            <motion.tr
+              key={e.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03 }}
+              className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
+            >
+              {/* NOMBRE */}
+              <td className="py-4 px-3 font-medium text-slate-800 dark:text-slate-100">
+                {e.nombre}
+              </td>
 
-                <td className="text-center px-2">
-                  {(usuario?.rol_usuario === "dev" ||
-                    usuario?.rol_usuario === "admin") && (
-                    <div className="flex gap-3 justify-center">
+              {/* CARGO */}
+              <td className="px-3 text-slate-600 dark:text-slate-300">
+                {e.cargo}
+              </td>
 
-                      <button
-                        onClick={() => eliminarEmpleado(e.id)}
-                        disabled={e.total_movs > 0}
-                        className={`${
-                          e.total_movs > 0
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-red-600 hover:underline"
-                        }`}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  )}
+              {/* MOVIMIENTOS */}
+              <td className="text-center px-3">
+                <span className="
+                  inline-flex items-center
+                  px-3 py-1
+                  rounded-full
+                  text-xs font-semibold
+                  bg-indigo-500/15
+                  text-indigo-400
+                ">
+                  {e.total_movs}
+                </span>
+              </td>
 
-                  {(usuario?.rol_usuario === "viewer" ||
-                    usuario?.rol_usuario === "jefe" ||
-                    usuario?.rol_usuario === "gerente") && (
-                    <span className="text-gray-500 text-xs">
-                      Sin permisos
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              {/* ACCIONES */}
+              <td className="text-center px-3">
+                {(usuario?.rol_usuario === "dev" ||
+                  usuario?.rol_usuario === "admin") && (
+                  <button
+                    onClick={() => eliminarEmpleado(e.id)}
+                    disabled={e.total_movs > 0}
+                    className={`
+                      px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                      ${
+                        e.total_movs > 0
+                          ? "bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
+                          : "bg-red-500/15 text-red-400 hover:bg-red-500/25"
+                      }
+                    `}
+                  >
+                    Eliminar
+                  </button>
+                )}
 
-      {loading && (
-        <p className="text-center text-gray-500 mt-4 animate-pulse">
-          Cargando empleados en el sistema…
-        </p>
-      )}
-    </motion.div>
-  );
+                {(usuario?.rol_usuario === "viewer" ||
+                  usuario?.rol_usuario === "jefe" ||
+                  usuario?.rol_usuario === "gerente") && (
+                  <span className="text-slate-400 text-xs">
+                    Sin permisos
+                  </span>
+                )}
+              </td>
+            </motion.tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {loading && (
+      <p className="text-center text-slate-500 dark:text-slate-400 mt-6 animate-pulse">
+        Cargando empleados…
+      </p>
+    )}
+  </motion.div>
+);
 }

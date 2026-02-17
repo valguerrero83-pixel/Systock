@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
+
 import ModalNuevoRepuesto from "./ModalNuevoRepuesto";
 import ModalNuevoEmpleado from "./ModalNuevoEmpleado";
 
@@ -26,6 +27,8 @@ export default function Layout() {
   const [totalRepuestos, setTotalRepuestos] = useState(0);
   const [stockBajo, setStockBajo] = useState(0);
   const [movimientosHoy, setMovimientosHoy] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
 
   // ------------------------------------------
   // ROLES
@@ -47,6 +50,10 @@ export default function Layout() {
       esViewer: usuario.rol_usuario === "viewer",
     });
   }, [usuario]);
+  // ---------------- DARK MODE ----------------
+    const [darkMode, setDarkMode] = useState<boolean>(() => {
+      return localStorage.getItem("theme") === "dark";
+    });
 
   // ------------------------------------------
   // DASHBOARD
@@ -73,205 +80,285 @@ export default function Layout() {
     return () => window.removeEventListener("dashboard-update", listener);
   }, []);
 
+ useEffect(() => {
+  const root = document.documentElement;
+
+  if (darkMode) {
+    root.classList.add("dark");
+    localStorage.setItem("theme", "dark"); // 👈 GUARDAMOS
+  } else {
+    root.classList.remove("dark");
+    localStorage.setItem("theme", "light"); // 👈 GUARDAMOS
+  }
+}, [darkMode]);
+
+
+
+
   // ------------------------------------------
   // RETURN
   // ------------------------------------------
   return (
-    <div className="min-h-screen bg-[#f5f7fa] flex flex-col">
+  <div className="min-h-screen flex bg-slate-50 dark:bg-[#0B1120] transition-colors duration-300" >
 
-      {/* ------------------ TOP BAR ------------------ */}
-      <header className="w-full bg-white shadow-sm px-4 md:px-8 py-4 
-        flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b">
+    {/* ================= SIDEBAR ================= */}
+  {/* Overlay solo mobile */}
+  {sidebarOpen && (
+    <div
+      className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+      onClick={() => setSidebarOpen(false)}
+    />
+  )}
 
-        <div className="flex items-center gap-3">
-          <img 
-            src="/favicon.png" 
-            alt="Systock logo" 
-            className="w-8 h-8 object-contain rounded-md" 
-          />
+  <aside
+    className={`
+      fixed lg:relative
+      z-50
+      top-0 left-0
+      h-full lg:h-auto
+      w-64
+      bg-white dark:bg-slate-900
+      border-r border-slate-200 dark:border-slate-800
+      p-6
+      transform transition-transform duration-300
+      ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      lg:translate-x-0
+      flex flex-col
+    `}
+  >
 
-          <div>
-            <h1 className="text-xl font-bold text-slate-800">Systock</h1>
-            <p className="text-sm text-gray-500 -mt-1">Control de inventario</p>
-
-            {usuario?.nombre && (
-              <p className="text-sm text-gray-600 mt-1">
-                Hola, <span className="font-semibold text-gray-800">{usuario.nombre}</span> 👋
-              </p>
-            )}
-          </div>
+      <div className="flex items-center gap-3 mb-10">
+        <img src="/favicon.png" className="w-9 h-9 rounded-md" />
+        <div>
+          <h1 className="font-bold text-slate-800 dark:text-white">
+            Systock
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-300">
+            Inventario
+          </p>
         </div>
+      </div>
 
-        {/* ------------------ NAV TOP ------------------ */}
-        <nav className="flex items-center gap-3 flex-wrap justify-start md:justify-end">
-
-          {role.esAdmin && (
-            <>
-              <TopButton
-                icon={userIcon()}
-                label="Empleado"
-                primary={false}
-                onClick={() => setModalEmpleadoAbierto(true)}
-              />
-
-              <ModalNuevoEmpleado
-                abierto={modalEmpleadoAbierto}
-                onClose={() => setModalEmpleadoAbierto(false)}
-                onCreated={() => {}}
-              />
-            </>
-          )}
-
-          {role.esAdmin && (
-            <button
-              onClick={() => setModalAbierto(true)}
-              className="px-4 py-2 rounded-lg flex items-center gap-2 border transition bg-gray-600 text-white hover:bg-gray-700"
-            >
-              {packageIcon()}
-              <span className="text-sm">Repuesto</span>
-            </button>
-          )}
-
-          <button
-            onClick={async () => {
-              await logout();
-              navigate("/login", { replace: true });
-            }}
-            className="p-2 rounded-md text-red-600 hover:bg-red-100 transition"
-          >
-            {logoutIcon()}
-          </button>
-
-        </nav>
-      </header>
-
-      {/* ------------------ DASHBOARD CARDS ------------------ */}
-      <section className="w-full px-4 md:px-6 mt-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
-
-          <DashboardCard
-            title="TOTAL REPUESTOS"
-            value={totalRepuestos}
-            subtitle="En inventario"
-            color="green"
-            icon={iconBox()}
-          />
-
-          <DashboardCard
-            title="STOCK BAJO"
-            value={stockBajo}
-            subtitle="Requieren atención"
-            color="yellow"
-            icon={iconWarning()}
-          />
-
-          <DashboardCard
-            title="MOVIMIENTOS HOY"
-            value={movimientosHoy}
-            subtitle="Movimientos registrados"
-            color="green"
-            icon={iconRepeat()}
-          />
-
-        </div>
-      </section>
-
-      {/* ------------------ PAGE CONTENT ------------------ */}
-      <main className="flex-1 px-6 py-6 pb-24">
-        <Outlet />
-      </main>
-
-      {/* ------------------ FOOTER MENU ------------------ */}
-      <footer className="fixed bottom-0 left-0 w-full bg-white shadow-inner border-t 
-        flex justify-between md:justify-center px-4 md:px-10 gap-6 md:gap-12 py-3">
+      <nav className="flex flex-col gap-2 text-sm">
 
         {(role.esAdmin || role.esJefe) && (
-          <MenuItem to="/salidas" icon={repeatIcon()} label="Salidas" />
+          <SidebarItem to="/salidas" label="Salidas" />
         )}
 
         {role.esAdmin && (
-          <MenuItem to="/entradas" icon={packageIcon()} label="Entradas" />
+          <SidebarItem to="/entradas" label="Entradas" />
         )}
 
-        <MenuItem to="/inventario" icon={clipboardIcon()} label="Inventario" />
-        <MenuItem to="/historial" icon={historyIcon()} label="Historial" />
+        <SidebarItem to="/inventario" label="Inventario" />
+        <SidebarItem to="/historial" label="Historial" />
 
         {role.esAdmin && (
-          <MenuItem to="/empleados" icon={userIcon()} label="Empleados" />
+          <SidebarItem to="/empleados" label="Empleados" />
         )}
-      </footer>
+      </nav>
+    </aside>
 
-      {/* ------------------ MODALS ------------------ */}
+    {/* ================= MAIN AREA ================= */}
+    <div className="flex-1 min-h-screen bg-white dark:bg-[#0B1120] overflow-x-hidden">
 
-      <ModalNuevoRepuesto
-        abierto={modalAbierto}
-        onClose={() => setModalAbierto(false)}
-        onCreated={() => {}}
+
+
+
+      {/* -------- TOP BAR -------- */}
+<header
+  className="
+    bg-white dark:bg-slate-900 
+    border-b border-slate-200 dark:border-slate-800 
+    px-6 py-4 
+    flex justify-between items-center
+  "
+>
+  {/* Botón menú móvil */}
+  <button
+    onClick={() => setSidebarOpen(true)}
+    className="lg:hidden p-2 rounded-md 
+    hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+  >
+    ☰
+  </button>
+
+  {/* Saludo */}
+  <div>
+    {usuario?.nombre && (
+      <p className="text-sm text-slate-600 dark:text-slate-300">
+        Hola, <span className="font-semibold">{usuario.nombre}</span> 👋
+      </p>
+    )}
+  </div>
+
+  {/* Acciones derecha */}
+  <div className="flex items-center gap-3">
+
+    {/* DARK MODE */}
+    <button
+      onClick={() => setDarkMode(!darkMode)}
+      className="
+        relative w-12 h-6 flex items-center 
+        bg-slate-200 dark:bg-slate-700 
+        rounded-full p-1 transition-colors duration-300
+      "
+    >
+      <div
+        className={`
+          w-4 h-4 bg-white rounded-full shadow-md 
+          transform transition-transform duration-300 
+          ${darkMode ? "translate-x-6" : "translate-x-0"}
+        `}
       />
+      <span className="absolute left-1 text-yellow-500 text-xs">☀️</span>
+      <span className="absolute right-1 text-slate-300 text-xs">🌙</span>
+    </button>
 
-      <ModalNuevoEmpleado
-        abierto={modalEmpleadoAbierto}
-        onClose={() => setModalEmpleadoAbierto(false)}
-        onCreated={() => {}}
-      />
+    {/* BOTÓN EMPLEADO */}
+    {role.esAdmin && (
+      <button
+        onClick={() => setModalEmpleadoAbierto(true)}
+        className="
+          px-4 py-2 rounded-xl text-sm font-medium
+          bg-slate-200 text-slate-800
+          hover:bg-slate-300
+          dark:bg-slate-700 dark:text-white
+          dark:hover:bg-slate-600
+          transition
+        "
+      >
+        Empleado
+      </button>
+    )}
 
+    {/* BOTÓN REPUESTO */}
+    {role.esAdmin && (
+      <button
+        onClick={() => setModalAbierto(true)}
+        className="
+          px-4 py-2 rounded-xl text-sm font-medium
+          bg-indigo-600 text-white
+          hover:bg-indigo-700
+          shadow-sm hover:shadow-md
+          transition
+        "
+      >
+        Repuesto
+      </button>
+    )}
+
+    {/* LOGOUT */}
+    <button
+      onClick={async () => {
+        await logout();
+        navigate("/login", { replace: true });
+      }}
+      className="
+        p-2 text-red-500 
+        hover:bg-red-100 
+        dark:hover:bg-red-900/40 
+        rounded-lg transition
+      "
+    >
+      {logoutIcon()}
+    </button>
+
+  </div>
+</header>
+
+      {/* -------- DASHBOARD -------- */}
+      <section className="p-6">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+          <DashboardCard
+            title="Total Repuestos"
+            value={totalRepuestos}
+            subtitle="En inventario"
+          />
+
+          <DashboardCard
+            title="Stock Bajo"
+            value={stockBajo}
+            subtitle="Requieren atención"
+          />
+
+          <DashboardCard
+            title="Movimientos Hoy"
+            value={movimientosHoy}
+            subtitle="Registrados"
+          />
+
+        </div>
+
+        <Outlet />
+
+      </section>
 
     </div>
-  );
-}
+
+    {/* ================= MODALS ================= */}
+    <ModalNuevoRepuesto
+      abierto={modalAbierto}
+      onClose={() => setModalAbierto(false)}
+      onCreated={() => {}}
+    />
+
+    <ModalNuevoEmpleado
+      abierto={modalEmpleadoAbierto}
+      onClose={() => setModalEmpleadoAbierto(false)}
+      onCreated={() => {}}
+    />
+
+  </div>
+);
 
 
 /* ---------------------- COMPONENTES AUXILIARES ---------------------- */
 
-function TopButton({ icon, label, primary, onClick }: any) {
+function DashboardCard({ title, value, subtitle }: any) {
+
   return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2 rounded-lg flex items-center gap-2 border transition
-        ${primary ? "bg-gray-600 text-white hover:bg-gray-700"
-        : "bg-gray-100 hover:bg-gray-200 text-slate-700"}`}
-    >
-      {icon}
-      <span className="text-sm">{label}</span>
-    </button>
+    <div className="bg-white dark:bg-slate-900 
+      border border-slate-200 dark:border-slate-800
+      rounded-2xl p-6 shadow-sm
+      hover:shadow-md hover:-translate-y-1
+      transition-all duration-300">
+
+      <h3 className="text-sm text-slate-500 dark:text-slate-300">
+        {title}
+      </h3>
+
+      <p className="text-3xl font-bold text-slate-800 dark:text-white mt-2">
+        {value}
+      </p>
+
+      <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">
+        {subtitle}
+      </p>
+    </div>
   );
 }
 
-function MenuItem({ to, icon, label }: any) {
+
+function SidebarItem({ to, label }: any) {
   return (
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex flex-col items-center gap-1 text-sm transition 
-          ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+        `block px-4 py-2 rounded-lg transition text-sm
+        ${
+          isActive
+            ? "bg-indigo-600 text-white"
+            : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+        }`
+      }
     >
-      {icon}
-      <span>{label}</span>
+      {label}
     </NavLink>
   );
 }
 
-function DashboardCard({ title, value, subtitle, color, icon }: any) {
-  const bg = color === "green" ? "bg-green-100" : "bg-yellow-100";
-  const border = color === "green" ? "border-green-300" : "border-yellow-300";
-  const text = color === "green" ? "text-green-800" : "text-yellow-800";
-  const iconBg = color === "green" ? "bg-green-300" : "bg-yellow-300";
-
-  return (
-    <div className={`${bg} ${border}
-        rounded-2xl p-6 flex justify-between items-center
-        border shadow-sm transition-all hover:shadow-md hover:-translate-y-1`}
-    >
-      <div>
-        <h3 className={`text-sm font-semibold ${text}`}>{title}</h3>
-        <p className="text-4xl font-bold text-gray-900 mt-1">{value}</p>
-        <p className={`${text} text-sm mt-1`}>{subtitle}</p>
-      </div>
-
-      <div className={`${iconBg} p-4 rounded-2xl`}>{icon}</div>
-    </div>
-  );
-}
 
 /* ---------------------- ICONOS ---------------------- */
 
@@ -360,4 +447,4 @@ function iconRepeat() {
       <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
     </svg>
   );
-}
+}}

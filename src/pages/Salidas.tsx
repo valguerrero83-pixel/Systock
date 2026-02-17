@@ -157,7 +157,7 @@ export default function Salidas() {
   if (esModoLectura) {
     return (
       <PageTransition>
-        <div className="max-w-7xl mx-auto mt-6 md:mt-8 px-4">
+        <div className="max-w-7xl mx-auto mt-4 md:mt-8 px-4">
           <h2 className="text-lg md:text-xl font-semibold text-gray-700 mb-4">
             Salidas (solo lectura)
           </h2>
@@ -165,23 +165,28 @@ export default function Salidas() {
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl p-4 md:p-6 shadow-md border border-gray-100"
+            className="bg-white rounded-2xl p-4 md:p-5 shadow-md border border-gray-100"
           >
-            <h2 className="text-lg md:text-xl font-semibold mb-4">
+            <h2 className="text-lg md:text-xl font-semibold mb-4 
+            text-slate-800 dark:text-slate-100"
+            >
               Historial de Salidas
             </h2>
 
-            <div className="max-h-[420px] md:max-h-[520px] overflow-y-auto pr-2 divide-y divide-gray-100">
+            <div className="max-h-[60vh] overflow-y-auto pr-2 divide-y divide-slate-200 dark:divide-slate-700">
+
               {historial.map((m, i) => (
                 <motion.div
-                  key={m.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="py-3 md:py-4 grid grid-cols-2 sm:grid-cols-5 text-xs md:text-sm items-center gap-2"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white dark:bg-slate-900
+                  rounded-3xl p-6
+                  border border-slate-200 dark:border-slate-800
+                  shadow-lg dark:shadow-black/40"
                 >
+
                   <div>
-                    <p className="font-semibold text-gray-800">
+                    <p className="font-semibold text-slate-800 dark:text-slate-100">
                       {new Date(m.created_at_tz).toLocaleDateString("es-CO")}
                     </p>
                     <p className="text-[10px] md:text-xs text-gray-500">
@@ -189,20 +194,51 @@ export default function Salidas() {
                     </p>
                   </div>
 
-                  <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold text-[10px] md:text-xs w-fit">
+                  <span className="
+                    inline-flex items-center
+                    px-2 py-0.5
+                    text-[11px] font-semibold
+                    rounded-full
+                    bg-red-500/15
+                    text-red-400
+                  ">
                     -{Math.abs(m.cantidad)} {m.repuestos?.unidad}
                   </span>
 
-                  <span className="font-medium">{m.repuestos?.nombre}</span>
 
-                  <span className="text-gray-600">{m.entregado?.nombre}</span>
-                  <span className="text-gray-600">{m.recibido?.nombre}</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-100">{m.repuestos?.nombre}</span>
+
+           
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-300">
+                      {m.entregado?.nombre}
+                    </span>
+
+                    <div className="flex items-center gap-1">
+                      <div className="w-4 h-px bg-slate-600"></div>
+                      <span className="text-slate-500 text-xs">→</span>
+                      <div className="w-4 h-px bg-slate-600"></div>
+                    </div>
+
+                    <span className="text-slate-200 font-medium">
+                      {m.recibido?.nombre}
+                    </span>
+                  </div>
+
+
 
                   {m.notas && (
-                    <p className="col-span-2 sm:col-span-5 text-[10px] md:text-xs text-gray-500 italic mt-1">
+                    <p className="
+                      col-span-2 sm:col-span-4
+                      text-sm
+                      text-slate-500 dark:text-slate-400
+                      italic
+                      mt-1
+                    ">
                       {m.notas}
                     </p>
                   )}
+
                 </motion.div>
               ))}
             </div>
@@ -219,23 +255,29 @@ export default function Salidas() {
   =============================== */
   return (
     <PageTransition>
-      <div className="w-full max-w-7xl mx-auto mt-6 md:mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 px-4">
-
+      <div className="w-full mt-6 md:mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 px-6">
         {/* FORMULARIO */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-4 md:p-6 shadow-md border border-gray-100"
+          className="bg-white dark:bg-slate-900
+          rounded-3xl p-6
+          border border-slate-200 dark:border-slate-800
+          shadow-lg dark:shadow-black/40"
         >
-          <h2 className="text-lg md:text-xl font-semibold mb-4">
+          <h2 className="text-lg md:text-xl font-semibold mb-4 
+            text-slate-800 dark:text-slate-100"
+            >
             Registrar Salida de Repuesto
           </h2>
 
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 md:p-4 mb-6">
-            <p className="text-[11px] md:text-xs text-red-700 font-semibold">
+          <div className="bg-red-50 dark:bg-red-900/20 
+          border border-red-200 dark:border-red-800 
+          rounded-2xl p-4 mb-6">
+            <p className="text-[11px] md:text-xs text-red-700 dark:text-red-400 font-semibold">
               FECHA Y HORA DEL REGISTRO
             </p>
-            <p className="text-base md:text-lg font-bold text-gray-900">
+            <p className="text-base md:text-lg font-bold text-slate-900 dark:text-white">
               {new Date().toLocaleDateString("es-CO")} •{" "}
               {new Date().toLocaleTimeString("es-CO", {
                 hour: "2-digit",
@@ -246,12 +288,20 @@ export default function Salidas() {
           </div>
 
           {/* REPUESTO */}
-          <label className="text-sm font-semibold">Repuesto</label>
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Repuesto</label>
           <select
             name="repuesto_id"
             value={form.repuesto_id}
             onChange={handleChange}
-            className="w-full mt-1 py-2 px-3 border border-gray-200 rounded-lg mb-2 text-sm md:text-base"
+            className="w-full mt-1 py-2.5 px-3
+            bg-slate-50 dark:bg-slate-800
+            border border-slate-200 dark:border-slate-700
+            rounded-xl
+            text-slate-800 dark:text-slate-200
+            appearance-none
+            focus:outline-none focus:ring-2 focus:ring-indigo-500
+            transition"
+
           >
             <option value="">Buscar repuesto...</option>
             {repuestos.map((r) => (
@@ -262,19 +312,27 @@ export default function Salidas() {
           </select>
 
           {stockActual !== null && (
-            <p className="text-xs text-gray-600 mb-4">
+            <p className="text-xs text-slate-600 dark:text-slate-300 mb-4">
               Disponible: <b>{stockActual}</b> {unidad}
             </p>
           )}
 
           {/* CANTIDAD */}
-          <label className="text-sm font-semibold">Cantidad a sacar</label>
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Cantidad a sacar</label>
           <input
             type="text"
             name="cantidad"
             value={form.cantidad}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-1 text-sm md:text-base"
+            className="w-full mt-1 py-2.5 px-3
+            bg-slate-50 dark:bg-slate-800/70 
+            dark:focus:ring-indigo-400
+            border border-slate-200 dark:border-slate-700
+            rounded-xl
+            text-slate-800 dark:text-slate-100
+            focus:outline-none focus:ring-2 focus:ring-indigo-500
+            transition"
+
             placeholder="Ej: 5"
           />
 
@@ -285,12 +343,20 @@ export default function Salidas() {
           )}
 
           {/* ENTREGADO POR */}
-          <label className="text-sm font-semibold mt-3">Entregado por</label>
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Entregado por</label>
           <select
             name="entregado_por"
             value={form.entregado_por}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-3 text-sm md:text-base"
+            className="w-full mt-1 py-2.5 px-3
+            bg-slate-50 dark:bg-slate-800/70
+            dark:focus:ring-indigo-400
+            border border-slate-200 dark:border-slate-700
+            rounded-xl
+            text-slate-800 dark:text-slate-200
+            focus:outline-none focus:ring-2 focus:ring-indigo-500
+            transition"
+
           >
             <option value="">Seleccione...</option>
             {empleados.map((e) => (
@@ -301,12 +367,20 @@ export default function Salidas() {
           </select>
 
           {/* RECIBIDO POR */}
-          <label className="text-sm font-semibold">Recibido por</label>
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recibido por</label>
           <select
             name="recibido_por"
             value={form.recibido_por}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-3 text-sm md:text-base"
+            className="w-full mt-1 py-2.5 px-3
+            bg-slate-50 dark:bg-slate-800/70
+            dark:focus:ring-indigo-400
+            border border-slate-200 dark:border-slate-700
+            rounded-xl
+            text-slate-800 dark:text-slate-200
+            focus:outline-none focus:ring-2 focus:ring-indigo-500
+            transition"
+
           >
             <option value="">Seleccione...</option>
             {empleados.map((e) => (
@@ -317,13 +391,21 @@ export default function Salidas() {
           </select>
 
           {/* NOTAS */}
-          <label className="text-sm font-semibold">Notas</label>
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Notas</label>
           <textarea
             name="notas"
             rows={2}
             value={form.notas}
             onChange={handleChange}
-            className="w-full py-2 px-3 border border-gray-200 rounded-lg mb-2 text-sm md:text-base"
+            className="w-full mt-1 py-2.5 px-3
+            bg-slate-50 dark:bg-slate-800/70
+            dark:focus:ring-indigo-400
+            border border-slate-200 dark:border-slate-700
+            rounded-xl
+            text-slate-800 dark:text-slate-200
+            focus:outline-none focus:ring-2 focus:ring-indigo-500
+            transition"
+
             placeholder="Detalles adicionales..."
           />
 
@@ -337,65 +419,113 @@ export default function Salidas() {
               !form.recibido_por ||
               Number(form.cantidad) > (stockActual ?? 0)
             }
-            className={`w-full mt-4 text-white py-3 rounded-lg shadow-sm transition text-sm md:text-base ${
+            className={`w-full mt-4 text-white py-3 rounded-xl 
+            font-semibold shadow-sm transition-all duration-300
+            ${
               Number(form.cantidad) > (stockActual ?? 0) ||
               !form.cantidad ||
               !form.repuesto_id
-                ? "bg-red-300 cursor-not-allowed"
-                : "bg-red-600 hover:bg-red-700"
+                ? "bg-red-400 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700 hover:shadow-md"
             }`}
+
           >
             Registrar Salida
           </button>
         </motion.div>
 
         {/* HISTORIAL */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-4 md:p-6 shadow-md border border-gray-100"
-        >
-          <h2 className="text-lg md:text-xl font-semibold mb-4">
-            Historial de Salidas
-          </h2>
+        {/* HISTORIAL */}
+<motion.div
+  initial={{ opacity: 0, y: 15 }}
+  animate={{ opacity: 1, y: 0 }}
+  className="
+    bg-white dark:bg-slate-900
+    rounded-3xl p-6
+    border border-slate-200 dark:border-slate-800
+    shadow-lg dark:shadow-black/40
+  "
+>
+  <h2 className="text-lg md:text-xl font-semibold mb-6 
+    text-slate-800 dark:text-slate-100">
+    Historial de Salidas
+  </h2>
 
-          <div className="max-h-[420px] md:max-h-[580px] overflow-y-auto pr-2 divide-y divide-gray-100">
-            {historial.map((m, i) => (
-              <motion.div
-                key={m?.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="py-3 md:py-4 grid grid-cols-2 sm:grid-cols-5 text-xs md:text-sm items-center gap-2"
-              >
-                <div>
-                  <p className="font-semibold text-gray-800">
-                    {new Date(m.created_at_tz).toLocaleDateString("es-CO")}
-                  </p>
-                  <p className="text-[10px] md:text-xs text-gray-500">
-                    {new Date(m.created_at_tz).toLocaleTimeString("es-CO")}
-                  </p>
-                </div>
+  <div className="max-h-[520px] overflow-y-auto pr-2 space-y-3">
+    {historial.map((m, i) => (
+      <motion.div
+  key={m?.id}
+  initial={{ opacity: 0, x: -10 }}
+  animate={{ opacity: 1, x: 0 }}
+  transition={{ delay: i * 0.03 }}
+  className="
+    py-4
+    px-3
+    grid grid-cols-2 sm:grid-cols-4
+    items-center gap-3
+    rounded-xl
+    hover:bg-slate-50 dark:hover:bg-slate-800/60
+    transition
+  "
+>
 
-                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-semibold text-[10px] md:text-xs w-fit">
-                  -{Math.abs(m.cantidad)} {m.repuestos?.unidad}
-                </span>
+  {/* FECHA */}
+  <div>
+    <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
+      {new Date(m.created_at_tz).toLocaleDateString("es-CO")}
+    </p>
+    <p className="text-xs text-slate-500">
+      {new Date(m.created_at_tz).toLocaleTimeString("es-CO")}
+    </p>
+  </div>
 
-                <span className="font-medium">{m.repuestos?.nombre}</span>
-                <span className="text-gray-600">{m.entregado?.nombre}</span>
-                <span className="text-gray-600">{m.recibido?.nombre}</span>
+  {/* BADGE MÁS COMPACTO */}
+  <span className="
+    inline-flex items-center
+    w-fit
+    px-2 py-0.5
+    text-sm font-semibold
+    rounded-full
+    bg-red-500/15
+    text-red-400
+    whitespace-nowrap
+  ">
+    -{Math.abs(m.cantidad)} {m.repuestos?.unidad}
+  </span>
 
-                {m.notas && (
-                  <p className="col-span-2 sm:col-span-5 text-[10px] md:text-xs text-gray-500 italic mt-1">
-                    {m.notas}
-                  </p>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+  {/* REPUESTO (más contraste) */}
+  <span className="font-medium text-slate-800 dark:text-slate-200 text-sm">
+    {m.repuestos?.nombre}
+  </span>
+
+  {/* MOVIMIENTO (menos claro, mejor contraste) */}
+  <div className="flex items-center gap-1.5 text-sm">
+    <span className="text-slate-400 dark:text-slate-300">
+      {m.entregado?.nombre}
+    </span>
+
+    <span className="text-slate-500 dark:text-slate-400 font-medium">
+      →
+    </span>
+
+    <span className="text-slate-700 dark:text-slate-200 font-medium">
+      {m.recibido?.nombre}
+    </span>
+  </div>
+
+  {m.notas && (
+    <p className="col-span-2 sm:col-span-4 text-[10px] text-slate-400 italic mt-1">
+      {m.notas}
+    </p>
+  )}
+
+</motion.div>
+
+
+    ))}
+  </div>
+</motion.div>
       </div>
-
       {toast && <Toast mensaje={toast} />}
     </PageTransition>
   );

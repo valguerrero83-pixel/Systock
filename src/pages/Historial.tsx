@@ -156,14 +156,21 @@ export default function Historial() {
         RENDER
   ============================= */
 
-  return (
-    <div className="max-w-7xl mx-auto mt-6 md:mt-8 px-4">
-      <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
-        <ArrowIcon /> Historial de Movimientos
-      </h2>
+return (
+  <div className="max-w-7xl mx-auto mt-6 md:mt-8 px-6">
 
-      {/* FILTROS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+    <h2 className="text-xl md:text-2xl font-semibold mb-6 
+      text-slate-800 dark:text-slate-100 flex items-center gap-2">
+      <ArrowIcon /> Historial de Movimientos
+    </h2>
+
+    {/* ================= FILTROS ================= */}
+    <div className="bg-white dark:bg-slate-900
+      border border-slate-200 dark:border-slate-800
+      rounded-3xl p-6 shadow-lg dark:shadow-black/40 mb-6">
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+
         <Filtro label="Empleado" name="empleado" value={filtros.empleado} onChange={handleFiltro}>
           <option value="">Todos</option>
           {empleados.map((e) => (
@@ -187,84 +194,121 @@ export default function Historial() {
         <FiltroFecha label="Desde" name="desde" value={filtros.desde} onChange={handleFiltro} />
         <FiltroFecha label="Hasta" name="hasta" value={filtros.hasta} onChange={handleFiltro} />
       </div>
-
-      {/* TABLA RESPONSIVE */}
-      <div className="overflow-x-auto rounded-2xl shadow bg-white">
-        <div className="max-h-[420px] md:max-h-[460px] overflow-y-auto">
-          <table className="w-full text-xs md:text-sm min-w-[700px] border-separate border-spacing-y-1">
-            <thead className="bg-gray-100 text-gray-700 sticky top-0 z-10">
-              <tr>
-                <Th>Fecha</Th>
-                <Th>Tipo</Th>
-                <Th>Repuesto</Th>
-                <Th>Cantidad</Th>
-                <Th>Entrega</Th>
-                <Th>Recibe</Th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {movimientos.map((m, i) => {
-                const { fecha, hora } = formatearFecha(m.created_at_tz);
-
-                return (
-                  <motion.tr
-                    key={m.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="bg-gray-50 hover:bg-gray-100 rounded-lg"
-                  >
-                    <Td>
-                      <div className="font-medium">{fecha}</div>
-                      <div className="text-[10px] md:text-xs text-gray-500">{hora}</div>
-                    </Td>
-
-                    <Td>
-                      <span
-                        className={`px-2 py-1 rounded-lg text-white text-[10px] md:text-xs font-semibold
-                        ${m.tipo === "entrada" ? "bg-green-400" : "bg-red-400"}`}
-                      >
-                        {m.tipo}
-                      </span>
-                    </Td>
-
-
-                    <Td>{m.repuestos?.nombre}</Td>
-
-                    <Td>
-                      <span
-                        className={`font-semibold ${
-                          m.tipo === "entrada" ? "text-green-500" : "text-red-500"
-                        }`}
-                      >
-                        {m.tipo === "entrada" ? "+" : "-"}
-                        {m.cantidad}
-                      </span>{" "}
-                      <span className="text-gray-700 text-[10px] md:text-xs">
-                        {m.repuestos?.unidad}
-                      </span>
-                    </Td>
-
-                    <Td>{m.empleado_entrega?.nombre ?? "—"}</Td>
-                    <Td>{m.empleado_recibe?.nombre ?? "—"}</Td>
-                  </motion.tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* BOTÓN EXPORTAR */}
-      <button
-        onClick={exportarCSV}
-        className="mt-6 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 text-sm md:text-base"
-      >
-        Exportar CSV
-      </button>
     </div>
-  );
+
+    {/* ================= TABLA ================= */}
+    <div className="bg-white dark:bg-slate-900
+      border border-slate-200 dark:border-slate-800
+      rounded-3xl p-6 shadow-lg dark:shadow-black/40">
+
+      <div className="max-h-[520px] overflow-y-auto pr-2 custom-scroll">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
+            <tr className="border-b border-slate-200 dark:border-slate-800
+              text-slate-500 dark:text-slate-400 text-left">
+              <Th>Fecha</Th>
+              <Th>Tipo</Th>
+              <Th>Repuesto</Th>
+              <Th>Cantidad</Th>
+              <Th>Entrega</Th>
+              <Th>Recibe</Th>
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+            {movimientos.map((m, i) => {
+              const { fecha, hora } = formatearFecha(m.created_at_tz);
+
+              return (
+                <motion.tr
+                  key={m.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.02 }}
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
+                >
+                  {/* FECHA */}
+                  <Td>
+                    <div className="font-semibold text-slate-800 dark:text-slate-100">
+                      {fecha}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {hora}
+                    </div>
+                  </Td>
+
+                  {/* TIPO */}
+                  <Td>
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                      ${
+                        m.tipo === "entrada"
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : "bg-red-500/15 text-red-400"
+                      }`}
+                    >
+                      {m.tipo === "entrada" ? "Entrada" : "Salida"}
+                    </span>
+                  </Td>
+
+                  {/* REPUESTO */}
+                  <Td>
+                    <span className="font-medium text-slate-800 dark:text-slate-200">
+                      {m.repuestos?.nombre}
+                    </span>
+                  </Td>
+
+                  {/* CANTIDAD */}
+                  <Td>
+                    <span
+                      className={`font-semibold text-base
+                        ${
+                          m.tipo === "entrada"
+                            ? "text-emerald-400"
+                            : "text-red-400"
+                        }`}
+                    >
+                      {m.tipo === "entrada" ? "+" : "-"}
+                      {m.cantidad}
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
+                      {m.repuestos?.unidad}
+                    </span>
+                  </Td>
+
+                  {/* ENTREGA */}
+                  <Td>
+                    <span className="text-slate-600 dark:text-slate-300">
+                      {m.empleado_entrega?.nombre ?? "—"}
+                    </span>
+                  </Td>
+
+                  {/* RECIBE */}
+                  <Td>
+                    <span className="text-slate-800 dark:text-slate-200 font-medium">
+                      {m.empleado_recibe?.nombre ?? "—"}
+                    </span>
+                  </Td>
+                </motion.tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {/* EXPORTAR */}
+    <button
+      onClick={exportarCSV}
+      className="mt-6 bg-indigo-600 hover:bg-indigo-700 
+      text-white px-6 py-2.5 rounded-xl 
+      font-semibold transition shadow-md"
+    >
+      Exportar CSV
+    </button>
+  </div>
+);
+
 }
 
 /* ============================
@@ -274,12 +318,20 @@ export default function Historial() {
 function Filtro({ label, name, value, onChange, children }: any) {
   return (
     <div>
-      <label className="text-sm font-semibold text-gray-700">{label}</label>
+      <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+        {label}
+      </label>
       <select
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full mt-1 px-3 py-2.5 border border-gray-300 rounded-xl shadow-sm bg-white text-sm"
+        className="
+          w-full mt-1 px-3 py-2.5
+          bg-slate-50 dark:bg-slate-800
+          border border-slate-200 dark:border-slate-700
+          rounded-xl text-sm
+          text-slate-800 dark:text-slate-200
+        "
       >
         {children}
       </select>
@@ -290,13 +342,21 @@ function Filtro({ label, name, value, onChange, children }: any) {
 function FiltroFecha({ label, name, value, onChange }: any) {
   return (
     <div>
-      <label className="text-sm font-semibold text-gray-700">{label}</label>
+      <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+        {label}
+      </label>
       <input
         type="date"
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full mt-1 px-3 py-2.5 border border-gray-300 rounded-xl shadow-sm bg-white text-sm"
+        className="
+          w-full mt-1 px-3 py-2.5
+          bg-slate-50 dark:bg-slate-800
+          border border-slate-200 dark:border-slate-700
+          rounded-xl text-sm
+          text-slate-800 dark:text-slate-200
+        "
       />
     </div>
   );
@@ -304,7 +364,7 @@ function FiltroFecha({ label, name, value, onChange }: any) {
 
 function Th({ children }: any) {
   return (
-    <th className="py-3 px-2 font-semibold text-gray-700 text-left">
+    <th className="py-3 font-semibold text-sm">
       {children}
     </th>
   );
@@ -312,8 +372,9 @@ function Th({ children }: any) {
 
 function Td({ children }: any) {
   return (
-    <td className="py-3 px-2 text-gray-800">
+    <td className="py-4 text-sm">
       {children}
     </td>
   );
 }
+

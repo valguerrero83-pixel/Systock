@@ -40,27 +40,28 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
     <AnimatePresence>
       {abierto && (
         <motion.div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-3"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
         >
-          {/* MODAL */}
           <motion.div
             className="
-              bg-white w-full max-w-lg rounded-2xl shadow-xl 
-              p-6 sm:p-8 
-              max-h-[85vh] overflow-y-auto
+              bg-white dark:bg-slate-900
+              w-full max-w-lg
+              rounded-3xl
+              shadow-2xl
+              border border-slate-200 dark:border-slate-800
+              p-6 sm:p-8
             "
-            initial={{ opacity: 0, scale: 0.85, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.85, y: 20 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ duration: 0.25 }}
           >
             {/* HEADER */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <svg width="22" height="22" stroke="currentColor" fill="none">
                   <circle cx="12" cy="8" r="4" />
                   <path d="M5.5 21a7 7 0 0 1 13 0" />
@@ -70,18 +71,18 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
 
               <button
                 onClick={onClose}
-                className="text-gray-600 hover:text-gray-800 text-xl"
+                className="text-slate-500 hover:text-slate-800 dark:hover:text-white text-xl transition"
               >
                 ✕
               </button>
             </div>
 
-            {/* FORMULARIO */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* FORM */}
+            <form onSubmit={handleSubmit} className="space-y-5">
 
               {/* NOMBRE */}
               <div>
-                <label className="text-sm font-semibold text-gray-700">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Nombre Completo
                 </label>
                 <input
@@ -90,16 +91,20 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
                   onChange={(e) => setNombre(e.target.value)}
                   placeholder="Ej: Juan Pérez"
                   className="
-                    w-full mt-1 px-3 py-2 border rounded-lg 
-                    focus:ring-2 focus:ring-blue-500 outline-none
-                    text-sm
+                    w-full mt-1 px-3 py-2.5
+                    bg-slate-50 dark:bg-slate-800/70
+                    border border-slate-200 dark:border-slate-700
+                    rounded-xl
+                    text-slate-800 dark:text-slate-100
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500
+                    transition
                   "
                 />
               </div>
 
               {/* CARGO */}
               <div>
-                <label className="text-sm font-semibold text-gray-700">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Cargo
                 </label>
                 <input
@@ -108,9 +113,13 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
                   onChange={(e) => setCargo(e.target.value)}
                   placeholder="Ej: Técnico, Operario, Jefe..."
                   className="
-                    w-full mt-1 px-3 py-2 border rounded-lg 
-                    focus:ring-2 focus:ring-blue-500 outline-none
-                    text-sm
+                    w-full mt-1 px-3 py-2.5
+                    bg-slate-50 dark:bg-slate-800/70
+                    border border-slate-200 dark:border-slate-700
+                    rounded-xl
+                    text-slate-800 dark:text-slate-100
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500
+                    transition
                   "
                 />
               </div>
@@ -120,12 +129,18 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
               )}
 
               {/* BOTONES */}
-              <div className="flex flex-col sm:flex-row justify-end gap-3 mt-5">
+              <div className="flex justify-end gap-3 pt-2">
 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-lg border hover:bg-gray-100 text-sm"
+                  className="
+                    px-4 py-2 rounded-xl
+                    border border-slate-300 dark:border-slate-600
+                    text-slate-600 dark:text-slate-300
+                    hover:bg-slate-100 dark:hover:bg-slate-800
+                    text-sm transition
+                  "
                 >
                   Cancelar
                 </button>
@@ -134,9 +149,11 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
                   type="submit"
                   disabled={cargando}
                   className="
-                    px-4 py-2 rounded-lg bg-gray-800 text-white 
-                    hover:bg-gray-900 flex items-center gap-2 
-                    text-sm disabled:opacity-70
+                    px-5 py-2 rounded-xl
+                    bg-indigo-600 hover:bg-indigo-700
+                    text-white font-medium
+                    text-sm transition
+                    disabled:opacity-60
                   "
                 >
                   {cargando ? "Guardando..." : "Agregar Empleado"}
