@@ -175,7 +175,7 @@ export default function Salidas() {
 
             <div className="max-h-[60vh] overflow-y-auto pr-2 divide-y divide-slate-200 dark:divide-slate-700">
 
-              {historial.map((m, i) => (
+              {historial.map((m,) => (
                 <motion.div
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}

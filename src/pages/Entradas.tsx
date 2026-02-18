@@ -5,7 +5,7 @@ import {
   obtenerEmpleados,
   registrarEntrada,
   obtenerHistorialEntradas,
-  obtenerStockActual,
+  
 } from "../services/entradasService";
 
 import PageTransition from "../components/PageTransition.bak";
