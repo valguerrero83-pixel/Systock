@@ -14,6 +14,7 @@ export default function Empleados() {
   const { usuario } = useAuth();
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busqueda, setBusqueda] = useState("");
 
   const cargarEmpleados = async () => {
     setLoading(true);
@@ -36,10 +37,12 @@ export default function Empleados() {
 
     movimientos?.forEach((m) => {
       if (m.entregado_por) {
-        movCount[m.entregado_por] = (movCount[m.entregado_por] || 0) + 1;
+        movCount[m.entregado_por] =
+          (movCount[m.entregado_por] || 0) + 1;
       }
       if (m.recibido_por) {
-        movCount[m.recibido_por] = (movCount[m.recibido_por] || 0) + 1;
+        movCount[m.recibido_por] =
+          (movCount[m.recibido_por] || 0) + 1;
       }
     });
 
@@ -90,107 +93,138 @@ export default function Empleados() {
     cargarEmpleados();
   };
 
-return (
-  <motion.div
-    className="
-      max-w-6xl mx-auto mt-6 md:mt-8 px-6
-      bg-white dark:bg-slate-900
-      border border-slate-200 dark:border-slate-800
-      rounded-3xl p-6
-      shadow-lg dark:shadow-black/40
-    "
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-  >
-    <h2 className="text-xl md:text-2xl font-semibold mb-6 
-      text-slate-800 dark:text-slate-100">
-      Empleados
-    </h2>
+  const empleadosFiltrados = empleados.filter((e) => {
+    const texto = busqueda.toLowerCase();
+    return (
+      e.nombre.toLowerCase().includes(texto) ||
+      e.cargo.toLowerCase().includes(texto)
+    );
+  });
 
-    {/* TABLA RESPONSIVE */}
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm min-w-[650px]">
-        <thead className="border-b border-slate-200 dark:border-slate-800">
-          <tr className="text-left text-slate-500 dark:text-slate-400">
-            <th className="py-3 px-3 font-semibold">Nombre</th>
-            <th className="px-3 font-semibold">Cargo</th>
-            <th className="px-3 text-center font-semibold">Movimientos</th>
-            <th className="px-3 text-center font-semibold">Acciones</th>
-          </tr>
-        </thead>
+  return (
+    <motion.div
+      className="
+        max-w-7xl mx-auto mt-6 md:mt-8 px-6
+        bg-white dark:bg-slate-900
+        border border-slate-200 dark:border-slate-800
+        rounded-3xl p-6
+        shadow-lg dark:shadow-black/40
+      "
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <h2 className="text-xl md:text-2xl font-semibold mb-4 
+        text-slate-800 dark:text-slate-100">
+        Empleados
+      </h2>
 
-        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-          {empleados.map((e, index) => (
-            <motion.tr
-              key={e.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.03 }}
-              className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
-            >
-              {/* NOMBRE */}
-              <td className="py-4 px-3 font-medium text-slate-800 dark:text-slate-100">
-                {e.nombre}
-              </td>
+      {/* 🔎 BUSCADOR */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Buscar por nombre o cargo..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          className="
+            w-full md:w-96
+            px-4 py-2.5
+            rounded-xl
+            border border-slate-300 dark:border-slate-700
+            bg-white dark:bg-slate-800
+            text-slate-800 dark:text-slate-200
+            focus:outline-none
+            focus:ring-2 focus:ring-indigo-500
+            transition
+          "
+        />
+      </div>
 
-              {/* CARGO */}
-              <td className="px-3 text-slate-600 dark:text-slate-300">
-                {e.cargo}
-              </td>
+      {/* TABLA */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[650px]">
+          <thead className="border-b border-slate-200 dark:border-slate-800">
+            <tr className="text-left text-slate-500 dark:text-slate-400">
+              <th className="py-3 px-3 font-semibold">Nombre</th>
+              <th className="px-3 font-semibold">Cargo</th>
+              <th className="px-3 text-center font-semibold">Movimientos</th>
+              <th className="px-3 text-center font-semibold">Acciones</th>
+            </tr>
+          </thead>
 
-              {/* MOVIMIENTOS */}
-              <td className="text-center px-3">
-                <span className="
-                  inline-flex items-center
-                  px-3 py-1
-                  rounded-full
-                  text-xs font-semibold
-                  bg-indigo-500/15
-                  text-indigo-400
-                ">
-                  {e.total_movs}
-                </span>
-              </td>
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+            {empleadosFiltrados.map((e, index) => (
+              <motion.tr
+                key={e.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
+                className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
+              >
+                <td className="py-4 px-3 font-medium text-slate-800 dark:text-slate-100">
+                  {e.nombre}
+                </td>
 
-              {/* ACCIONES */}
-              <td className="text-center px-3">
-                {(usuario?.rol_usuario === "dev" ||
-                  usuario?.rol_usuario === "admin") && (
-                  <button
-                    onClick={() => eliminarEmpleado(e.id)}
-                    disabled={e.total_movs > 0}
-                    className={`
-                      px-3 py-1.5 rounded-lg text-xs font-semibold transition
-                      ${
-                        e.total_movs > 0
-                          ? "bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
-                          : "bg-red-500/15 text-red-400 hover:bg-red-500/25"
-                      }
-                    `}
-                  >
-                    Eliminar
-                  </button>
-                )}
+                <td className="px-3 text-slate-600 dark:text-slate-300">
+                  {e.cargo}
+                </td>
 
-                {(usuario?.rol_usuario === "viewer" ||
-                  usuario?.rol_usuario === "jefe" ||
-                  usuario?.rol_usuario === "gerente") && (
-                  <span className="text-slate-400 text-xs">
-                    Sin permisos
+                <td className="text-center px-3">
+                  <span className="
+                    inline-flex items-center
+                    px-3 py-1
+                    rounded-full
+                    text-xs font-semibold
+                    bg-indigo-500/15
+                    text-indigo-400
+                  ">
+                    {e.total_movs}
                   </span>
-                )}
-              </td>
-            </motion.tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                </td>
 
-    {loading && (
-      <p className="text-center text-slate-500 dark:text-slate-400 mt-6 animate-pulse">
-        Cargando empleados…
-      </p>
-    )}
-  </motion.div>
-);
+                <td className="text-center px-3">
+                  {(usuario?.rol_usuario === "dev" ||
+                    usuario?.rol_usuario === "admin") && (
+                    <button
+                      onClick={() => eliminarEmpleado(e.id)}
+                      disabled={e.total_movs > 0}
+                      className={`
+                        px-3 py-1.5 rounded-lg text-xs font-semibold transition
+                        ${
+                          e.total_movs > 0
+                            ? "bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
+                            : "bg-red-500/15 text-red-400 hover:bg-red-500/25"
+                        }
+                      `}
+                    >
+                      Eliminar
+                    </button>
+                  )}
+
+                  {(usuario?.rol_usuario === "viewer" ||
+                    usuario?.rol_usuario === "jefe" ||
+                    usuario?.rol_usuario === "gerente") && (
+                    <span className="text-slate-400 text-xs">
+                      Sin permisos
+                    </span>
+                  )}
+                </td>
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {!loading && empleadosFiltrados.length === 0 && (
+        <p className="text-center text-slate-500 dark:text-slate-400 mt-6">
+          No se encontraron empleados.
+        </p>
+      )}
+
+      {loading && (
+        <p className="text-center text-slate-500 dark:text-slate-400 mt-6 animate-pulse">
+          Cargando empleados…
+        </p>
+      )}
+    </motion.div>
+  );
 }
