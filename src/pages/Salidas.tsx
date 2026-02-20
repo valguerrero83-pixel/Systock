@@ -514,10 +514,18 @@ export default function Salidas() {
   </div>
 
   {m.notas && (
-    <p className="col-span-2 sm:col-span-4 text-[10px] text-slate-400 italic mt-1">
-      {m.notas}
-    </p>
-  )}
+  <p
+    className="
+      col-span-2 sm:col-span-4
+      text-sm
+      text-slate-500 dark:text-slate-400
+      italic
+      mt-1
+    "
+  >
+    {m.notas}
+  </p>
+)}
 
 </motion.div>
 
