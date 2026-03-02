@@ -15,51 +15,67 @@ export default function Empleados() {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
+  const { sedeActiva } = useAuth();
 
-  const cargarEmpleados = async () => {
-    setLoading(true);
+const cargarEmpleados = async () => {
+  setLoading(true);
 
-    const { data: lista, error } = await supabase
-      .from("empleados")
-      .select("id, nombre, cargo");
+  // 🔹 EMPLEADOS
+  let empQuery = supabase
+    .from("empleados")
+    .select("id, nombre, area, sede_id");
 
-    if (error) {
-      console.error("Error cargando empleados:", error);
-      setLoading(false);
-      return;
-    }
+  if (sedeActiva && sedeActiva !== "all") {
+    empQuery = empQuery.eq("sede_id", sedeActiva);
+  }
 
-    const { data: movimientos } = await supabase
-      .from("movimientos")
-      .select("entregado_por, recibido_por");
+  const { data: lista, error } = await empQuery;
 
-    const movCount: Record<string, number> = {};
-
-    movimientos?.forEach((m) => {
-      if (m.entregado_por) {
-        movCount[m.entregado_por] =
-          (movCount[m.entregado_por] || 0) + 1;
-      }
-      if (m.recibido_por) {
-        movCount[m.recibido_por] =
-          (movCount[m.recibido_por] || 0) + 1;
-      }
-    });
-
-    const empleadosFormateados = lista.map((e) => ({
-      id: e.id,
-      nombre: e.nombre,
-      cargo: e.cargo ?? "—",
-      total_movs: movCount[e.id] || 0,
-    }));
-
-    setEmpleados(empleadosFormateados);
+  if (error) {
+    console.error("Error cargando empleados:", error);
     setLoading(false);
-  };
+    return;
+  }
 
-  useEffect(() => {
-    cargarEmpleados();
-  }, []);
+  // 🔹 MOVIMIENTOS
+  let movQuery = supabase
+    .from("movimientos")
+    .select("entregado_por, recibido_por, sede_id");
+
+  if (sedeActiva && sedeActiva !== "all") {
+    movQuery = movQuery.eq("sede_id", sedeActiva);
+  }
+
+  const { data: movimientos } = await movQuery;
+
+  const movCount: Record<string, number> = {};
+
+  movimientos?.forEach((m) => {
+    if (m.entregado_por) {
+      movCount[m.entregado_por] =
+        (movCount[m.entregado_por] || 0) + 1;
+    }
+    if (m.recibido_por) {
+      movCount[m.recibido_por] =
+        (movCount[m.recibido_por] || 0) + 1;
+    }
+  });
+
+  const empleadosFormateados = (lista ?? []).map((e) => ({
+    id: e.id,
+    nombre: e.nombre,
+    cargo: e.area ?? "—", // 🔥 IMPORTANTE: tu BD usa area
+    total_movs: movCount[e.id] || 0,
+  }));
+
+  setEmpleados(empleadosFormateados);
+  setLoading(false);
+};
+
+useEffect(() => {
+  if (!sedeActiva) return;
+  cargarEmpleados();
+}, [sedeActiva]);
 
   const eliminarEmpleado = async (id: string) => {
     const { data: movs, error: movErr } = await supabase

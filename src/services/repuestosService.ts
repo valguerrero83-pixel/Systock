@@ -1,19 +1,19 @@
 import { supabase } from "../lib/supabase";
 
-export async function crearRepuesto(repuesto: any) {
+export async function crearRepuesto(payload: any) {
   const { data, error } = await supabase
     .from("repuestos")
-    .insert([
-      {
-        nombre: repuesto.nombre,
-        unidad: repuesto.unidad,
-        stock_minimo: repuesto.stock_minimo,
-        cantidad_inicial: repuesto.cantidad_inicial,
-        usuario_id: repuesto.usuario_id,
-      }
-    ])
+    .insert({
+      nombre: payload.nombre,
+      unidad: payload.unidad,
+      stock_minimo: payload.stock_minimo,
+      cantidad_inicial: payload.cantidad_inicial,
+      usuario_id: payload.usuario_id,
+      sede_id: payload.sede_id, // 🔥 ESTO ES LO QUE FALTABA
+    })
     .select();
 
   if (error) throw error;
+
   return data;
 }

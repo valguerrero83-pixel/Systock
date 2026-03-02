@@ -1,8 +1,14 @@
 import { supabase } from "../lib/supabase";
-import type { Repuesto, Empleado, StockActual, CrearEntradaDTO, Movimiento } from "../types/index";
+import type {
+  Repuesto,
+  Empleado,
+  StockActual,
+  CrearEntradaDTO,
+  Movimiento,
+} from "../types/index";
 
 /* ========================================
-   FECHA COLOMBIA (VERSIÓN CORRECTA)
+   FECHA COLOMBIA
 ======================================== */
 function fechaColombia() {
   const opciones = {
@@ -11,59 +17,104 @@ function fechaColombia() {
   };
 
   const fechaLocal = new Date()
-    .toLocaleString("sv-SE", opciones) // "2026-02-11 11:23:59"
-    .replace(" ", "T"); // <-- ESTA ES LA CLAVE
+    .toLocaleString("sv-SE", opciones)
+    .replace(" ", "T");
 
   return `${fechaLocal}-05:00`;
 }
 
-
 /* ========================================
-      OBTENER REPUESTOS
+      OBTENER REPUESTOS (SOPORTA ALL)
 ======================================== */
-export async function obtenerRepuestos(): Promise<Repuesto[]> {
-  const { data, error } = await supabase
+export async function obtenerRepuestos(
+  sedeId: string | "all"
+): Promise<Repuesto[]> {
+
+  let query = supabase
     .from("repuestos")
     .select("id, codigo_corto, nombre, unidad")
     .order("nombre");
 
-  if (error) throw error;
+  if (sedeId && sedeId !== "all") {
+    query = query.eq("sede_id", sedeId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error obteniendo repuestos:", error);
+    throw error;
+  }
 
   return (data as Repuesto[]) ?? [];
 }
 
 /* ========================================
-      OBTENER EMPLEADOS
+      OBTENER EMPLEADOS (SOPORTA ALL)
 ======================================== */
-export async function obtenerEmpleados(): Promise<Empleado[]> {
-  const { data, error } = await supabase
+export async function obtenerEmpleados(
+  sedeId: string | "all"
+): Promise<Empleado[]> {
+
+  let query = supabase
     .from("empleados")
     .select("id, nombre")
     .order("nombre");
 
-  if (error) throw error;
+  if (sedeId && sedeId !== "all") {
+    query = query.eq("sede_id", sedeId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error obteniendo empleados:", error);
+    throw error;
+  }
 
   return (data as Empleado[]) ?? [];
 }
 
 /* ========================================
-      OBTENER STOCK ACTUAL
+      OBTENER STOCK ACTUAL (SOPORTA ALL)
 ======================================== */
-export async function obtenerStockActual(): Promise<StockActual[]> {
-  const { data, error } = await supabase
+export async function obtenerStockActual(
+  sedeId: string | "all"
+): Promise<StockActual[]> {
+
+  let query = supabase
     .from("stock_actual")
     .select("repuesto_id, stock");
 
-  if (error) throw error;
+  if (sedeId && sedeId !== "all") {
+    query = query.eq("sede_id", sedeId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error obteniendo stock:", error);
+    throw error;
+  }
 
   return (data as StockActual[]) ?? [];
 }
 
 /* ========================================
-      REGISTRAR ENTRADA
+      REGISTRAR ENTRADA (GUARDA SEDE)
 ======================================== */
-export async function registrarEntrada(payload: CrearEntradaDTO) {
-  const { repuesto_id, cantidad, recibido_por, notas, usuario_id } = payload;
+export async function registrarEntrada(
+  payload: CrearEntradaDTO & { sede_id: string }
+) {
+
+  const {
+    repuesto_id,
+    cantidad,
+    recibido_por,
+    notas,
+    usuario_id,
+    sede_id,
+  } = payload;
 
   const { error } = await supabase.from("movimientos").insert({
     tipo: "entrada",
@@ -72,12 +123,13 @@ export async function registrarEntrada(payload: CrearEntradaDTO) {
     entregado_por: null,
     recibido_por,
     usuario_id,
+    sede_id,
     notas: notas ?? "",
     created_at_tz: fechaColombia(),
   });
 
   if (error) {
-    console.error("Error al registrar entrada:", error);
+    console.error("Error registrando entrada:", error);
     throw error;
   }
 
@@ -85,10 +137,13 @@ export async function registrarEntrada(payload: CrearEntradaDTO) {
 }
 
 /* ========================================
-      HISTORIAL ENTRADAS
+      HISTORIAL ENTRADAS (SOPORTA ALL)
 ======================================== */
-export async function obtenerHistorialEntradas(): Promise<Movimiento[]> {
-  const { data, error } = await supabase
+export async function obtenerHistorialEntradas(
+  sedeId: string | "all"
+): Promise<Movimiento[]> {
+
+  let query = supabase
     .from("movimientos")
     .select(`
       id,
@@ -98,11 +153,13 @@ export async function obtenerHistorialEntradas(): Promise<Movimiento[]> {
       notas,
       repuesto_id,
       usuario_id,
+      sede_id,
 
       repuestos:repuesto_id (
         id,
         nombre,
-        unidad
+        unidad,
+        stock_minimo
       ),
 
       empleado_entrega:entregado_por (
@@ -118,24 +175,29 @@ export async function obtenerHistorialEntradas(): Promise<Movimiento[]> {
     .eq("tipo", "entrada")
     .order("created_at_tz", { ascending: false });
 
-  if (error) throw error;
+  if (sedeId && sedeId !== "all") {
+    query = query.eq("sede_id", sedeId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error historial entradas:", error);
+    throw error;
+  }
+
   if (!data) return [];
 
   return data.map((m: any) => ({
     id: m.id,
     tipo: m.tipo,
     cantidad: m.cantidad,
-    created_at_tz: m.created_at_tz,
+    created_at_tz: m.created_at_tz ?? null,
     notas: m.notas ?? null,
-
     repuesto_id: m.repuesto_id ?? null,
     usuario_id: m.usuario_id ?? null,
-
-    entregado_por: null,
-    recibido_por: m.empleado_recibe?.id ?? null,
-
     repuestos: m.repuestos ?? null,
     empleado_entrega: m.empleado_entrega ?? null,
     empleado_recibe: m.empleado_recibe ?? null,
-  })) as Movimiento[];
+  }));
 }

@@ -14,7 +14,7 @@ export default function ModalNuevoRepuesto({
   onClose,
   onCreated,
 }: ModalNuevoRepuestoProps) {
-  const { usuario } = useAuth();
+  const { usuario, sedeActiva } = useAuth();
 
   const [form, setForm] = useState({
     nombre: "",
@@ -50,12 +50,13 @@ export default function ModalNuevoRepuesto({
       setLoading(true);
 
       await crearRepuesto({
-        nombre: form.nombre,
-        unidad: form.unidad,
-        stock_minimo: Number(form.stock_minimo),
-        cantidad_inicial: Number(form.cantidad_inicial),
-        usuario_id: usuario.id,
-      });
+      nombre: form.nombre,
+      unidad: form.unidad,
+      stock_minimo: Number(form.stock_minimo),
+      cantidad_inicial: Number(form.cantidad_inicial),
+      usuario_id: usuario.id,
+      sede_id: sedeActiva!, // 🔥 CLAVE
+    });
 
       setForm({
         nombre: "",

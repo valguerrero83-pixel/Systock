@@ -29,3 +29,12 @@ export async function actualizarArea(id: string, nuevaArea: string): Promise<voi
 
   if (error) throw error;
 }
+
+export async function actualizarSede(id: string, nuevaSede: string): Promise<void> {
+  const { error } = await supabase
+    .from("users")
+    .update({ sede: nuevaSede })
+    .eq("id", id);
+
+  if (error) throw error;
+}

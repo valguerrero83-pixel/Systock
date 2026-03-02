@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition.bak";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../context/AuthContext";
 
 interface ItemInventario {
   repuesto_id: string;
@@ -15,49 +16,57 @@ interface ItemInventario {
 }
 
 export default function Inventario() {
+  const { sedeActiva } = useAuth();
+
   const [items, setItems] = useState<ItemInventario[]>([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
 
-  const cargarInventario = async () => {
-    setLoading(true);
 
-    const { data, error } = await supabase
-      .from("stock_actual")
-      .select("*")
-      .order("codigo_corto", { ascending: true });
+const cargarInventario = async () => {
+  if (!sedeActiva) return;
 
-    if (error) {
-      console.error("Error cargando inventario:", error);
-      alert("Error cargando inventario");
-    } else {
-      setItems(data ?? []);
-    }
+  setLoading(true);
 
-    setLoading(false);
+  let query = supabase
+    .from("stock_actual")
+    .select("*")
+    .order("codigo_corto", { ascending: true });
+
+  if (sedeActiva !== "all") {
+    query = query.eq("sede_id", sedeActiva);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error cargando inventario:", error);
+    alert("Error cargando inventario");
+  } else {
+    setItems(data ?? []);
+  }
+
+  setLoading(false);
+};
+
+useEffect(() => {
+  if (!sedeActiva) return;
+
+  cargarInventario();
+
+  const channel = supabase
+    .channel("rt_inventario")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "movimientos" },
+      () => cargarInventario()
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
   };
-
-  useEffect(() => {
-    cargarInventario();
-
-    const channel = supabase
-      .channel("rt_inventario")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "repuestos" },
-        () => cargarInventario()
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "movimientos" },
-        () => cargarInventario()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+}, [sedeActiva]); // 👈 ahora depende del usuario
 
   const itemsFiltrados = items.filter((i) => {
     const texto = busqueda.toLowerCase();

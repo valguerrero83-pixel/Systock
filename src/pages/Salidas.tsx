@@ -37,6 +37,7 @@ export default function Salidas() {
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [historial, setHistorial] = useState<any[]>([]);
   const [toast, setToast] = useState("");
+  const { sedeActiva } = useAuth();
 
   const [stockActual, setStockActual] = useState<number | null>(null);
 
@@ -52,24 +53,28 @@ export default function Salidas() {
   const unidad = repuestoSeleccionado?.unidad ?? "";
 
   useEffect(() => {
-    cargarTodo();
-  }, []);
+  if (!sedeActiva) return;
+  cargarTodo();
+}, [sedeActiva]);
 
   async function cargarTodo() {
-    try {
-      const [rep, emp, hist] = await Promise.all([
-        getRepuestos(),
-        getEmpleados(),
-        getHistorialSalidas(),
-      ]);
+  if (!sedeActiva) return;
 
-      setRepuestos(rep);
-      setEmpleados(emp);
-      setHistorial(hist);
-    } catch {
-      showToast("Error cargando datos.");
-    }
+  try {
+    const [rep, emp, hist] = await Promise.all([
+      getRepuestos(sedeActiva),
+      getEmpleados(sedeActiva),
+      getHistorialSalidas(sedeActiva),
+    ]);
+
+    setRepuestos(rep ?? []);
+    setEmpleados(emp ?? []);
+    setHistorial(hist ?? []);
+  } catch (err) {
+    console.error(err);
+    showToast("Error cargando datos.");
   }
+}
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -83,7 +88,7 @@ export default function Salidas() {
       setForm({ ...form, repuesto_id: value });
 
       if (value) {
-        const stock = await getStockActualById(value);
+        const stock = await getStockActualById(value, sedeActiva!);
         setStockActual(stock);
       } else {
         setStockActual(null);
@@ -121,6 +126,7 @@ export default function Salidas() {
 
     try {
       const resp = await crearSalida({
+        sede_id: sedeActiva!,
         repuesto_id: form.repuesto_id,
         cantidad: cantidadNum,
         entregado_por: form.entregado_por,

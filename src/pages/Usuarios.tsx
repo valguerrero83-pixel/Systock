@@ -5,6 +5,7 @@ import {
   obtenerUsuarios,
   actualizarRol,
   actualizarArea,
+  actualizarSede,
 } from "../services/userService";
 import { useAuth } from "../context/AuthContext";
 
@@ -57,6 +58,16 @@ export default function Usuarios() {
     }
   }
 
+  async function cambiarSede(id: string, sede: string) {
+  try {
+    await actualizarSede(id, sede);
+    mostrarToast("Sede actualizada ✓");
+    cargarUsuarios();
+  } catch {
+    mostrarToast("Error actualizando sede.");
+  }
+}
+
   // 🔐 Validación de permisos
   if (usuario?.rol_usuario !== "admin" && usuario?.rol_usuario !== "dev") {
     return (
@@ -88,6 +99,7 @@ export default function Usuarios() {
                   <th className="text-left px-2">Email</th>
                   <th className="text-left px-2">Rol</th>
                   <th className="text-left px-2">Área</th>
+                  <th className="text-left px-2">Sede</th>
                   <th className="text-left px-2">Acciones</th>
                 </tr>
               </thead>
@@ -127,6 +139,15 @@ export default function Usuarios() {
                         value={u.area || ""}
                         placeholder="Área..."
                         onChange={(e) => cambiarArea(u.id, e.target.value)}
+                      />
+                    </td>
+                    <td className="px-2">
+                      <input
+                        type="text"
+                        className="border px-2 py-1 rounded-lg bg-white w-full text-xs md:text-sm"
+                        value={u.sede || ""}
+                        placeholder="Sede..."
+                        onChange={(e) => cambiarSede(u.id, e.target.value)}
                       />
                     </td>
 

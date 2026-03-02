@@ -35,6 +35,7 @@ export default function Entradas() {
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [historial, setHistorial] = useState<any[]>([]);
   const [toast, setToast] = useState("");
+  const { sedeActiva } = useAuth();
 
   const [form, setForm] = useState({
     repuesto_id: "",
@@ -50,10 +51,10 @@ export default function Entradas() {
   async function cargarDatos() {
     try {
       const [rep, emp, hist] = await Promise.all([
-        obtenerRepuestos(),
-        obtenerEmpleados(),
-        obtenerHistorialEntradas(),
-      ]);
+      obtenerRepuestos(sedeActiva!),
+      obtenerEmpleados(sedeActiva!),
+      obtenerHistorialEntradas(sedeActiva!),
+    ]);
 
       setRepuestos(rep);
       setEmpleados(emp);
@@ -83,6 +84,7 @@ export default function Entradas() {
 
     try {
       await registrarEntrada({
+        sede_id: sedeActiva!,
         repuesto_id: form.repuesto_id,
         cantidad: Number(form.cantidad),
         recibido_por: form.recibido_por,

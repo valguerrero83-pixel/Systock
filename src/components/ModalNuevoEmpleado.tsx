@@ -1,40 +1,44 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "../lib/supabase";
+import { useAuth } from "../context/AuthContext";
+import { crearEmpleado } from "../services/empleadosService";
+
 
 export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any) {
   const [nombre, setNombre] = useState("");
   const [cargo, setCargo] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
+  const { sedeActiva } = useAuth();
 
   async function handleSubmit(e: any) {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    if (!nombre.trim()) return setError("El nombre es obligatorio");
-    if (!cargo.trim()) return setError("El cargo es obligatorio");
+  if (!nombre.trim()) return setError("El nombre es obligatorio");
+  if (!cargo.trim()) return setError("El cargo es obligatorio");
+  if (!sedeActiva) return setError("No hay sede activa");
 
-    setCargando(true);
+  setCargando(true);
 
-    const { error: insertError } = await supabase.from("empleados").insert({
-      nombre,
-      cargo,
-    });
-
-    setCargando(false);
-
-    if (insertError) {
-      console.error(insertError);
-      return setError("Ocurrió un error al guardar el empleado.");
-    }
+  try {
+    await crearEmpleado(
+      { nombre, cargo },
+      sedeActiva
+    );
 
     onCreated();
     onClose();
 
     setNombre("");
     setCargo("");
+  } catch (err) {
+    console.error(err);
+    setError("Ocurrió un error al guardar el empleado.");
   }
+
+  setCargando(false);
+}
 
   return (
     <AnimatePresence>

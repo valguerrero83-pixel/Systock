@@ -3,6 +3,7 @@ import { obtenerHistorialMovimientos } from "../services/historialService";
 import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
 import type { Movimiento, Empleado, Repuesto } from "../types/index";
+import { useAuth } from "../context/AuthContext";
 
 /* ============================
    FORMATEAR FECHA / HORA
@@ -41,6 +42,7 @@ export default function Historial() {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
+  const { sedeActiva } = useAuth();
 
   const [filtros, setFiltros] = useState({
     empleado: "",
@@ -51,23 +53,28 @@ export default function Historial() {
   });
 
   useEffect(() => {
-    cargarDatos();
-  }, []);
+  if (!sedeActiva) return;
+  cargarDatos();
+}, [sedeActiva]);
 
   /* ============================
          CARGAR DATOS
   ============================= */
   async function cargarDatos() {
-    const hist = await obtenerHistorialMovimientos("365");
+    if (!sedeActiva) return;
+
+    const hist = await obtenerHistorialMovimientos("365", sedeActiva);
 
     const { data: emp } = await supabase
       .from("empleados")
       .select("id, nombre")
+      .eq("sede_id", sedeActiva)
       .order("nombre");
 
     const { data: rep } = await supabase
       .from("repuestos")
       .select("id, nombre, unidad, stock_minimo")
+      .eq("sede_id", sedeActiva)
       .order("nombre");
 
     setHistOriginal(hist ?? []);
