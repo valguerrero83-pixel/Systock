@@ -46,6 +46,11 @@ export interface Movimiento {
   repuestos?: Repuesto | null;
   empleado_entrega?: Empleado | null;
   empleado_recibe?: Empleado | null;
+
+  sede?: {
+    id: string;
+    nombre: string;
+  } | null;
 }
 
 // Inventario desde la vista stock_actual

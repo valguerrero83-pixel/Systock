@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+
 import { getEmpleados } from "../services/salidasService";
 import { obtenerRepuestos } from "../services/entradasService";
-import { obtenerHistorialMovimientos } from "../services/reportesService";
+import { obtenerHistorialMovimientos } from "../services/historialService";
 
 import type { Empleado, Repuesto, Movimiento } from "../types";
 
@@ -11,6 +13,8 @@ interface PropsModal {
 }
 
 export default function ModalReportes({ abierto, onClose }: PropsModal) {
+  const { sedeActiva } = useAuth();
+
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [historial, setHistorial] = useState<Movimiento[]>([]);
@@ -22,19 +26,45 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
   });
 
   useEffect(() => {
-    if (abierto) cargarFiltros();
-  }, [abierto]);
+    if (abierto && sedeActiva) {
+      cargarDatos();
+    }
+  }, [abierto, sedeActiva]);
 
-  async function cargarFiltros() {
-    const [emp, rep] = await Promise.all([getEmpleados(), obtenerRepuestos()]);
-    setEmpleados(emp);
-    setRepuestos(rep);
-    filtrarMovimientos("30");
+  async function cargarDatos() {
+    if (!sedeActiva) return;
+
+    const [emp, rep] = await Promise.all([
+      getEmpleados(sedeActiva),
+      obtenerRepuestos(sedeActiva),
+    ]);
+
+    setEmpleados(emp ?? []);
+    setRepuestos(rep ?? []);
+
+    await filtrarMovimientos(filtros.periodo);
   }
 
   async function filtrarMovimientos(periodo: string) {
-    const datos = await obtenerHistorialMovimientos(periodo);
-    setHistorial(datos);
+    if (!sedeActiva) return;
+
+    const datos = await obtenerHistorialMovimientos(periodo, sedeActiva);
+
+    let lista = datos ?? [];
+
+    if (filtros.empleado) {
+      lista = lista.filter(
+        (m) =>
+          m.empleado_entrega?.id === filtros.empleado ||
+          m.empleado_recibe?.id === filtros.empleado
+      );
+    }
+
+    if (filtros.repuesto) {
+      lista = lista.filter((m) => m.repuesto_id === filtros.repuesto);
+    }
+
+    setHistorial(lista);
   }
 
   function handleFiltro(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -43,25 +73,35 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
     const nuevosFiltros = { ...filtros, [name]: value };
     setFiltros(nuevosFiltros);
 
-    if (name === "periodo") filtrarMovimientos(value);
+    if (name === "periodo") {
+      filtrarMovimientos(value);
+    } else {
+      filtrarMovimientos(nuevosFiltros.periodo);
+    }
   }
 
   function exportarCSV() {
     if (historial.length === 0) return;
 
-    const filas = historial.map((m: Movimiento) => ({
+    const filas = historial.map((m) => ({
       Fecha: m.created_at_tz,
       Tipo: m.tipo,
       Repuesto: m.repuestos?.nombre,
       Cantidad: m.cantidad,
       EntregadoPor: m.empleado_entrega?.nombre ?? "",
       RecibidoPor: m.empleado_recibe?.nombre ?? "",
+      Sede: m.sede?.nombre ?? "", // 🔥 para modo ALL
     }));
 
     const encabezados = Object.keys(filas[0]).join(",");
-    const contenido = filas.map((f) => Object.values(f).join(",")).join("\n");
+    const contenido = filas
+      .map((f) => Object.values(f).join(","))
+      .join("\n");
 
-    const blob = new Blob([encabezados + "\n" + contenido], { type: "text/csv" });
+    const blob = new Blob(
+      [encabezados + "\n" + contenido],
+      { type: "text/csv;charset=utf-8;" }
+    );
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -73,33 +113,18 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
   if (!abierto) return null;
 
   return (
-    <div
-      className="
-        fixed inset-0 bg-black/40 backdrop-blur-sm 
-        flex justify-center items-center 
-        p-4 z-50
-      "
-    >
-      <div
-        className="
-          bg-white w-full max-w-6xl rounded-2xl shadow-xl 
-          p-6 sm:p-8 
-          max-h-[90vh] overflow-y-auto
-        "
-      >
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4 z-50">
+      <div className="bg-white w-full max-w-6xl rounded-2xl shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
             Historial de Movimientos
           </h2>
 
           <div className="flex items-center gap-3">
             <button
               onClick={exportarCSV}
-              className="
-                bg-gray-800 text-white px-4 py-2 rounded-lg shadow 
-                hover:bg-gray-900 text-sm sm:text-base
-              "
+              className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 text-sm sm:text-base"
             >
               Exportar CSV
             </button>
@@ -115,7 +140,6 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
 
         {/* FILTROS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {/* Empleado */}
           <div>
             <label className="text-sm font-semibold">Empleado</label>
             <select
@@ -133,7 +157,6 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
             </select>
           </div>
 
-          {/* Repuesto */}
           <div>
             <label className="text-sm font-semibold">Repuesto</label>
             <select
@@ -151,7 +174,6 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
             </select>
           </div>
 
-          {/* Periodo */}
           <div>
             <label className="text-sm font-semibold">Periodo</label>
             <select
@@ -180,40 +202,58 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
                   <th>Cantidad</th>
                   <th>Entregado por</th>
                   <th>Recibido por</th>
+                  {sedeActiva === "all" && <th>Sede</th>}
                 </tr>
               </thead>
 
               <tbody>
-                {historial.map((m: Movimiento) => (
+                {historial.map((m) => (
                   <tr key={m.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      {new Date(m.created_at_tz + "Z").toLocaleDateString("es-CO")}
+                      {new Date(m.created_at_tz).toLocaleDateString("es-CO")}
                       <br />
                       <span className="text-xs text-gray-500">
-                        {new Date(m.created_at_tz + "Z").toLocaleTimeString("es-CO")}
+                        {new Date(m.created_at_tz).toLocaleTimeString("es-CO")}
                       </span>
                     </td>
 
                     <td className="px-4 py-3">
                       <span
                         className={`px-2 py-1 rounded text-white text-xs ${
-                          m.tipo === "entrada" ? "bg-green-500" : "bg-red-500"
+                          m.tipo === "entrada"
+                            ? "bg-green-500"
+                            : "bg-red-500"
                         }`}
                       >
                         {m.tipo}
                       </span>
                     </td>
 
-                    <td className="px-4 py-3">{m.repuestos?.nombre}</td>
+                    <td className="px-4 py-3">
+                      {m.repuestos?.nombre}
+                    </td>
 
                     <td className="px-4 py-3">
                       {m.tipo === "entrada" ? "+" : "-"}
                       {m.cantidad}{" "}
-                      <span className="text-gray-500">{m.repuestos?.unidad}</span>
+                      <span className="text-gray-500">
+                        {m.repuestos?.unidad}
+                      </span>
                     </td>
 
-                    <td className="px-4 py-3">{m.empleado_entrega?.nombre ?? "-"}</td>
-                    <td className="px-4 py-3">{m.empleado_recibe?.nombre ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      {m.empleado_entrega?.nombre ?? "-"}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {m.empleado_recibe?.nombre ?? "-"}
+                    </td>
+
+                    {sedeActiva === "all" && (
+                      <td className="px-4 py-3">
+                        {m.sede?.nombre ?? "-"}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
