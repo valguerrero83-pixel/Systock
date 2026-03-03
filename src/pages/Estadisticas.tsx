@@ -58,15 +58,15 @@ export default function Estadisticas() {
 
   /* ================= VOLUMEN ================= */
 
-  const volumenEntradas = movimientosNormalizados
-    .filter((m) => m.tipo === "entrada")
-    .reduce((acc, m) => acc + m.cantidad, 0);
+//   const volumenEntradas = movimientosNormalizados
+//     .filter((m) => m.tipo === "entrada")
+//     .reduce((acc, m) => acc + m.cantidad, 0);
 
-  const volumenSalidas = movimientosNormalizados
-    .filter((m) => m.tipo === "salida")
-    .reduce((acc, m) => acc + m.cantidad, 0);
+//   const volumenSalidas = movimientosNormalizados
+//     .filter((m) => m.tipo === "salida")
+//     .reduce((acc, m) => acc + m.cantidad, 0);
 
-  const volumenTotal = volumenEntradas + volumenSalidas;
+//   const volumenTotal = volumenEntradas + volumenSalidas;
 
   /* ================= PORCENTAJES ================= */
 
@@ -83,34 +83,34 @@ export default function Estadisticas() {
 
   /* ================= VARIACIÓN MENSUAL ================= */
 
-  const ahora = new Date();
-  const mesActual = ahora.getMonth();
-  const añoActual = ahora.getFullYear();
+//   const ahora = new Date();
+//   const mesActual = ahora.getMonth();
+//   const añoActual = ahora.getFullYear();
 
-  const mesAnterior = mesActual === 0 ? 11 : mesActual - 1;
-  const añoMesAnterior = mesActual === 0 ? añoActual - 1 : añoActual;
+//   const mesAnterior = mesActual === 0 ? 11 : mesActual - 1;
+//   const añoMesAnterior = mesActual === 0 ? añoActual - 1 : añoActual;
 
-  const movimientosMesActual = movimientosNormalizados.filter((m) => {
-    const d = new Date(m.created_at_tz);
-    return d.getMonth() === mesActual && d.getFullYear() === añoActual;
-  }).length;
+//   const movimientosMesActual = movimientosNormalizados.filter((m) => {
+//     const d = new Date(m.created_at_tz);
+//     return d.getMonth() === mesActual && d.getFullYear() === añoActual;
+//   }).length;
 
-  const movimientosMesAnterior = movimientosNormalizados.filter((m) => {
-    const d = new Date(m.created_at_tz);
-    return (
-      d.getMonth() === mesAnterior &&
-      d.getFullYear() === añoMesAnterior
-    );
-  }).length;
+//   const movimientosMesAnterior = movimientosNormalizados.filter((m) => {
+//     const d = new Date(m.created_at_tz);
+//     return (
+//       d.getMonth() === mesAnterior &&
+//       d.getFullYear() === añoMesAnterior
+//     );
+//   }).length;
 
-  const variacionMensual =
-    movimientosMesAnterior > 0
-      ? (
-          ((movimientosMesActual - movimientosMesAnterior) /
-            movimientosMesAnterior) *
-          100
-        ).toFixed(1)
-      : 0;
+//   const variacionMensual =
+//     movimientosMesAnterior > 0
+//       ? (
+//           ((movimientosMesActual - movimientosMesAnterior) /
+//             movimientosMesAnterior) *
+//           100
+//         ).toFixed(1)
+//       : 0;
 
   /* ================= SEMANA ================= */
 
@@ -118,10 +118,10 @@ export default function Estadisticas() {
   const hace7Dias = new Date();
   hace7Dias.setDate(hoy.getDate() - 7);
 
-  const movimientosSemana = movimientosNormalizados.filter((m) => {
-    const d = new Date(m.created_at_tz);
-    return d >= hace7Dias;
-  }).length;
+//   const movimientosSemana = movimientosNormalizados.filter((m) => {
+//     const d = new Date(m.created_at_tz);
+//     return d >= hace7Dias;
+//   }).length;
 
   /* ================= TENDENCIA DIARIA ================= */
 
