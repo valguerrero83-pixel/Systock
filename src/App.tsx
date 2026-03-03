@@ -8,6 +8,7 @@ import Inventario from "./pages/Inventario";
 import Historial from "./pages/Historial";
 import Login from "./pages/Login";
 import Empleados from "./pages/Empleados";
+import Estadisticas from "./pages/Estadisticas";
 
 // --------------------------------------
 // PROTECTED ROUTE
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/inventario" element={<Inventario />} />
             <Route path="/historial" element={<Historial />} />
             <Route path="/empleados" element={<Empleados />} />
+            <Route path="/estadisticas" element={<Estadisticas />} />
 
           </Route>
         </Route>

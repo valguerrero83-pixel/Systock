@@ -11,7 +11,7 @@ import {
 
 import PageTransition from "../components/PageTransition.bak";
 import { motion } from "framer-motion";
-
+import SelectPro from "../components/SelectPro";
 /* ===============================
       TOAST BONITO
 =============================== */
@@ -294,28 +294,28 @@ export default function Salidas() {
           </div>
 
           {/* REPUESTO */}
-          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Repuesto</label>
-          <select
-            name="repuesto_id"
-            value={form.repuesto_id}
-            onChange={handleChange}
-            className="w-full mt-1 py-2.5 px-3
-            bg-slate-50 dark:bg-slate-800
-            border border-slate-200 dark:border-slate-700
-            rounded-xl
-            text-slate-800 dark:text-slate-200
-            appearance-none
-            focus:outline-none focus:ring-2 focus:ring-indigo-500
-            transition"
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Repuesto
+          </label>
 
-          >
-            <option value="">Buscar repuesto...</option>
-            {repuestos.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.nombre}
-              </option>
-            ))}
-          </select>
+          <SelectPro
+            value={form.repuesto_id}
+            onChange={async (val) => {
+              setForm({ ...form, repuesto_id: val });
+
+              if (val) {
+                const stock = await getStockActualById(val, sedeActiva!);
+                setStockActual(stock);
+              } else {
+                setStockActual(null);
+              }
+            }}
+            placeholder="Buscar repuesto..."
+            options={repuestos.map((r) => ({
+              value: r.id,
+              label: r.nombre,
+            }))}
+          />
 
           {stockActual !== null && (
             <p className="text-xs text-slate-600 dark:text-slate-300 mb-4">
@@ -349,52 +349,38 @@ export default function Salidas() {
           )}
 
           {/* ENTREGADO POR */}
-          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Entregado por</label>
-          <select
-            name="entregado_por"
-            value={form.entregado_por}
-            onChange={handleChange}
-            className="w-full mt-1 py-2.5 px-3
-            bg-slate-50 dark:bg-slate-800/70
-            dark:focus:ring-indigo-400
-            border border-slate-200 dark:border-slate-700
-            rounded-xl
-            text-slate-800 dark:text-slate-200
-            focus:outline-none focus:ring-2 focus:ring-indigo-500
-            transition"
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Entregado por
+          </label>
 
-          >
-            <option value="">Seleccione...</option>
-            {empleados.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombre}
-              </option>
-            ))}
-          </select>
+          <SelectPro
+            value={form.entregado_por}
+            onChange={(val) =>
+              setForm({ ...form, entregado_por: val })
+            }
+            placeholder="Seleccione..."
+            options={empleados.map((e) => ({
+              value: e.id,
+              label: e.nombre,
+            }))}
+          />
 
           {/* RECIBIDO POR */}
-          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recibido por</label>
-          <select
-            name="recibido_por"
-            value={form.recibido_por}
-            onChange={handleChange}
-            className="w-full mt-1 py-2.5 px-3
-            bg-slate-50 dark:bg-slate-800/70
-            dark:focus:ring-indigo-400
-            border border-slate-200 dark:border-slate-700
-            rounded-xl
-            text-slate-800 dark:text-slate-200
-            focus:outline-none focus:ring-2 focus:ring-indigo-500
-            transition"
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Recibido por
+          </label>
 
-          >
-            <option value="">Seleccione...</option>
-            {empleados.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombre}
-              </option>
-            ))}
-          </select>
+          <SelectPro
+            value={form.recibido_por}
+            onChange={(val) =>
+              setForm({ ...form, recibido_por: val })
+            }
+            placeholder="Seleccione..."
+            options={empleados.map((e) => ({
+              value: e.id,
+              label: e.nombre,
+            }))}
+          />
 
           {/* NOTAS */}
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Notas</label>

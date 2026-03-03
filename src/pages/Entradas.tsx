@@ -10,6 +10,7 @@ import {
 
 import PageTransition from "../components/PageTransition.bak";
 import { motion } from "framer-motion";
+import SelectPro from "../components/SelectPro";
 
 /* ================= TOAST ================= */
 
@@ -144,21 +145,18 @@ export default function Entradas() {
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             Repuesto
           </label>
-          <select
-            name="repuesto_id"
+
+          <SelectPro
             value={form.repuesto_id}
-            onChange={handleChange}
-            className="w-full mt-1 py-2.5 px-3 bg-slate-50 dark:bg-slate-800/70
-            border border-slate-200 dark:border-slate-700 rounded-xl mb-4
-            text-slate-800 dark:text-slate-200"
-          >
-            <option value="">Buscar repuesto...</option>
-            {repuestos.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.codigo_corto} — {r.nombre}
-              </option>
-            ))}
-          </select>
+            onChange={(val) =>
+              setForm({ ...form, repuesto_id: val })
+            }
+            placeholder="Buscar repuesto..."
+            options={repuestos.map((r) => ({
+              value: r.id,
+              label: `${r.codigo_corto ?? ""} — ${r.nombre}`,
+            }))}
+          />
 
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             Cantidad
@@ -176,21 +174,18 @@ export default function Entradas() {
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             Recibido por
           </label>
-          <select
-            name="recibido_por"
+
+          <SelectPro
             value={form.recibido_por}
-            onChange={handleChange}
-            className="w-full mt-1 py-2.5 px-3 bg-slate-50 dark:bg-slate-800/70
-            border border-slate-200 dark:border-slate-700 rounded-xl mb-4
-            text-slate-800 dark:text-slate-200"
-          >
-            <option value="">Seleccione...</option>
-            {empleados.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombre}
-              </option>
-            ))}
-          </select>
+            onChange={(val) =>
+              setForm({ ...form, recibido_por: val })
+            }
+            placeholder="Seleccione..."
+            options={empleados.map((e) => ({
+              value: e.id,
+              label: e.nombre,
+            }))}
+          />
 
           <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             Notas

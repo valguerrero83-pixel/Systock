@@ -4,6 +4,9 @@ import { supabase } from "../lib/supabase";
 import { motion } from "framer-motion";
 import type { Movimiento, Empleado, Repuesto } from "../types/index";
 import { useAuth } from "../context/AuthContext";
+import SelectPro from "../components/SelectPro";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
 /* ============================
    FORMATEAR FECHA / HORA
@@ -43,6 +46,7 @@ export default function Historial() {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const { sedeActiva } = useAuth();
+  const navigate = useNavigate();
 
   const [filtros, setFiltros] = useState({
     empleado: "",
@@ -162,14 +166,36 @@ export default function Historial() {
   /* ============================
         RENDER
   ============================= */
-
 return (
   <div className="max-w-7xl mx-auto mt-6 md:mt-8 px-6">
 
-    <h2 className="text-xl md:text-2xl font-semibold mb-6 
-      text-slate-800 dark:text-slate-100 flex items-center gap-2">
-      <ArrowIcon /> Historial de Movimientos
-    </h2>
+    {/* ================= HEADER ================= */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+
+      <div className="flex items-center gap-2">
+        <ArrowIcon />
+        <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-slate-100">
+          Historial de Movimientos
+        </h2>
+      </div>
+
+      <button
+        onClick={() => navigate("/estadisticas")}
+        className="
+          px-4 py-2
+          text-sm
+          rounded-xl
+          border border-slate-300 dark:border-slate-600
+          text-slate-700 dark:text-slate-200
+          hover:bg-slate-100 dark:hover:bg-slate-800
+          transition
+          font-medium
+        "
+      >
+        Ver estadísticas
+      </button>
+
+    </div>
 
     {/* ================= FILTROS ================= */}
     <div className="bg-white dark:bg-slate-900
@@ -200,6 +226,7 @@ return (
 
         <FiltroFecha label="Desde" name="desde" value={filtros.desde} onChange={handleFiltro} />
         <FiltroFecha label="Hasta" name="hasta" value={filtros.hasta} onChange={handleFiltro} />
+
       </div>
     </div>
 
@@ -209,20 +236,26 @@ return (
       rounded-3xl p-6 shadow-lg dark:shadow-black/40">
 
       <div className="max-h-[520px] overflow-y-auto pr-2 custom-scroll">
+
         <table className="w-full text-sm">
+
           <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
             <tr className="border-b border-slate-200 dark:border-slate-800
               text-slate-500 dark:text-slate-400 text-left">
+
+              {sedeActiva === "all" && <Th>Sede</Th>}
               <Th>Fecha</Th>
               <Th>Tipo</Th>
               <Th>Repuesto</Th>
               <Th>Cantidad</Th>
               <Th>Entrega</Th>
               <Th>Recibe</Th>
+
             </tr>
           </thead>
 
           <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+
             {movimientos.map((m, i) => {
               const { fecha, hora } = formatearFecha(m.created_at_tz);
 
@@ -234,7 +267,11 @@ return (
                   transition={{ delay: i * 0.02 }}
                   className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
                 >
-                  {/* FECHA */}
+
+                  {sedeActiva === "all" && (
+                    <Td>{m.sede?.nombre ?? "—"}</Td>
+                  )}
+
                   <Td>
                     <div className="font-semibold text-slate-800 dark:text-slate-100">
                       {fecha}
@@ -244,31 +281,28 @@ return (
                     </div>
                   </Td>
 
-                  {/* TIPO */}
                   <Td>
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
-                      ${
-                        m.tipo === "entrada"
-                          ? "bg-emerald-500/15 text-emerald-400"
-                          : "bg-red-500/15 text-red-400"
-                      }`}
+                        ${
+                          m.tipo === "entrada"
+                            ? "bg-emerald-500/15 text-emerald-400"
+                            : "bg-red-500/15 text-red-400"
+                        }`}
                     >
                       {m.tipo === "entrada" ? "Entrada" : "Salida"}
                     </span>
                   </Td>
 
-                  {/* REPUESTO */}
                   <Td>
                     <span className="font-medium text-slate-800 dark:text-slate-200">
-                      {m.repuestos?.nombre}
+                      {m.repuestos?.nombre ?? "—"}
                     </span>
                   </Td>
 
-                  {/* CANTIDAD */}
                   <Td>
                     <span
-                      className={`font-semibold text-base
+                      className={`font-semibold
                         ${
                           m.tipo === "entrada"
                             ? "text-emerald-400"
@@ -279,69 +313,71 @@ return (
                       {m.cantidad}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
-                      {m.repuestos?.unidad}
+                      {m.repuestos?.unidad ?? ""}
                     </span>
                   </Td>
 
-                  {/* ENTREGA */}
                   <Td>
                     <span className="text-slate-600 dark:text-slate-300">
                       {m.empleado_entrega?.nombre ?? "—"}
                     </span>
                   </Td>
 
-                  {/* RECIBE */}
                   <Td>
                     <span className="text-slate-800 dark:text-slate-200 font-medium">
                       {m.empleado_recibe?.nombre ?? "—"}
                     </span>
                   </Td>
+
                 </motion.tr>
               );
             })}
+
           </tbody>
+
         </table>
       </div>
     </div>
 
-    {/* EXPORTAR */}
-    <button
-      onClick={exportarCSV}
-      className="mt-6 bg-indigo-600 hover:bg-indigo-700 
-      text-white px-6 py-2.5 rounded-xl 
-      font-semibold transition shadow-md"
-    >
-      Exportar CSV
-    </button>
+    {/* ================= EXPORTAR ================= */}
+    <div className="flex justify-end mt-6">
+      <button
+        onClick={exportarCSV}
+        className="bg-indigo-600 hover:bg-indigo-700 
+          text-white px-6 py-2.5 rounded-xl 
+          font-semibold transition shadow-md"
+      >
+        Exportar CSV
+      </button>
+    </div>
+
   </div>
 );
-
-}
 
 /* ============================
     SUBCOMPONENTES
 ============================ */
 
 function Filtro({ label, name, value, onChange, children }: any) {
+  const options = React.Children.toArray(children).map((child: any) => ({
+    value: child.props.value,
+    label: child.props.children,
+  }));
+
   return (
     <div>
       <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
         {label}
       </label>
-      <select
-        name={name}
+
+      <SelectPro
         value={value}
-        onChange={onChange}
-        className="
-          w-full mt-1 px-3 py-2.5
-          bg-slate-50 dark:bg-slate-800
-          border border-slate-200 dark:border-slate-700
-          rounded-xl text-sm
-          text-slate-800 dark:text-slate-200
-        "
-      >
-        {children}
-      </select>
+        onChange={(val) =>
+          onChange({ target: { name, value: val } })
+        }
+        options={options}
+        placeholder="Seleccionar..."
+      />
     </div>
   );
 }
@@ -384,4 +420,4 @@ function Td({ children }: any) {
     </td>
   );
 }
-
+}

@@ -41,6 +41,10 @@ export async function obtenerHistorialMovimientos(
       empleado_recibe:recibido_por (
         id,
         nombre
+      ),
+      sedes:sede_id (
+        id,
+        nombre
       )
     `)
     .gte("created_at_tz", fechaDesde.toISOString())
@@ -71,5 +75,6 @@ export async function obtenerHistorialMovimientos(
     repuestos: m.repuestos ?? null,
     empleado_entrega: m.empleado_entrega ?? null,
     empleado_recibe: m.empleado_recibe ?? null,
+    sedes: m.sedes ?? null,
   })) as Movimiento[];
 }
