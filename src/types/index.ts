@@ -47,7 +47,7 @@ export interface Movimiento {
   empleado_entrega?: Empleado | null;
   empleado_recibe?: Empleado | null;
 
-  sede?: {
+  sedes?: {
     id: string;
     nombre: string;
   } | null;

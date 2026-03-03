@@ -65,28 +65,39 @@ export default function Historial() {
          CARGAR DATOS
   ============================= */
   async function cargarDatos() {
-    if (!sedeActiva) return;
+  if (!sedeActiva) return;
 
-    const hist = await obtenerHistorialMovimientos("365", sedeActiva);
+  const hist = await obtenerHistorialMovimientos("365", sedeActiva);
 
-    const { data: emp } = await supabase
-      .from("empleados")
-      .select("id, nombre")
-      .eq("sede_id", sedeActiva)
-      .order("nombre");
+  // 🔥 EMPLEADOS
+  let empQuery = supabase
+    .from("empleados")
+    .select("id, nombre")
+    .order("nombre");
 
-    const { data: rep } = await supabase
-      .from("repuestos")
-      .select("id, nombre, unidad, stock_minimo")
-      .eq("sede_id", sedeActiva)
-      .order("nombre");
-
-    setHistOriginal(hist ?? []);
-    setMovimientos(hist ?? []);
-    setEmpleados(emp ?? []);
-    setRepuestos(rep ?? []);
+  if (sedeActiva !== "all") {
+    empQuery = empQuery.eq("sede_id", sedeActiva);
   }
 
+  const { data: emp } = await empQuery;
+
+  // 🔥 REPUESTOS
+  let repQuery = supabase
+    .from("repuestos")
+    .select("id, nombre, unidad, stock_minimo")
+    .order("nombre");
+
+  if (sedeActiva !== "all") {
+    repQuery = repQuery.eq("sede_id", sedeActiva);
+  }
+
+  const { data: rep } = await repQuery;
+
+  setHistOriginal(hist ?? []);
+  setMovimientos(hist ?? []);
+  setEmpleados(emp ?? []);
+  setRepuestos(rep ?? []);
+}
   /* ============================
          FILTROS
   ============================= */
@@ -242,7 +253,6 @@ return (
           <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
             <tr className="border-b border-slate-200 dark:border-slate-800
               text-slate-500 dark:text-slate-400 text-left">
-
               {sedeActiva === "all" && <Th>Sede</Th>}
               <Th>Fecha</Th>
               <Th>Tipo</Th>
@@ -269,7 +279,7 @@ return (
                 >
 
                   {sedeActiva === "all" && (
-                    <Td>{m.sede?.nombre ?? "—"}</Td>
+                    <Td>{m.sedes?.nombre ?? "—"}</Td>
                   )}
 
                   <Td>

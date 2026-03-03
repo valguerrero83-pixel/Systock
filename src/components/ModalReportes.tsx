@@ -90,7 +90,7 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
       Cantidad: m.cantidad,
       EntregadoPor: m.empleado_entrega?.nombre ?? "",
       RecibidoPor: m.empleado_recibe?.nombre ?? "",
-      Sede: m.sede?.nombre ?? "", // 🔥 para modo ALL
+      Sede: m.sedes?.nombre ?? "", // 🔥 para modo ALL
     }));
 
     const encabezados = Object.keys(filas[0]).join(",");
@@ -251,7 +251,7 @@ export default function ModalReportes({ abierto, onClose }: PropsModal) {
 
                     {sedeActiva === "all" && (
                       <td className="px-4 py-3">
-                        {m.sede?.nombre ?? "-"}
+                        {m.sedes?.nombre ?? "-"}
                       </td>
                     )}
                   </tr>
