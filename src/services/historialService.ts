@@ -1,15 +1,18 @@
 import { supabase } from "../lib/supabase";
 import type { Movimiento } from "../types/index";
 
-/* =========================================
-      HISTORIAL MOVIMIENTOS (SOPORTA ALL)
-========================================= */
 export async function obtenerHistorialMovimientos(
   dias: string,
-  sedeId: string | "all"
+  sedeId: string | "all",
+  filtros?: {
+    categoria?: string
+    repuesto?: string
+    tipo?: string
+    desde?: string
+    hasta?: string
+  }
 ): Promise<Movimiento[]> {
 
-  // 🔥 Calcular fecha desde
   const diasNum = Number(dias);
   const fechaDesde = new Date();
   fechaDesde.setDate(fechaDesde.getDate() - diasNum);
@@ -26,11 +29,12 @@ export async function obtenerHistorialMovimientos(
       usuario_id,
       sede_id,
 
-      repuestos:repuesto_id (
+      repuestos:repuesto_id!inner (
         id,
         nombre,
         unidad,
-        stock_minimo
+        stock_minimo,
+        categoria_id
       ),
 
       empleado_entrega:entregado_por (
@@ -42,17 +46,43 @@ export async function obtenerHistorialMovimientos(
         id,
         nombre
       ),
+
       sedes:sede_id (
         id,
         nombre
+      ),
+
+      usuario:usuario_id (
+        id,
+        nombre,
+        email
       )
     `)
     .gte("created_at_tz", fechaDesde.toISOString())
     .order("created_at_tz", { ascending: false });
 
-  // 🔥 SOLO filtra si no es modo global
   if (sedeId && sedeId !== "all") {
     query = query.eq("sede_id", sedeId);
+  }
+
+  if (filtros?.repuesto) {
+    query = query.eq("repuesto_id", filtros.repuesto);
+  }
+
+  if (filtros?.tipo) {
+    query = query.eq("tipo", filtros.tipo);
+  }
+
+  if (filtros?.categoria) {
+    query = query.eq("repuestos.categoria_id", filtros.categoria);
+  }
+
+  if (filtros?.desde) {
+    query = query.gte("created_at_tz", filtros.desde);
+  }
+
+  if (filtros?.hasta) {
+    query = query.lte("created_at_tz", filtros.hasta);
   }
 
   const { data, error } = await query;
@@ -62,19 +92,5 @@ export async function obtenerHistorialMovimientos(
     return [];
   }
 
-  if (!data) return [];
-
-  return data.map((m: any) => ({
-    id: m.id,
-    tipo: m.tipo,
-    cantidad: m.cantidad,
-    created_at_tz: m.created_at_tz ?? null,
-    notas: m.notas ?? null,
-    repuesto_id: m.repuesto_id ?? null,
-    usuario_id: m.usuario_id ?? null,
-    repuestos: m.repuestos ?? null,
-    empleado_entrega: m.empleado_entrega ?? null,
-    empleado_recibe: m.empleado_recibe ?? null,
-    sedes: m.sedes ?? null,
-  })) as Movimiento[];
+  return (data ?? []) as unknown as Movimiento[];
 }

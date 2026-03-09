@@ -1,3 +1,4 @@
+
 // Usuario de la aplicación (tabla users)
 export interface UsuarioApp {
   id: string;
@@ -24,6 +25,7 @@ export interface Repuesto {
   unidad: string;
   stock_minimo: number;
   created_at?: string;
+  categoria_id?: string
 }
 
 // Movimiento (entradas/salidas)
@@ -51,6 +53,12 @@ export interface Movimiento {
     id: string;
     nombre: string;
   } | null;
+
+  usuario?: {
+  id: string
+  nombre: string
+  email?: string
+} | null
 }
 
 // Inventario desde la vista stock_actual

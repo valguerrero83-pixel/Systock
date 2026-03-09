@@ -1,19 +1,30 @@
 import { supabase } from "../lib/supabase";
 
-export async function crearRepuesto(payload: any) {
-  const { data, error } = await supabase
-    .from("repuestos")
-    .insert({
-      nombre: payload.nombre,
-      unidad: payload.unidad,
-      stock_minimo: payload.stock_minimo,
-      cantidad_inicial: payload.cantidad_inicial,
-      usuario_id: payload.usuario_id,
-      sede_id: payload.sede_id, // 🔥 ESTO ES LO QUE FALTABA
-    })
-    .select();
+export async function crearRepuesto(data:any){
 
-  if (error) throw error;
+const { data: repuesto, error } = await supabase
+.from("repuestos")
+.insert([
+{
+nombre: data.nombre,
+referencia: data.referencia,
+codigo_siesa: data.codigo_siesa,
+marca: data.marca,
+proveedor: data.proveedor,
+unidad: data.unidad,
+stock_minimo: data.stock_minimo,
+cantidad_inicial: data.cantidad_inicial,
+usuario_id: data.usuario_id,
+sede_id: data.sede_id,
+categoria_id: data.categoria_id
+}
+])
+.select()
 
-  return data;
+if(error){
+  console.error("ERROR CREANDO REPUESTO:", error)
+  throw error
+}
+
+return repuesto
 }

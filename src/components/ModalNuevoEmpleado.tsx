@@ -3,42 +3,44 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { crearEmpleado } from "../services/empleadosService";
 
-
 export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any) {
   const [nombre, setNombre] = useState("");
   const [cargo, setCargo] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
-  const { sedeActiva } = useAuth();
+
+  const { sedeActiva, usuario } = useAuth(); // 👈 agregado usuario
 
   async function handleSubmit(e: any) {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
 
-  if (!nombre.trim()) return setError("El nombre es obligatorio");
-  if (!cargo.trim()) return setError("El cargo es obligatorio");
-  if (!sedeActiva) return setError("No hay sede activa");
+    if (!nombre.trim()) return setError("El nombre es obligatorio");
+    if (!cargo.trim()) return setError("El cargo es obligatorio");
+    if (!sedeActiva) return setError("No hay sede activa");
+    if (!usuario?.id) return setError("No hay usuario activo");
 
-  setCargando(true);
+    setCargando(true);
 
-  try {
-    await crearEmpleado(
-      { nombre, cargo },
-      sedeActiva
-    );
+    try {
+      await crearEmpleado(
+        { nombre, cargo },
+        sedeActiva,
+        usuario.id // 👈 AQUÍ SE GUARDA QUIÉN LO CREÓ
+      );
 
-    onCreated();
-    onClose();
+      onCreated();
+      onClose();
 
-    setNombre("");
-    setCargo("");
-  } catch (err) {
-    console.error(err);
-    setError("Ocurrió un error al guardar el empleado.");
+      setNombre("");
+      setCargo("");
+    } catch (err) {
+      console.error(err);
+      setError("Ocurrió un error al guardar el empleado.");
+    }
+
+    setCargando(false);
   }
-
-  setCargando(false);
-}
 
   return (
     <AnimatePresence>
@@ -63,6 +65,7 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.25 }}
           >
+
             {/* HEADER */}
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">

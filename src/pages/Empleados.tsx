@@ -8,74 +8,97 @@ interface Empleado {
   nombre: string;
   cargo: string;
   total_movs: number;
+
+  usuario?: {
+    nombre: string;
+    email: string;
+  } | null;
 }
 
 export default function Empleados() {
-  const { usuario } = useAuth();
+  const { usuario, sedeActiva } = useAuth();
+
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
-  const { sedeActiva } = useAuth();
 
-const cargarEmpleados = async () => {
-  setLoading(true);
+  const cargarEmpleados = async () => {
+    setLoading(true);
 
-  // 🔹 EMPLEADOS
-  let empQuery = supabase
-    .from("empleados")
-    .select("id, nombre, area, sede_id");
+    /* =========================
+        EMPLEADOS + USUARIO
+    ========================= */
+    let empQuery = supabase
+      .from("empleados")
+      .select(`
+        id,
+        nombre,
+        area,
+        sede_id,
+        usuario:usuario_id (
+          nombre,
+          email
+        )
+      `);
 
-  if (sedeActiva && sedeActiva !== "all") {
-    empQuery = empQuery.eq("sede_id", sedeActiva);
-  }
+    if (sedeActiva && sedeActiva !== "all") {
+      empQuery = empQuery.eq("sede_id", sedeActiva);
+    }
 
-  const { data: lista, error } = await empQuery;
+    const { data: lista, error } = await empQuery;
 
-  if (error) {
-    console.error("Error cargando empleados:", error);
+    if (error) {
+      console.error("Error cargando empleados:", error);
+      setLoading(false);
+      return;
+    }
+
+    /* =========================
+        MOVIMIENTOS
+    ========================= */
+    let movQuery = supabase
+      .from("movimientos")
+      .select("entregado_por, recibido_por, sede_id");
+
+    if (sedeActiva && sedeActiva !== "all") {
+      movQuery = movQuery.eq("sede_id", sedeActiva);
+    }
+
+    const { data: movimientos } = await movQuery;
+
+    const movCount: Record<string, number> = {};
+
+    movimientos?.forEach((m) => {
+      if (m.entregado_por) {
+        movCount[m.entregado_por] =
+          (movCount[m.entregado_por] || 0) + 1;
+      }
+
+      if (m.recibido_por) {
+        movCount[m.recibido_por] =
+          (movCount[m.recibido_por] || 0) + 1;
+      }
+    });
+
+    /* =========================
+        FORMATEAR
+    ========================= */
+    const empleadosFormateados = (lista ?? []).map((e: any) => ({
+      id: e.id,
+      nombre: e.nombre,
+      cargo: e.area ?? "—",
+      total_movs: movCount[e.id] || 0,
+      usuario: e.usuario ?? null,
+    }));
+
+    setEmpleados(empleadosFormateados);
     setLoading(false);
-    return;
-  }
+  };
 
-  // 🔹 MOVIMIENTOS
-  let movQuery = supabase
-    .from("movimientos")
-    .select("entregado_por, recibido_por, sede_id");
-
-  if (sedeActiva && sedeActiva !== "all") {
-    movQuery = movQuery.eq("sede_id", sedeActiva);
-  }
-
-  const { data: movimientos } = await movQuery;
-
-  const movCount: Record<string, number> = {};
-
-  movimientos?.forEach((m) => {
-    if (m.entregado_por) {
-      movCount[m.entregado_por] =
-        (movCount[m.entregado_por] || 0) + 1;
-    }
-    if (m.recibido_por) {
-      movCount[m.recibido_por] =
-        (movCount[m.recibido_por] || 0) + 1;
-    }
-  });
-
-  const empleadosFormateados = (lista ?? []).map((e) => ({
-    id: e.id,
-    nombre: e.nombre,
-    cargo: e.area ?? "—", // 🔥 IMPORTANTE: tu BD usa area
-    total_movs: movCount[e.id] || 0,
-  }));
-
-  setEmpleados(empleadosFormateados);
-  setLoading(false);
-};
-
-useEffect(() => {
-  if (!sedeActiva) return;
-  cargarEmpleados();
-}, [sedeActiva]);
+  useEffect(() => {
+    if (!sedeActiva) return;
+    cargarEmpleados();
+  }, [sedeActiva]);
 
   const eliminarEmpleado = async (id: string) => {
     const { data: movs, error: movErr } = await supabase
@@ -134,7 +157,7 @@ useEffect(() => {
         Empleados
       </h2>
 
-      {/* 🔎 BUSCADOR */}
+      {/* BUSCADOR */}
       <div className="mb-6">
         <input
           type="text"
@@ -157,12 +180,13 @@ useEffect(() => {
 
       {/* TABLA */}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm min-w-[650px]">
+        <table className="w-full text-sm min-w-[720px]">
           <thead className="border-b border-slate-200 dark:border-slate-800">
             <tr className="text-left text-slate-500 dark:text-slate-400">
               <th className="py-3 px-3 font-semibold">Nombre</th>
               <th className="px-3 font-semibold">Cargo</th>
               <th className="px-3 text-center font-semibold">Movimientos</th>
+              <th className="px-3 text-center font-semibold">Creado por</th>
               <th className="px-3 text-center font-semibold">Acciones</th>
             </tr>
           </thead>
@@ -197,6 +221,51 @@ useEffect(() => {
                   </span>
                 </td>
 
+                {/* USUARIO */}
+                <td className="text-center px-3">
+                  {e.usuario?.nombre ? (
+                    <div className="relative group inline-block">
+
+                      <span className="
+                        inline-flex items-center justify-center
+                        w-7 h-7 rounded-full
+                        bg-indigo-500/15 text-indigo-400
+                        text-xs font-semibold
+                      ">
+                        {e.usuario.nombre
+                          .split(" ")
+                          .map((n: string) => n[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()}
+                      </span>
+
+                      <div className="
+                        absolute right-0
+                        bottom-full mb-2
+                        hidden group-hover:block
+                        bg-slate-900 text-white
+                        text-xs px-3 py-2 rounded-md
+                        text-left
+                        w-max max-w-[340px]
+                        break-words
+                        z-[999]
+                        shadow-lg
+                      ">
+                        <div className="font-semibold">
+                          {e.usuario.nombre}
+                        </div>
+
+                        <div className="text-slate-300 break-all">
+                          {e.usuario.email}
+                        </div>
+                      </div>
+
+                    </div>
+                  ) : "—"}
+                </td>
+
+                {/* ACCIONES */}
                 <td className="text-center px-3">
                   {(usuario?.rol_usuario === "dev" ||
                     usuario?.rol_usuario === "admin") && (
@@ -214,14 +283,6 @@ useEffect(() => {
                     >
                       Eliminar
                     </button>
-                  )}
-
-                  {(usuario?.rol_usuario === "viewer" ||
-                    usuario?.rol_usuario === "jefe" ||
-                    usuario?.rol_usuario === "gerente") && (
-                    <span className="text-slate-400 text-xs">
-                      Sin permisos
-                    </span>
                   )}
                 </td>
               </motion.tr>

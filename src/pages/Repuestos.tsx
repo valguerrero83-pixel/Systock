@@ -21,9 +21,15 @@ export default function Repuestos() {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from("repuestos")
-      .select("*")
-      .order("created_at", { ascending: false });
+    .from("repuestos")
+    .select(`
+      *,
+      usuario:usuario_id (
+        id,
+        nombre
+      )
+    `)
+    .order("created_at", { ascending: false });
 
     if (error) {
       console.error(error);
@@ -71,11 +77,12 @@ export default function Repuestos() {
                 <th className="p-2 font-semibold">Nombre</th>
                 <th className="p-2 font-semibold">Unidad</th>
                 <th className="p-2 font-semibold">Stock mínimo</th>
+                <th className="p-2 font-semibold">Registrado</th>
               </tr>
             </thead>
 
             <tbody>
-              {repuestos.map((r) => (
+              {repuestos.map((r: any) => (
                 <tr
                   key={r.id}
                   className="border-b hover:bg-gray-50 transition"
@@ -83,6 +90,20 @@ export default function Repuestos() {
                   <td className="p-2">{r.nombre}</td>
                   <td className="p-2">{r.unidad}</td>
                   <td className="p-2">{r.stock_minimo}</td>
+                  <td className="p-2">
+                  {r.usuario?.email ? (
+                    <span className="inline-flex items-center justify-center
+                      w-7 h-7 rounded-full
+                      bg-indigo-500/15 text-indigo-400
+                      text-xs font-semibold">
+
+                      {r.usuario.email
+                        .split("@")[0]
+                        .slice(0,2)
+                        .toUpperCase()}
+                    </span>
+                  ) : "—"}
+                </td>
                 </tr>
               ))}
             </tbody>

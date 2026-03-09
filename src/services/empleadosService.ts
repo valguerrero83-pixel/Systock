@@ -2,11 +2,12 @@ import { supabase } from "../lib/supabase";
 import type { CrearEmpleadoDTO, Empleado } from "../types/index";
 
 /* =========================================
-      CREAR EMPLEADO (GUARDA SEDE)
+      CREAR EMPLEADO (GUARDA SEDE + USUARIO)
 ========================================= */
 export async function crearEmpleado(
   payload: CrearEmpleadoDTO,
-  sedeId: string
+  sedeId: string,
+  usuarioId: string
 ): Promise<Empleado[]> {
 
   const { data, error } = await supabase
@@ -14,8 +15,9 @@ export async function crearEmpleado(
     .insert([
       {
         nombre: payload.nombre,
-        area: payload.cargo, // 🔥 seguimos usando area
+        area: payload.cargo, // seguimos usando area
         sede_id: sedeId,
+        usuario_id: usuarioId // 👈 QUIÉN CREÓ EL EMPLEADO
       },
     ])
     .select("*");
