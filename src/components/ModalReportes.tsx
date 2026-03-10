@@ -5,7 +5,7 @@ import { getEmpleados } from "../services/salidasService";
 import { obtenerRepuestos } from "../services/entradasService";
 import { obtenerHistorialMovimientos } from "../services/historialService";
 
-import type { Empleado, Repuesto, Movimiento } from "../types";
+import type { Repuesto, Movimiento } from "../types";
 
 interface PropsModal {
   abierto: boolean;
@@ -15,7 +15,7 @@ interface PropsModal {
 export default function ModalReportes({ abierto, onClose }: PropsModal) {
   const { sedeActiva } = useAuth();
 
-  const [empleados, setEmpleados] = useState<Empleado[]>([]);
+  const [empleados, setEmpleados] = useState<any[]>([]);
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [historial, setHistorial] = useState<Movimiento[]>([]);
 
