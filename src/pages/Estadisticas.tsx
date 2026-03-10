@@ -269,51 +269,11 @@ porcentaje: totalTop ? Number(((c.movimientos/totalTop)*100).toFixed(1)) : 0
 
 /* ================= REPUESTOS CRITICOS ================= */
 
-const repuestosCriticos = useMemo(()=>{
-
-const mapa:any = {};
-
-mov.forEach(m=>{
-
-if(m.tipo!=="salida") return;
-
-const nombre = m.repuestos?.nombre ?? "—";
-const ref = m.repuestos?.referencia ?? "";
-
-const key = nombre+ref;
-
-if(!mapa[key]){
-
-mapa[key] = {
-nombre,
-referencia:ref,
-salidas:0
-};
-
-}
-
-mapa[key].salidas++;
-
-});
-
-const arr = Object.values(mapa)
-.sort((a:any,b:any)=>b.salidas-a.salidas)
-.slice(0,5);
-
-const totalTop = arr.reduce((acc:number,r:any)=>acc+r.salidas,0);
-
-return arr.map((r:any)=>({
-...r,
-porcentaje: totalTop ? Number(((r.salidas/totalTop)*100).toFixed(1)) : 0
-}));
-
-},[mov]);
 
 const repuestoMasUsado = topRepuestos[0]
 ? `${topRepuestos[0].nombre} (${topRepuestos[0].referencia})`
 : "—";
 
-const colores = ["#6366F1","#10B981","#F59E0B","#EF4444","#8B5CF6"];
 
 /* ================= UI ================= */
 
@@ -461,7 +421,7 @@ label={(d:any)=>`${((d.value/total)*100).toFixed(1)}%`}
 <YAxis/>
 
 <Tooltip
-formatter={(value:any, name:any, props:any)=>[
+formatter={(value:any, _:any, props:any)=>[
 `${value}%`,
 `${props.payload.movimientos} movimientos`
 ]}
@@ -496,7 +456,7 @@ formatter={(v:any)=>`${v}%`}
 <YAxis/>
 
 <Tooltip
-formatter={(value:any,name:any,props:any)=>[
+formatter={(value:any,_:any,props:any)=>[
 `${value}%`,
 `${props.payload.movimientos} movimientos`
 ]}
@@ -531,7 +491,7 @@ formatter={(v:any)=>`${v}%`}
 <YAxis/>
 
 <Tooltip
-formatter={(value:any,name:any,props:any)=>[
+formatter={(value:any,_:any,props:any)=>[
 `${value}%`,
 `${props.payload.entregas} entregas`
 ]}
@@ -566,7 +526,7 @@ formatter={(v:any)=>`${v}%`}
 <YAxis/>
 
 <Tooltip
-formatter={(value:any,name:any,props:any)=>[
+formatter={(value:any,_:any,props:any)=>[
 `${value}%`,
 `${props.payload.movimientos} movimientos`
 ]}
