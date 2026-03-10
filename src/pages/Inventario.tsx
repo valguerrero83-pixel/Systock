@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import PageTransition from "../components/PageTransition.bak";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
+import SelectBuscable from "../components/SelectBuscable";
 
 interface Categoria {
   id: string;
@@ -25,6 +26,10 @@ interface ItemInventario {
   usuario?: {
     nombre: string;
     email: string;
+  } | null;
+  sedes?: {
+    id: string;
+    nombre: string;
   } | null;
 }
 
@@ -73,6 +78,7 @@ export default function Inventario() {
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
 
+
   const cargarInventario = async () => {
 
     if (!sedeActiva) return;
@@ -80,12 +86,19 @@ export default function Inventario() {
     setLoading(true);
 
     let query = supabase
-      .from("stock_actual")
-      .select("*")
-      .order("codigo_corto", { ascending: true });
+    .from("stock_actual")
+    .select(`
+      *,
+      sedes:sede_id (
+        id,
+        nombre
+      )
+    `)
+    .order("codigo_corto", { ascending: true });
 
     if (sedeActiva !== "all") {
       query = query.eq("sede_id", sedeActiva);
+      
     }
 
     const { data, error } = await query;
@@ -106,44 +119,61 @@ export default function Inventario() {
     const repuestoIds = data.map((i: any) => i.repuesto_id);
 
     const { data: repuestos } = await supabase
-      .from("repuestos")
-      .select(`
-        id,
-        usuario_id,
-        categoria_id,
-        users:usuario_id (
-          nombre,
-          email
-        ),
-        categorias (
-          id,
-          nombre
-        )
-      `)
+  .from("repuestos")
+  .select(`
+    id,
+    referencia,
+    marca,
+    proveedor,
+    codigo_siesa,
+    usuario_id,
+    categoria_id,
+    users:usuario_id (
+      nombre,
+      email
+    ),
+    categorias (
+      id,
+      nombre
+    )
+  `)
       .in("id", repuestoIds);
 
     const mapaUsuarios: Record<string, any> = {};
     const mapaCategorias: Record<string, any> = {};
+    const mapaExtras: Record<string, any> = {};
     const conteo: Record<string, number> = {};
 
     repuestos?.forEach((r: any) => {
 
-      mapaUsuarios[r.id] = r.users;
-      mapaCategorias[r.id] = r.categorias;
+  mapaUsuarios[r.id] = r.users;
+  mapaCategorias[r.id] = r.categorias;
 
-      if (r.categorias?.id) {
-        conteo[r.categorias.id] = (conteo[r.categorias.id] || 0) + 1;
-      }
+  mapaExtras[r.id] = {
+    referencia: r.referencia,
+    marca: r.marca,
+    proveedor: r.proveedor,
+    codigo_siesa: r.codigo_siesa
+  };
 
-    });
+  if (r.categorias?.id) {
+    conteo[r.categorias.id] = (conteo[r.categorias.id] || 0) + 1;
+  }
+
+});
 
     setConteoCategorias(conteo);
 
     const inventarioConUsuario = data.map((item: any) => ({
-      ...item,
-      usuario: mapaUsuarios[item.repuesto_id] ?? null,
-      categoria: mapaCategorias[item.repuesto_id] ?? null,
-    }));
+  ...item,
+  usuario: mapaUsuarios[item.repuesto_id] ?? null,
+  categoria: mapaCategorias[item.repuesto_id] ?? null,
+
+  referencia: mapaExtras[item.repuesto_id]?.referencia ?? null,
+  marca: mapaExtras[item.repuesto_id]?.marca ?? null,
+  proveedor: mapaExtras[item.repuesto_id]?.proveedor ?? null,
+  codigo_siesa: mapaExtras[item.repuesto_id]?.codigo_siesa ?? null
+}));
 
     setItems(inventarioConUsuario);
     setLoading(false);
@@ -161,7 +191,7 @@ export default function Inventario() {
 
     setCategorias(data?? []);
   };
-
+  
   const [columnas, setColumnas] = useState({
   referencia: false,
   marca: false,
@@ -236,6 +266,44 @@ const toggleColumna = (key: keyof typeof columnas) => {
         <h2 className="text-xl md:text-2xl font-semibold mb-4 text-slate-800 dark:text-slate-100 flex items-center gap-2">
           Inventario de Repuestos
         </h2>
+
+        {/* BUSCADOR + FILTRO */}
+
+        <div className="mb-6 flex flex-col md:flex-row gap-4">
+
+          <input
+            type="text"
+            placeholder="Buscar por código, nombre o unidad..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="
+              w-full md:w-96
+              px-4 py-2.5
+              rounded-xl
+              border border-slate-300 dark:border-slate-700
+              bg-white dark:bg-slate-800
+              text-slate-800 dark:text-slate-200
+              focus:outline-none
+              focus:ring-2 focus:ring-indigo-500
+            "
+          />
+
+          <SelectBuscable
+            value={categoriaFiltro || "all"}
+            placeholder="Todas las categorías"
+            onChange={(id) => setCategoriaFiltro(id === "all" ? "" : id)}
+            items={[
+              {
+                id: "all",
+                nombre: `Todas las categorías (${categorias.length})`,
+              },
+              ...categorias.map((c) => ({
+                id: c.id,
+                nombre: `${c.nombre} (${conteoCategorias[c.id] ?? 0})`,
+              })),
+            ]}
+          />
+        </div>
         <div className="mb-4 flex flex-wrap gap-2">
 
   <span className="text-sm text-slate-500 dark:text-slate-400 mr-2">
@@ -264,55 +332,6 @@ const toggleColumna = (key: keyof typeof columnas) => {
 
 </div>
 
-        {/* BUSCADOR + FILTRO */}
-
-        <div className="mb-6 flex flex-col md:flex-row gap-4">
-
-          <input
-            type="text"
-            placeholder="Buscar por código, nombre o unidad..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="
-              w-full md:w-96
-              px-4 py-2.5
-              rounded-xl
-              border border-slate-300 dark:border-slate-700
-              bg-white dark:bg-slate-800
-              text-slate-800 dark:text-slate-200
-              focus:outline-none
-              focus:ring-2 focus:ring-indigo-500
-            "
-          />
-
-
-          <select
-            value={categoriaFiltro}
-            onChange={(e) => setCategoriaFiltro(e.target.value)}
-            className="
-              min-w-[220px]
-              px-4 py-2.5
-              rounded-xl
-              border border-slate-300 dark:border-slate-700
-              bg-white dark:bg-slate-800
-              text-slate-800 dark:text-slate-200
-              focus:outline-none
-              focus:ring-2 focus:ring-indigo-500
-              transition
-            "
-          >
-            <option value="">Todas las categorías</option>
-
-            {categorias.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
-
-          </select>
-
-        </div>
-
         {/* TABLA */}
 
         <div className="overflow-x-auto">
@@ -324,15 +343,15 @@ const toggleColumna = (key: keyof typeof columnas) => {
               <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
 
                 <tr className="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-
+                  {sedeActiva === "all" && <th>Sede</th>}
                   <th className="py-3">Código</th>
-                  <th>Nombre</th>
+                  <th>Categoría</th>
                   {columnas.referencia && <th>Referencia</th>}
                   {columnas.marca && <th>Marca</th>}
                   {columnas.proveedor && <th>Proveedor</th>}
                   {columnas.codigo_siesa && <th>Código Siesa</th>}
                   {columnas.ubicacion && <th>Ubicación</th>}
-                  <th>Categoría</th>
+                  <th>Nombre</th>
                   <th>Stock Actual</th>
                   <th>Stock Mín.</th>
                   <th>Estado</th>
@@ -359,47 +378,16 @@ const toggleColumna = (key: keyof typeof columnas) => {
                       transition={{ delay: index * 0.03 }}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition"
                     >
+                      {sedeActiva === "all" && (
+                      <td className="text-slate-600 dark:text-slate-400">
+                        {i.sedes?.nombre ?? "—"}
+                      </td>
+                      )}
 
                       <td className="py-3 font-semibold text-slate-800 dark:text-slate-200">
                         {i.codigo_corto}
                       </td>
-
-                      <td className="text-slate-800 dark:text-slate-200">
-                        {i.nombre}
-                      </td>
-
-                      {columnas.referencia && (
-  <td className="text-slate-600 dark:text-slate-400">
-    {(i as any).referencia ?? "—"}
-  </td>
-)}
-
-{columnas.marca && (
-  <td className="text-slate-600 dark:text-slate-400">
-    {(i as any).marca ?? "—"}
-  </td>
-)}
-
-{columnas.proveedor && (
-  <td className="text-slate-600 dark:text-slate-400">
-    {(i as any).proveedor ?? "—"}
-  </td>
-)}
-
-{columnas.codigo_siesa && (
-  <td className="text-slate-600 dark:text-slate-400">
-    {(i as any).codigo_siesa ?? "—"}
-  </td>
-)}
-
-{columnas.ubicacion && (
-  <td className="text-slate-600 dark:text-slate-400">
-    {(i as any).ubicacion ?? "—"}
-  </td>
-)}
-                      {/* CATEGORIA CON COLOR + CONTADOR */}
-
-                      <td>
+                       <td>
 
                         {i.categoria ? (
 
@@ -446,6 +434,40 @@ const toggleColumna = (key: keyof typeof columnas) => {
 
                       </td>
 
+                      {columnas.referencia && (
+                        <td className="text-slate-600 dark:text-slate-400">
+                          {(i as any).referencia ?? "—"}
+                        </td>
+                      )}
+
+                      {columnas.marca && (
+                        <td className="text-slate-600 dark:text-slate-400">
+                          {(i as any).marca ?? "—"}
+                        </td>
+                      )}
+
+                      {columnas.proveedor && (
+                        <td className="text-slate-600 dark:text-slate-400">
+                          {(i as any).proveedor ?? "—"}
+                        </td>
+                      )}
+
+                      {columnas.codigo_siesa && (
+                        <td className="text-slate-600 dark:text-slate-400">
+                          {(i as any).codigo_siesa ?? "—"}
+                        </td>
+                      )}
+
+                      {columnas.ubicacion && (
+                        <td className="text-slate-600 dark:text-slate-400">
+                          {(i as any).ubicacion ?? "—"}
+                        </td>
+                      )}
+
+                      <td className="text-slate-800 dark:text-slate-200">
+                        {i.nombre}
+                      </td>
+                     
                       {/* STOCK */}
 
                       <td>

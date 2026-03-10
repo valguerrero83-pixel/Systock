@@ -13,19 +13,33 @@ export interface UsuarioApp {
 export interface Empleado {
   id: string;
   nombre: string;
-  area?: string;
-  created_at?: string;
+  cargo: string;
+  total_movs: number;
+  entradas: number;
+  salidas: number;
+  ultimo_mov: string | null;
+
+  usuario?: {
+    nombre: string;
+    email: string;
+  } | null;
 }
 
 // Repuestos
 export interface Repuesto {
-  id: string;
-  codigo_corto?: string;
-  nombre: string;
-  unidad: string;
-  stock_minimo: number;
-  created_at?: string;
+  id: string
+  nombre: string
+  unidad: string
+  stock_minimo: number
+
+  codigo_corto?: string
+  codigo_siesa?: string
   categoria_id?: string
+
+  categorias?: {
+    id: string
+    nombre: string
+  }
 }
 
 // Movimiento (entradas/salidas)

@@ -5,6 +5,7 @@ export async function obtenerHistorialMovimientos(
   dias: string,
   sedeId: string | "all",
   filtros?: {
+    empleado?: string
     categoria?: string
     repuesto?: string
     tipo?: string
@@ -34,9 +35,15 @@ export async function obtenerHistorialMovimientos(
         nombre,
         unidad,
         stock_minimo,
-        categoria_id
+        codigo_corto,
+        codigo_siesa,
+        categoria_id,
+        categorias (
+          id,
+          nombre
+        )
       ),
-
+      
       empleado_entrega:entregado_por (
         id,
         nombre
@@ -64,6 +71,12 @@ export async function obtenerHistorialMovimientos(
   if (sedeId && sedeId !== "all") {
     query = query.eq("sede_id", sedeId);
   }
+
+  if (filtros?.empleado) {
+  query = query.or(
+    `recibido_por.eq.${filtros.empleado},entregado_por.eq.${filtros.empleado}`
+  );
+}
 
   if (filtros?.repuesto) {
     query = query.eq("repuesto_id", filtros.repuesto);

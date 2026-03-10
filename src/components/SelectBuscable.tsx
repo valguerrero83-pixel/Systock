@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Item {
@@ -26,13 +26,10 @@ export default function SelectBuscable({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-
     function handleClickOutside(event:any) {
-
       if(ref.current && !ref.current.contains(event.target)){
         setAbierto(false)
       }
-
     }
 
     document.addEventListener("mousedown",handleClickOutside)
@@ -43,16 +40,32 @@ export default function SelectBuscable({
 
   },[])
 
-  const seleccionado = items.find((i)=>i.id===value)
+  /* ---------- NORMALIZAR ITEMS ---------- */
 
-  const filtrados = items.filter((i)=>
+  const itemsSeguros = useMemo(() => {
+
+    const map = new Map<string, Item>();
+
+    items.forEach((i) => {
+      if (!i?.id) return;
+      map.set(String(i.id), {
+        id: String(i.id),
+        nombre: i.nombre
+      });
+    });
+
+    return Array.from(map.values());
+
+  }, [items]);
+
+  const seleccionado = itemsSeguros.find((i)=>i.id===value)
+
+  const filtrados = itemsSeguros.filter((i)=>
     i.nombre.toLowerCase().includes(busqueda.toLowerCase())
   )
 
   return (
     <div ref={ref} className="relative w-full">
-
-      {/* BOTON SELECT */}
 
       <button
         type="button"
@@ -81,13 +94,12 @@ export default function SelectBuscable({
 
       </button>
 
-      {/* DROPDOWN */}
-
       <AnimatePresence>
 
         {abierto && (
 
           <motion.div
+            key="dropdown"
             initial={{opacity:0,y:6}}
             animate={{opacity:1,y:0}}
             exit={{opacity:0}}
@@ -104,8 +116,6 @@ export default function SelectBuscable({
             overflow-hidden
             "
           >
-
-            {/* BUSCADOR */}
 
             <div className="p-2 border-b border-slate-200 dark:border-slate-700">
 
@@ -128,17 +138,15 @@ export default function SelectBuscable({
 
             </div>
 
-            {/* LISTA */}
-
             <div className="max-h-60 overflow-y-auto">
 
-              {filtrados.map((item)=>{
+              {filtrados.map((item) => {
 
                 const activo = value === item.id
 
                 return (
                   <button
-                    key={item.id}
+                    key={`select-item-${item.id}`}
                     onClick={()=>{
                       onChange(item.id)
                       setAbierto(false)

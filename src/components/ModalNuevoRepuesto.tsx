@@ -59,7 +59,7 @@ export default function ModalNuevoRepuesto({
 
     async function cargar() {
       const data = await obtenerCategorias(sedeActiva!);
-      setCategorias(data ?? []);
+      setCategorias((data ?? []).filter((c:any) => c?.id));
     }
 
     cargar();
@@ -114,8 +114,12 @@ export default function ModalNuevoRepuesto({
     try {
       const nueva = await crearCategoria(nombreCategoria.trim(), sedeActiva);
 
-      setCategorias(prev => [...prev, ...nueva]);
-      setCategoriaId(nueva[0].id);
+      setCategorias(prev => {
+      const map = new Map(prev.map(c => [c.id, c]));
+      nueva.forEach((c:any) => map.set(c.id, c));
+      return Array.from(map.values());
+    });
+      setCategoriaId(String(nueva[0].id));
 
       setNombreCategoria("");
       setModalCategoria(false);
@@ -321,13 +325,16 @@ return (
               <div className="flex gap-2 mt-1">
 
                 <SelectBuscable
-                  value={categoriaId}
-                  items={categorias.map((c)=>({
-                    id: c.id,
+                  value={categoriaId || "none"}
+                  items={categorias
+                  .filter((c) => c?.id)
+                  .map((c) => ({
+                    id: String(c.id),
                     nombre: c.nombre
-                  }))}
+                  }))
+                }
                   placeholder="Seleccionar categoría"
-                  onChange={(id)=>setCategoriaId(id)}
+                  onChange={(id)=>setCategoriaId(id === "none" ? "" : id)}
                 />
 
                 <button
@@ -357,24 +364,26 @@ return (
                 className={inputStyle}
               />
 
-              <SelectBuscable
-                value={form.unidad}
-                items={unidades}
-                placeholder="Unidad"
-                onChange={(id)=>setForm({...form, unidad:id})}
-              />
+             <SelectBuscable
+              value={form.unidad || "Unidades"}
+              items={unidades.map((u) => ({
+                id: String(u.id),
+                nombre: u.nombre
+              }))}
+              placeholder="Unidad"
+              onChange={(id) => setForm({ ...form, unidad: id })}
+            />
 
-              <input
-                ref={stockRef}
-                type="number"
-                name="stock_minimo"
-                value={form.stock_minimo}
-                onChange={handleChange}
-                onKeyDown={(e)=>handleEnter(e)}
-                placeholder="Stock mínimo"
-                className={inputStyle}
-              />
-
+            <input
+              ref={stockRef}
+              type="number"
+              name="stock_minimo"
+              value={form.stock_minimo}
+              onChange={handleChange}
+              onKeyDown={(e) => handleEnter(e)}
+              placeholder="Stock mínimo"
+              className={inputStyle}
+            />
             </div>
 
             {error && (

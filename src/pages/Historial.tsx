@@ -61,7 +61,17 @@ export default function Historial() {
     hasta: "",
     categoria: ""
   });
-  
+  const [columnas, setColumnas] = useState({
+  codigo_app: false,
+  codigo_siesa: false,
+  categoria: false
+});
+function toggleColumna(key: keyof typeof columnas) {
+  setColumnas((prev) => ({
+    ...prev,
+    [key]: !prev[key]
+  }));
+}
 
   useEffect(() => {
     if (!sedeActiva) return;
@@ -106,7 +116,18 @@ export default function Historial() {
       .order("nombre");
 
     setMovimientos(hist ?? []);
-    setEmpleados(emp ?? []);
+    setEmpleados(
+    (emp ?? []).map((e: any) => ({
+      id: e.id,
+      nombre: e.nombre,
+      cargo: e.area ?? "—",
+      total_movs: 0,
+      entradas: 0,
+      salidas: 0,
+      ultimo_mov: null,
+      usuario: e.usuario ?? null
+    }))
+  );
     setRepuestos(rep ?? []);
     setCategorias(categoriasData ?? []);
   }
@@ -185,11 +206,38 @@ export default function Historial() {
     a.download = "historial_movimientos.csv";
     a.click();
   }
+  function colorCategoria(nombre: string) {
 
+const estilos = [
+"bg-indigo-500/15 text-indigo-400",
+"bg-blue-500/15 text-blue-400",
+"bg-emerald-500/15 text-emerald-400",
+"bg-teal-500/15 text-teal-400",
+"bg-cyan-500/15 text-cyan-400",
+"bg-purple-500/15 text-purple-400",
+"bg-pink-500/15 text-pink-400",
+"bg-rose-500/15 text-rose-400",
+"bg-amber-500/15 text-amber-400",
+"bg-orange-500/15 text-orange-400",
+"bg-lime-500/15 text-lime-400",
+"bg-sky-500/15 text-sky-400"
+];
+
+let hash = 0;
+
+for (let i = 0; i < nombre.length; i++) {
+hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+}
+
+const index = Math.abs(hash) % estilos.length;
+
+return estilos[index];
+}
+  
   /* ============================
         RENDER
   ============================= */
-
+  
   return (
     <div className="max-w-7xl mx-auto mt-6 md:mt-8 px-6">
 
@@ -262,6 +310,35 @@ export default function Historial() {
 
         </div>
       </div>
+      <div className="mb-4 flex flex-wrap gap-2">
+
+  <span className="text-sm text-slate-500 dark:text-slate-400 mr-2">
+    Mostrar columnas:
+  </span>
+
+  {Object.keys(columnas).map((key) => {
+
+    const activo = columnas[key as keyof typeof columnas];
+
+    return (
+      <button
+        key={key}
+        onClick={() => toggleColumna(key as keyof typeof columnas)}
+        className={`
+          px-3 py-1 text-xs rounded-full border
+          ${
+            activo
+              ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30"
+              : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+          }
+        `}
+      >
+        {key}
+      </button>
+    );
+  })}
+
+</div>
 
       {/* TABLA */}
 
@@ -280,6 +357,9 @@ export default function Historial() {
                 {sedeActiva === "all" && <Th>Sede</Th>}
                 <Th>Fecha</Th>
                 <Th>Tipo</Th>
+                {columnas.codigo_app && <Th>Código</Th>}
+                {columnas.codigo_siesa && <Th>Siesa</Th>}
+                {columnas.categoria && <Th>Categoría</Th>}
                 <Th>Repuesto</Th>
                 <Th>Cantidad</Th>
                 <Th>Entrega</Th>
@@ -291,99 +371,143 @@ export default function Historial() {
 
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
 
-              {movimientos.map((m, i) => {
+{movimientos.map((m, i) => {
 
-                const { fecha, hora } = formatearFecha(m.created_at_tz);
+const { fecha, hora } = formatearFecha(m.created_at_tz);
 
-                return (
-                  <motion.tr
-                    key={m.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.02 }}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
-                  >
+return (
 
-                    {sedeActiva === "all" && (
-                      <Td>{m.sedes?.nombre ?? "—"}</Td>
-                    )}
+<motion.tr
+key={m.id}
+initial={{ opacity: 0, y: 8 }}
+animate={{ opacity: 1, y: 0 }}
+transition={{ delay: i * 0.02 }}
+className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
+>
 
-                    <Td>
-                      <div className="font-semibold text-slate-800 dark:text-slate-100">
-                        {fecha}
-                      </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
-                        {hora}
-                      </div>
-                    </Td>
+{sedeActiva === "all" && (
+<Td>{m.sedes?.nombre ?? "—"}</Td>
+)}
 
-                    <Td>
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
-                          ${
-                            m.tipo === "entrada"
-                              ? "bg-emerald-500/15 text-emerald-400"
-                              : "bg-red-500/15 text-red-400"
-                          }`}
-                      >
-                        {m.tipo === "entrada" ? "Entrada" : "Salida"}
-                      </span>
-                    </Td>
+<Td>
+<div className="font-semibold text-slate-800 dark:text-slate-100">
+{fecha}
+</div>
+<div className="text-xs text-slate-500 dark:text-slate-400">
+{hora}
+</div>
+</Td>
 
-                    <Td>
-                      <span className="font-medium text-slate-800 dark:text-slate-200">
-                        {m.repuestos?.nombre ?? "—"}
-                      </span>
-                    </Td>
+<Td>
+<span
+className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+${
+m.tipo === "entrada"
+? "bg-emerald-500/15 text-emerald-400"
+: "bg-red-500/15 text-red-400"
+}`}
+>
+{m.tipo === "entrada" ? "Entrada" : "Salida"}
+</span>
+</Td>
 
-                    <Td>
-                      <span
-                        className={`font-semibold
-                          ${
-                            m.tipo === "entrada"
-                              ? "text-emerald-400"
-                              : "text-red-400"
-                          }`}
-                      >
-                        {m.tipo === "entrada" ? "+" : "-"}
-                        {m.cantidad}
-                      </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
-                        {m.repuestos?.unidad ?? ""}
-                      </span>
-                    </Td>
+{columnas.codigo_app && (
+<Td>
+{m.repuestos?.codigo_corto ?? "—"}
+</Td>
+)}
 
-                    <Td>
-                      <span className="text-slate-600 dark:text-slate-300">
-                        {m.empleado_entrega?.nombre ?? "—"}
-                      </span>
-                    </Td>
+{columnas.codigo_siesa && (
+<Td>
+{m.repuestos?.codigo_siesa ?? "—"}
+</Td>
+)}
 
-                    <Td>
-                      <span className="text-slate-800 dark:text-slate-200 font-medium">
-                        {m.empleado_recibe?.nombre ?? "—"}
-                      </span>
-                    </Td>
+{columnas.categoria && (
+<Td>
 
-                    <Td>
-                      {m.usuario?.nombre ? (
-                        <div className="relative group">
+{m.repuestos?.categorias?.nombre ? (
 
-                          <span className="inline-flex items-center justify-center
-                            w-7 h-7 rounded-full
-                            bg-indigo-500/15 text-indigo-400
-                            text-xs font-semibold">
+<span
+className={`
+inline-flex items-center
+px-3 py-1
+rounded-full
+text-xs font-semibold
+${colorCategoria(m.repuestos.categorias.nombre)}
+`}
+>
+{m.repuestos.categorias.nombre}
+</span>
 
-                            {m.usuario.nombre
-                              .split(" ")
-                              .map((n: string) => n[0])
-                              .join("")
-                              .slice(0, 2)
-                              .toUpperCase()}
+) : (
 
-                          </span>
+<span className="text-slate-400">—</span>
 
-                          <div className="
+)}
+
+</Td>
+)}
+
+<Td>
+<span className="font-medium text-slate-800 dark:text-slate-200">
+{m.repuestos?.nombre ?? "—"}
+</span>
+</Td>
+
+<Td>
+<span
+className={`font-semibold
+${
+m.tipo === "entrada"
+? "text-emerald-400"
+: "text-red-400"
+}`}
+>
+{m.tipo === "entrada" ? "+" : "-"}
+{m.cantidad}
+</span>
+
+<span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
+{m.repuestos?.unidad ?? ""}
+</span>
+</Td>
+
+<Td>
+<span className="text-slate-600 dark:text-slate-300">
+{m.empleado_entrega?.nombre ?? "—"}
+</span>
+</Td>
+
+<Td>
+<span className="text-slate-800 dark:text-slate-200 font-medium">
+{m.empleado_recibe?.nombre ?? "—"}
+</span>
+</Td>
+
+<Td>
+{m.usuario?.nombre ? (
+
+<div className="relative group">
+
+<span
+className="inline-flex items-center justify-center
+w-7 h-7 rounded-full
+bg-indigo-500/15 text-indigo-400
+text-xs font-semibold"
+>
+
+{m.usuario.nombre
+.split(" ")
+.map((n: string) => n[0])
+.join("")
+.slice(0, 2)
+.toUpperCase()}
+
+</span>
+
+<div
+className="
 absolute right-0
 bottom-full mb-2
 hidden group-hover:block
@@ -394,27 +518,32 @@ w-max max-w-[340px]
 break-words
 z-[999]
 shadow-lg
-">
+"
+>
 
-                            <div className="font-semibold">
-                              {m.usuario.nombre}
-                            </div>
+<div className="font-semibold">
+{m.usuario.nombre}
+</div>
 
-                            <div className="text-slate-300 break-all">
-                              {m.usuario.email}
-                            </div>
+<div className="text-slate-300 break-all">
+{m.usuario.email}
+</div>
 
-                          </div>
+</div>
 
-                        </div>
-                      ) : "—"}
-                    </Td>
+</div>
 
-                  </motion.tr>
-                );
-              })}
+) : "—"}
 
-            </tbody>
+</Td>
+
+</motion.tr>
+
+);
+
+})}
+
+</tbody>
 
           </table>
         </div>
