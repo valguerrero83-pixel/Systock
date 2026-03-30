@@ -10,9 +10,6 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
   LineChart,
   Line,
   LabelList

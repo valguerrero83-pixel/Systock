@@ -9,7 +9,7 @@ export default function ModalKardexRepuesto({
   repuesto,
 }: any) {
 
-  const { sedeActiva } = useAuth();
+  const { } = useAuth();
   const [compras, setCompras] = useState<any[]>([]);
 
   useEffect(() => {

@@ -279,11 +279,6 @@ function toggleColumna(key: keyof typeof columnas) {
   /* =========================
       KPIs
   ========================= */
-
-  const totalMovs = empleados.reduce((a, e) => a + e.total_movs, 0);
-  const totalEntradas = empleados.reduce((a, e) => a + e.entradas, 0);
-  const totalSalidas = empleados.reduce((a, e) => a + e.salidas, 0);
-
   return (
     <motion.div
       className="
@@ -304,7 +299,28 @@ function toggleColumna(key: keyof typeof columnas) {
 
 
       {/* BUSCADOR */}
+{/* BUSCADOR */}
 
+<div className="mb-6 flex flex-col md:flex-row md:items-center gap-3">
+
+  <input
+    type="text"
+    placeholder="Buscar empleado por nombre o cargo..."
+    value={busqueda}
+    onChange={(e) => setBusqueda(e.target.value)}
+    className="
+      w-full md:w-80
+      px-3 py-2.5
+      bg-slate-50 dark:bg-slate-800/70
+      border border-slate-200 dark:border-slate-700
+      rounded-xl
+      text-slate-800 dark:text-slate-100
+      focus:outline-none focus:ring-2 focus:ring-indigo-500
+      transition
+    "
+  />
+
+</div>
       <div className="mb-6">
 
 
@@ -609,31 +625,3 @@ function toggleColumna(key: keyof typeof columnas) {
 /* =========================
     STAT COMPONENT
 ========================= */
-
-function Stat({ label, value, green, red }: any) {
-
-  return (
-
-    <div className="
-      bg-slate-50 dark:bg-slate-800/60
-      rounded-xl
-      p-4
-      border border-slate-200 dark:border-slate-700
-    ">
-
-      <p className="text-xs text-slate-500 dark:text-slate-400">
-        {label}
-      </p>
-
-      <p className={`text-xl font-semibold mt-1
-        ${green ? "text-emerald-500" :
-          red ? "text-red-500" :
-          "text-indigo-500"}`}>
-        {value}
-      </p>
-
-    </div>
-
-  );
-
-}
