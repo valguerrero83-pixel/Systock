@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { obtenerCategorias, crearCategoria } from "../services/categoriasService";
 import SelectBuscable from "../components/SelectBuscable";
+import { supabase } from "../lib/supabase";
 
 interface ModalNuevoRepuestoProps {
   abierto: boolean;
@@ -39,6 +40,17 @@ export default function ModalNuevoRepuesto({
   const [modalCategoria, setModalCategoria] = useState(false);
   const [nombreCategoria, setNombreCategoria] = useState("");
 
+  const [ubicaciones, setUbicaciones] = useState<any[]>([]);
+  const [ubicacionId, setUbicacionId] = useState("");
+
+  const [modalUbicacion, setModalUbicacion] = useState(false);
+const [nuevaUbicacion, setNuevaUbicacion] = useState({
+  bodega: "",
+  estante: "",
+  nivel: "",
+  descripcion: ""
+});
+
   const unidades = [
     { id: "Unidades", nombre: "Unidades" },
     { id: "Litros", nombre: "Litros" },
@@ -55,15 +67,28 @@ export default function ModalNuevoRepuesto({
   const stockRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!sedeActiva) return;
+  if (!sedeActiva) return;
 
-    async function cargar() {
-      const data = await obtenerCategorias(sedeActiva!);
-      setCategorias((data ?? []).filter((c:any) => c?.id));
-    }
+  async function cargar() {
 
-    cargar();
-  }, [sedeActiva]);
+    // CARGAR CATEGORIAS
+    const data = await obtenerCategorias(sedeActiva!);
+    setCategorias((data ?? []).filter((c:any) => c?.id));
+
+    // CARGAR UBICACIONES
+    const { data: ubic } = await supabase
+      .from("ubicaciones")
+      .select("id,bodega,estante,nivel")
+      .eq("sede_id", sedeActiva)
+      .order("bodega");
+
+    setUbicaciones(ubic ?? []);
+
+  }
+
+  cargar();
+
+}, [sedeActiva]);
 
   useEffect(() => {
 
@@ -72,6 +97,7 @@ export default function ModalNuevoRepuesto({
       setModalCategoria(false)
     }
   }
+  
 
   if (modalCategoria) {
     document.addEventListener("keydown", handleEsc)
@@ -87,6 +113,9 @@ export default function ModalNuevoRepuesto({
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   }
+  function labelUbicacion(u:any){
+  return `${u.bodega}-${u.estante}-${u.nivel}`;
+}
 
   function handleEnter(
     e: React.KeyboardEvent,
@@ -129,6 +158,36 @@ export default function ModalNuevoRepuesto({
       setError("Error creando la categoría.");
     }
   }
+  async function crearUbicacion(){
+
+if(!sedeActiva) return;
+
+const { error } = await supabase
+.from("ubicaciones")
+.insert({
+sede_id:sedeActiva,
+bodega:nuevaUbicacion.bodega,
+estante:nuevaUbicacion.estante,
+nivel:nuevaUbicacion.nivel,
+descripcion:nuevaUbicacion.descripcion
+});
+
+if(error){
+console.error(error);
+return;
+}
+
+const { data } = await supabase
+.from("ubicaciones")
+.select("id,bodega,estante,nivel")
+.eq("sede_id",sedeActiva);
+
+setUbicaciones(data ?? []);
+
+setModalUbicacion(false);
+
+}
+console.log("UBICACION ID:", ubicacionId);
 
   async function handleSubmit() {
 
@@ -159,7 +218,8 @@ export default function ModalNuevoRepuesto({
         cantidad_inicial: Number(form.cantidad_inicial),
         usuario_id: usuario.id,
         sede_id: sedeActiva!,
-        categoria_id: categoriaId || null
+        categoria_id: categoriaId || null,
+        ubicacion_id: ubicacionId || null
       });
 
       setForm({
@@ -174,6 +234,8 @@ export default function ModalNuevoRepuesto({
       });
 
       setCategoriaId("");
+
+      setUbicacionId("");
 
       onCreated();
 
@@ -240,7 +302,7 @@ return (
 
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-5 overflow-visible">
 
             {/* NOMBRE */}
 
@@ -316,76 +378,112 @@ return (
 
             {/* CATEGORIA */}
 
-            <div>
+<div>
 
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                Categoría
-              </label>
+<label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+Categoría
+</label>
 
-              <div className="flex gap-2 mt-1">
+<div className="flex gap-2 mt-1">
 
-                <SelectBuscable
-                  value={categoriaId || "none"}
-                  items={categorias
-                  .filter((c) => c?.id)
-                  .map((c) => ({
-                    id: String(c.id),
-                    nombre: c.nombre
-                  }))
-                }
-                  placeholder="Seleccionar categoría"
-                  onChange={(id)=>setCategoriaId(id === "none" ? "" : id)}
-                />
+<SelectBuscable
+value={categoriaId || "none"}
+items={[
+{ id:"none", nombre:"Sin categoría"},
+...categorias.map((c)=>({
+id:String(c.id),
+nombre:c.nombre
+}))
+]}
+placeholder="Seleccionar categoría"
+onChange={(id)=>setCategoriaId(id === "none" ? "" : id)}
+/>
 
-                <button
-                  type="button"
-                  onClick={()=>setModalCategoria(true)}
-                  className="px-3 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20"
-                >
-                  +
-                </button>
+<button
+type="button"
+onClick={()=>setModalCategoria(true)}
+className="px-3 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20"
+>
++
+</button>
 
-              </div>
+</div>
 
-            </div>
+</div>
+{/* UBICACION */}
+
+<div>
+
+<label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+Ubicación (opcional)
+</label>
+
+<div className="flex gap-2 mt-1">
+
+<SelectBuscable
+value={ubicacionId || "none"}
+items={[
+{ id:"none", nombre:"Sin ubicación"},
+...ubicaciones.map((u)=>({
+id:u.id,
+nombre:labelUbicacion(u)
+}))
+]}
+placeholder="Seleccionar ubicación"
+onChange={(id)=>{
+  console.log("Seleccion ubicación:", id);
+  setUbicacionId(id);
+}}
+/>
+
+<button
+type="button"
+onClick={()=>setModalUbicacion(true)}
+className="px-3 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20"
+>
++
+</button>
+
+</div>
+
+</div>
+
 
             {/* CANTIDAD + UNIDAD + STOCK */}
 
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr] gap-3">
 
-              <input
-                ref={cantidadRef}
-                type="number"
-                name="cantidad_inicial"
-                value={form.cantidad_inicial}
-                onChange={handleChange}
-                onKeyDown={(e)=>handleEnter(e)}
-                placeholder="Cantidad"
-                className={inputStyle}
-              />
+<input
+ref={cantidadRef}
+type="number"
+name="cantidad_inicial"
+value={form.cantidad_inicial}
+onChange={handleChange}
+placeholder="Cantidad"
+className={inputStyle}
+/>
 
-             <SelectBuscable
-              value={form.unidad || "Unidades"}
-              items={unidades.map((u) => ({
-                id: String(u.id),
-                nombre: u.nombre
-              }))}
-              placeholder="Unidad"
-              onChange={(id) => setForm({ ...form, unidad: id })}
-            />
+<SelectBuscable
+value={form.unidad || "Unidades"}
+items={unidades.map((u)=>({
+id:u.id,
+nombre:u.nombre
+}))}
+placeholder="Unidad"
+onChange={(id)=>setForm({...form, unidad:id})}
+/>
 
-            <input
-              ref={stockRef}
-              type="number"
-              name="stock_minimo"
-              value={form.stock_minimo}
-              onChange={handleChange}
-              onKeyDown={(e) => handleEnter(e)}
-              placeholder="Stock mínimo"
-              className={inputStyle}
-            />
-            </div>
+<input
+ref={stockRef}
+type="number"
+name="stock_minimo"
+value={form.stock_minimo}
+onChange={handleChange}
+placeholder="Stock mínimo"
+className={inputStyle}
+/>
 
+</div>
             {error && (
               <p className="text-red-500 text-sm">{error}</p>
             )}
@@ -474,11 +572,12 @@ return (
             <div className="flex justify-end gap-3 mt-5">
 
               <button
-                onClick={()=>setModalCategoria(false)}
-                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              >
-                Cancelar
-              </button>
+  type="button"
+  onClick={()=>setModalCategoria(true)}
+  className="px-3 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20"
+>
+  +
+</button>
 
               <button
                 onClick={handleCrearCategoria}
@@ -496,6 +595,82 @@ return (
       )}
 
     </AnimatePresence>
+    <AnimatePresence>
+
+{modalUbicacion && (
+
+<motion.div
+className="fixed inset-0 z-[999999] bg-black/40 backdrop-blur-sm flex justify-center items-center p-4"
+initial={{opacity:0}}
+animate={{opacity:1}}
+exit={{opacity:0}}
+>
+
+<motion.div
+className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6"
+initial={{scale:0.9,opacity:0}}
+animate={{scale:1,opacity:1}}
+exit={{scale:0.9,opacity:0}}
+>
+
+<h3 className="text-lg font-semibold mb-4 text-slate-800 dark:text-slate-100">
+Nueva Ubicación
+</h3>
+
+<div className="space-y-3">
+
+<input
+placeholder="Bodega (Ej: Almacén)"
+className={inputStyle}
+value={nuevaUbicacion.bodega}
+onChange={(e)=>setNuevaUbicacion({...nuevaUbicacion,bodega:e.target.value})}
+/>
+
+<input
+placeholder="Estante (Ej: A)"
+className={inputStyle}
+value={nuevaUbicacion.estante}
+onChange={(e)=>setNuevaUbicacion({...nuevaUbicacion,estante:e.target.value})}
+/>
+
+<input
+placeholder="Nivel (Ej: 1)"
+className={inputStyle}
+value={nuevaUbicacion.nivel}
+onChange={(e)=>setNuevaUbicacion({...nuevaUbicacion,nivel:e.target.value})}
+/>
+
+<input
+placeholder="Descripción (opcional)"
+className={inputStyle}
+value={nuevaUbicacion.descripcion}
+onChange={(e)=>setNuevaUbicacion({...nuevaUbicacion,descripcion:e.target.value})}
+/>
+
+</div>
+<div className="flex justify-end gap-3 mt-5">
+
+<button
+onClick={()=>setModalUbicacion(false)}
+className="px-4 py-2 rounded-xl border border-slate-300"
+>
+Cancelar
+</button>
+
+<button
+onClick={crearUbicacion}
+className="px-4 py-2 rounded-xl bg-indigo-600 text-white"
+>
+Crear
+</button>
+
+</div>
+</motion.div>
+</motion.div>
+
+)}
+
+</AnimatePresence>
 
   </AnimatePresence>
 );}

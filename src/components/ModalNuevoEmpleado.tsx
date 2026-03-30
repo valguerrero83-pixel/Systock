@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { crearEmpleado } from "../services/empleadosService";
@@ -9,7 +9,10 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
 
-  const { sedeActiva, usuario } = useAuth(); // 👈 agregado usuario
+  const nombreRef = useRef<HTMLInputElement>(null);
+  const cargoRef = useRef<HTMLInputElement>(null);
+
+  const { sedeActiva, usuario } = useAuth();
 
   async function handleSubmit(e: any) {
     e.preventDefault();
@@ -26,7 +29,7 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
       await crearEmpleado(
         { nombre, cargo },
         sedeActiva,
-        usuario.id // 👈 AQUÍ SE GUARDA QUIÉN LO CREÓ
+        usuario.id
       );
 
       onCreated();
@@ -40,6 +43,19 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
     }
 
     setCargando(false);
+  }
+
+  // ENTER ENTRE CAMPOS
+  function handleKeyDown(e: any, siguiente?: any) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (siguiente) siguiente.current?.focus();
+      else handleSubmit(e);
+    }
+
+    if (e.key === "Escape") {
+      onClose();
+    }
   }
 
   return (
@@ -68,11 +84,7 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
 
             {/* HEADER */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <svg width="22" height="22" stroke="currentColor" fill="none">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M5.5 21a7 7 0 0 1 13 0" />
-                </svg>
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-100">
                 Nuevo Empleado
               </h2>
 
@@ -93,9 +105,11 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
                   Nombre Completo
                 </label>
                 <input
+                  ref={nombreRef}
                   type="text"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, cargoRef)}
                   placeholder="Ej: Juan Pérez"
                   className="
                     w-full mt-1 px-3 py-2.5
@@ -104,7 +118,6 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
                     rounded-xl
                     text-slate-800 dark:text-slate-100
                     focus:outline-none focus:ring-2 focus:ring-indigo-500
-                    transition
                   "
                 />
               </div>
@@ -115,9 +128,11 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
                   Cargo
                 </label>
                 <input
+                  ref={cargoRef}
                   type="text"
                   value={cargo}
                   onChange={(e) => setCargo(e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e)}
                   placeholder="Ej: Técnico, Operario, Jefe..."
                   className="
                     w-full mt-1 px-3 py-2.5
@@ -126,7 +141,6 @@ export default function ModalNuevoEmpleado({ abierto, onClose, onCreated }: any)
                     rounded-xl
                     text-slate-800 dark:text-slate-100
                     focus:outline-none focus:ring-2 focus:ring-indigo-500
-                    transition
                   "
                 />
               </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   obtenerRepuestos,
@@ -10,6 +10,7 @@ import {
 import PageTransition from "../components/PageTransition.bak";
 import { motion } from "framer-motion";
 import SelectPro from "../components/SelectPro";
+
 
 /* ================= TOAST ================= */
 
@@ -39,11 +40,24 @@ export default function Entradas() {
   const [toast, setToast] = useState("");
 
   const [form, setForm] = useState({
-    repuesto_id: "",
-    cantidad: "",
-    recibido_por: "",
-    notas: "",
-  });
+  repuesto_id: "",
+  cantidad: "",
+  recibido_por: "",
+  notas: "",
+  costo_unitario: "",
+  proveedor: "",
+  factura: "",
+});
+const cantidadRef = useRef<HTMLInputElement>(null);
+const costoRef = useRef<HTMLInputElement>(null);
+const proveedorRef = useRef<HTMLInputElement>(null);
+const facturaRef = useRef<HTMLInputElement>(null);
+
+
+const costoTotal =
+  Number(form.cantidad || 0) * Number(form.costo_unitario || 0);
+
+  
 
   /* ================= CARGA DE DATOS ================= */
 
@@ -137,13 +151,20 @@ export default function Entradas() {
     try {
 
       await registrarEntrada({
-        sede_id: sedeActiva!,
-        repuesto_id: form.repuesto_id,
-        cantidad: Number(form.cantidad),
-        recibido_por: form.recibido_por,
-        notas: form.notas,
-        usuario_id: usuario!.id,
-      });
+      sede_id: sedeActiva!,
+      repuesto_id: form.repuesto_id,
+      cantidad: Number(form.cantidad),
+      recibido_por: form.recibido_por,
+      notas: form.notas,
+      usuario_id: usuario!.id,
+      costo_unitario: Number(form.costo_unitario || 0),
+      costo_total:
+        Number(form.cantidad || 0) *
+        Number(form.costo_unitario || 0),
+      proveedor: form.proveedor,
+      factura: form.factura,
+    });
+    
 
       showToast("Entrada registrada ✓");
 
@@ -152,6 +173,9 @@ export default function Entradas() {
         cantidad: "",
         recibido_por: "",
         notas: "",
+        costo_unitario: "",
+        proveedor: "",
+        factura: "",
       });
 
       /* SOLO RECARGAMOS HISTORIAL */
@@ -164,7 +188,17 @@ export default function Entradas() {
     }
 
   }
+  function handleEnter(e: any, siguiente?: any) {
+  if (e.key === "Enter") {
+    e.preventDefault();
 
+    if (siguiente) {
+      siguiente.current?.focus();
+    } else {
+      handleSubmit();
+    }
+  }
+}
   return (
 
     <PageTransition>
@@ -225,10 +259,73 @@ export default function Entradas() {
           </label>
 
           <input
+            ref={cantidadRef}
             type="number"
             name="cantidad"
             value={form.cantidad}
             onChange={handleChange}
+            onKeyDown={(e) => handleEnter(e, costoRef)}
+            className="w-full mt-1 py-2.5 px-3 bg-slate-50 dark:bg-slate-800/70
+            border border-slate-200 dark:border-slate-700 rounded-xl mb-4
+            text-slate-800 dark:text-slate-100"
+          />
+
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Costo Unitario
+          </label>
+
+          <input
+            ref={costoRef}
+            type="number"
+            name="costo_unitario"
+            value={form.costo_unitario}
+            onChange={handleChange}
+            onKeyDown={(e) => handleEnter(e, proveedorRef)}
+            className="w-full mt-1 py-2.5 px-3 bg-slate-50 dark:bg-slate-800/70
+            border border-slate-200 dark:border-slate-700 rounded-xl mb-4
+            text-slate-800 dark:text-slate-100"
+          />
+
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Costo Total
+          </label>
+
+          <input
+            type="text"
+            value={costoTotal.toLocaleString("es-CO")}
+            disabled
+            className="w-full mt-1 py-2.5 px-3 bg-slate-100 dark:bg-slate-800
+            border border-slate-200 dark:border-slate-700 rounded-xl mb-4
+            text-slate-800 dark:text-slate-100"
+          />
+
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Proveedor
+          </label>
+
+          <input
+            ref={proveedorRef}
+            type="text"
+            name="proveedor"
+            value={form.proveedor}
+            onChange={handleChange}
+            onKeyDown={(e) => handleEnter(e, facturaRef)}
+            className="w-full mt-1 py-2.5 px-3 bg-slate-50 dark:bg-slate-800/70
+            border border-slate-200 dark:border-slate-700 rounded-xl mb-4
+            text-slate-800 dark:text-slate-100"
+          />
+
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Factura
+          </label>
+
+          <input
+            ref={facturaRef}
+            type="text"
+            name="factura"
+            value={form.factura}
+            onChange={handleChange}
+            onKeyDown={(e) => handleEnter(e)}
             className="w-full mt-1 py-2.5 px-3 bg-slate-50 dark:bg-slate-800/70
             border border-slate-200 dark:border-slate-700 rounded-xl mb-4
             text-slate-800 dark:text-slate-100"

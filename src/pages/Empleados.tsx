@@ -256,7 +256,8 @@ function toggleColumna(key: keyof typeof columnas) {
   a.download = "empleados_movimientos.csv";
   a.click();
 }
-  /* =========================
+
+/* =========================
         FILTRO
   ========================= */
 
@@ -301,38 +302,44 @@ function toggleColumna(key: keyof typeof columnas) {
         Empleados
       </h2>
 
-      {/* KPIs */}
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-
-        <Stat label="Empleados" value={empleados.length} />
-        <Stat label="Movimientos" value={totalMovs} />
-        <Stat label="Entradas" value={totalEntradas} green />
-        <Stat label="Salidas" value={totalSalidas} red />
-
-      </div>
 
       {/* BUSCADOR */}
 
       <div className="mb-6">
-        <input
-          type="text"
-          placeholder="Buscar por nombre o cargo..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          className="
-            w-full md:w-96
-            px-4 py-2.5
-            rounded-xl
-            border border-slate-300 dark:border-slate-700
-            bg-white dark:bg-slate-800
-            text-slate-800 dark:text-slate-200
-            focus:outline-none
-            focus:ring-2 focus:ring-indigo-500
-          "
-        />
+
+
+    {/* CARDS */}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+
+      <div className="bg-indigo-500/10 p-4 rounded-2xl">
+        <p className="text-sm text-slate-500">Empleados</p>
+        <p className="text-2xl font-semibold text-indigo-500">
+          {empleados.length}
+        </p>
       </div>
-      <div className="mb-6 flex flex-wrap gap-2">
+
+      <div className="bg-emerald-500/10 p-4 rounded-2xl">
+        <p className="text-sm text-slate-500">Entradas</p>
+        <p className="text-2xl font-semibold text-emerald-500">
+          {empleados.reduce((acc,e)=>acc+e.entradas,0)}
+        </p>
+      </div>
+
+      <div className="bg-red-500/10 p-4 rounded-2xl">
+        <p className="text-sm text-slate-500">Salidas</p>
+        <p className="text-2xl font-semibold text-red-500">
+          {empleados.reduce((acc,e)=>acc+e.salidas,0)}
+        </p>
+      </div>
+
+      <div className="bg-amber-500/10 p-4 rounded-2xl">
+        <p className="text-sm text-slate-500">Movimientos</p>
+        <p className="text-2xl font-semibold text-amber-500">
+          {empleados.reduce((acc,e)=>acc+e.total_movs,0)}
+        </p>
+      </div>
+
+    </div>
 
   <span className="text-sm text-slate-500 dark:text-slate-400 mr-2">
     Mostrar columnas:
@@ -360,11 +367,7 @@ function toggleColumna(key: keyof typeof columnas) {
     );
   })}
 
-</div>
-      <div className="flex flex-wrap gap-3 mb-6">
-
-
-  <button
+    <button
     onClick={exportarCSVGlobal}
     className="
       px-4 py-2
@@ -379,6 +382,14 @@ function toggleColumna(key: keyof typeof columnas) {
   </button>
 
 </div>
+      <div className="flex flex-wrap gap-3 mb-6">
+
+
+
+
+</div>
+
+
 
       {/* TABLA */}
 

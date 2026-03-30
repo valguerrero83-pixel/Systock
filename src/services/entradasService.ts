@@ -104,8 +104,14 @@ export async function obtenerStockActual(
       REGISTRAR ENTRADA (GUARDA SEDE)
 ======================================== */
 export async function registrarEntrada(
-  payload: CrearEntradaDTO & { sede_id: string }
-) {
+  payload: CrearEntradaDTO & {
+    sede_id: string;
+    costo_unitario?: number;
+    costo_total?: number;
+    proveedor?: string;
+    factura?: string;
+  }
+): Promise<{ success: boolean }> {
 
   const {
     repuesto_id,
@@ -114,6 +120,10 @@ export async function registrarEntrada(
     notas,
     usuario_id,
     sede_id,
+    costo_unitario,
+    costo_total,
+    proveedor,
+    factura,
   } = payload;
 
   const { error } = await supabase.from("movimientos").insert({
@@ -126,6 +136,12 @@ export async function registrarEntrada(
     sede_id,
     notas: notas ?? "",
     created_at_tz: fechaColombia(),
+
+    // COSTOS
+    costo_unitario: costo_unitario ?? null,
+    costo_total: costo_total ?? null,
+    proveedor: proveedor ?? null,
+    factura: factura ?? null,
   });
 
   if (error) {
@@ -135,7 +151,6 @@ export async function registrarEntrada(
 
   return { success: true };
 }
-
 /* ========================================
       HISTORIAL ENTRADAS (SOPORTA ALL)
 ======================================== */

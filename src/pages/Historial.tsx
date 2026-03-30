@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import SelectPro from "../components/SelectPro";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { colorCategoria } from "../utils/colorCategoria";
 
 /* ============================
    FORMATEAR FECHA / HORA
@@ -20,7 +21,7 @@ function formatearFecha(fecha: string | null | undefined) {
       fecha: f.toLocaleDateString("es-CO", { timeZone: "America/Bogota" }),
       hora: f.toLocaleTimeString("es-CO", {
         timeZone: "America/Bogota",
-        hour12: false,
+        hour12: true,
       }),
     };
   } catch {
@@ -62,9 +63,11 @@ export default function Historial() {
     categoria: ""
   });
   const [columnas, setColumnas] = useState({
-  codigo_app: false,
-  codigo_siesa: false,
-  categoria: false
+  codigo_app: true,
+  codigo_siesa: true,
+  referencia: true,
+  categoria: true,
+  marca: true,
 });
 function toggleColumna(key: keyof typeof columnas) {
   setColumnas((prev) => ({
@@ -104,7 +107,7 @@ function toggleColumna(key: keyof typeof columnas) {
 
     const { data: rep } = await supabase
     .from("repuestos")
-    .select("id, nombre, unidad, stock_minimo, categoria_id")
+    .select("id, nombre, unidad, stock_minimo, categoria_id, referencia, marca, codigo_siesa, codigo_corto")
     .eq("sede_id", sedeActiva)
     .order("nombre");
 
@@ -135,6 +138,41 @@ function toggleColumna(key: keyof typeof columnas) {
     const repuestosFiltrados = filtros.categoria
 ? repuestos.filter(r => r.categoria_id === filtros.categoria)
 : repuestos;
+
+
+{/* CARDS RESUMEN */}
+
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+
+  <div className="bg-indigo-500/10 p-4 rounded-2xl">
+    <p className="text-sm text-slate-500">Movimientos</p>
+    <p className="text-2xl font-semibold text-indigo-500">
+      {movimientos.length}
+    </p>
+  </div>
+
+  <div className="bg-emerald-500/10 p-4 rounded-2xl">
+    <p className="text-sm text-slate-500">Entradas</p>
+    <p className="text-2xl font-semibold text-emerald-500">
+      {movimientos.filter(m => m.tipo === "entrada").length}
+    </p>
+  </div>
+
+  <div className="bg-red-500/10 p-4 rounded-2xl">
+    <p className="text-sm text-slate-500">Salidas</p>
+    <p className="text-2xl font-semibold text-red-500">
+      {movimientos.filter(m => m.tipo === "salida").length}
+    </p>
+  </div>
+
+  <div className="bg-amber-500/10 p-4 rounded-2xl">
+    <p className="text-sm text-slate-500">Repuestos movidos</p>
+    <p className="text-2xl font-semibold text-amber-500">
+      {new Set(movimientos.map(m => m.repuesto_id)).size}
+    </p>
+  </div>
+
+</div>
   /* ============================
          FILTROS
   ============================= */
@@ -169,71 +207,96 @@ function toggleColumna(key: keyof typeof columnas) {
   /* ============================
        EXPORTAR CSV
   ============================= */
+function exportarCSV() {
 
-  function exportarCSV() {
+if (!movimientos.length) return;
 
-    if (!movimientos.length) return;
+const filas = movimientos.map((m) => {
 
-    const filas = movimientos.map((m) => {
+const { fecha, hora } = formatearFecha(m.created_at_tz);
 
-      const { fecha, hora } = formatearFecha(m.created_at_tz);
+const fila:any = {};
 
-      return {
-        Fecha: `${fecha} ${hora}`,
-        Tipo: m.tipo,
-        Repuesto: m.repuestos?.nombre ?? "",
-        Cantidad:
-          (m.tipo === "entrada" ? "+" : "-") +
-          m.cantidad +
-          " " +
-          (m.repuestos?.unidad ?? ""),
-        Entrega: m.empleado_entrega?.nombre ?? "",
-        Recibe: m.empleado_recibe?.nombre ?? "",
-      };
-    });
+/* SEDE */
 
-    const encabezado = Object.keys(filas[0]).join(";");
-    const contenido = filas
-      .map((f) => Object.values(f).map((v) => `"${v}"`).join(";"))
-      .join("\n");
-
-    const blob = new Blob(["\uFEFF" + encabezado + "\n" + contenido], {
-      type: "text/csv;charset=utf-8",
-    });
-
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "historial_movimientos.csv";
-    a.click();
-  }
-  function colorCategoria(nombre: string) {
-
-const estilos = [
-"bg-indigo-500/15 text-indigo-400",
-"bg-blue-500/15 text-blue-400",
-"bg-emerald-500/15 text-emerald-400",
-"bg-teal-500/15 text-teal-400",
-"bg-cyan-500/15 text-cyan-400",
-"bg-purple-500/15 text-purple-400",
-"bg-pink-500/15 text-pink-400",
-"bg-rose-500/15 text-rose-400",
-"bg-amber-500/15 text-amber-400",
-"bg-orange-500/15 text-orange-400",
-"bg-lime-500/15 text-lime-400",
-"bg-sky-500/15 text-sky-400"
-];
-
-let hash = 0;
-
-for (let i = 0; i < nombre.length; i++) {
-hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+if (sedeActiva === "all") {
+fila["Sede"] = m.sedes?.nombre ?? "";
 }
 
-const index = Math.abs(hash) % estilos.length;
+/* FIJAS */
 
-return estilos[index];
+fila["Fecha"] = `${fecha} ${hora}`;
+fila["Tipo"] = m.tipo;
+
+/* COLUMNAS ACTIVAS */
+
+if (columnas.codigo_app) {
+fila["Código App"] = m.repuestos?.codigo_corto ?? "";
 }
-  
+
+if (columnas.codigo_siesa) {
+fila["Código Siesa"] = (m.repuestos as any)?.codigo_siesa ?? "";
+}
+
+if (columnas.referencia) {
+  fila["Referencia"] = (m.repuestos as any)?.referencia ?? "";
+}
+
+if (columnas.marca) {
+  fila["Marca"] = (m.repuestos as any)?.marca ?? "";
+}
+
+if (columnas.categoria) {
+  fila["Categoría"] = m.repuestos?.categorias?.nombre ?? "";
+}
+
+/* PRINCIPAL */
+
+fila["Repuesto"] = m.repuestos?.nombre ?? "";
+
+/* CANTIDAD */
+
+fila["Cantidad"] =
+(m.tipo === "entrada" ? "+" : "-") +
+m.cantidad +
+" " +
+(m.repuestos?.unidad ?? "");
+
+/* EMPLEADOS */
+
+fila["Entrega"] = m.empleado_entrega?.nombre ?? "";
+fila["Recibe"] = m.empleado_recibe?.nombre ?? "";
+
+/* USUARIO */
+
+fila["Usuario"] = m.usuario?.nombre ?? "";
+
+return fila;
+
+});
+
+/* GENERAR CSV */
+
+const headers = Object.keys(filas[0]);
+
+const csv = [
+headers.join(";"),
+...filas.map(row =>
+headers.map(h => `"${row[h] ?? ""}"`).join(";")
+)
+].join("\n");
+
+const blob = new Blob(["\uFEFF" + csv], {
+type: "text/csv;charset=utf-8;"
+});
+
+const link = document.createElement("a");
+link.href = URL.createObjectURL(blob);
+link.download = "historial_movimientos.csv";
+link.click();
+
+}
+
   /* ============================
         RENDER
   ============================= */
@@ -333,12 +396,35 @@ return estilos[index];
           }
         `}
       >
-        {key}
+        {{
+  codigo_app: "Código",
+  codigo_siesa: "Siesa",
+  referencia: "Referencia",
+  marca: "Marca",
+  categoria: "Categoría"
+}[key]}
       </button>
     );
   })}
+  <button
+onClick={exportarCSV}
+className="
+bg-indigo-600 hover:bg-indigo-700
+text-white
+px-4 py-2
+rounded-xl
+text-sm
+font-semibold
+shadow-sm
+transition
+ml-auto
+"
+>
+Exportar CSV
+</button>
 
 </div>
+
 
       {/* TABLA */}
 
@@ -350,7 +436,13 @@ return estilos[index];
 
           <table className="w-full text-sm">
 
-            <thead className="sticky top-0 bg-white dark:bg-slate-900 z-10">
+            <thead className="
+            sticky top-0
+            bg-white/80 dark:bg-slate-900/80
+            backdrop-blur
+            z-10
+            border-b border-slate-200 dark:border-slate-800
+            ">
               <tr className="border-b border-slate-200 dark:border-slate-800
                 text-slate-500 dark:text-slate-400 text-left">
 
@@ -359,6 +451,8 @@ return estilos[index];
                 <Th>Tipo</Th>
                 {columnas.codigo_app && <Th>Código</Th>}
                 {columnas.codigo_siesa && <Th>Siesa</Th>}
+                {columnas.referencia && <Th>Referencia</Th>}
+                {columnas.marca && <Th>Marca</Th>}
                 {columnas.categoria && <Th>Categoría</Th>}
                 <Th>Repuesto</Th>
                 <Th>Cantidad</Th>
@@ -420,6 +514,17 @@ m.tipo === "entrada"
 {columnas.codigo_siesa && (
 <Td>
 {m.repuestos?.codigo_siesa ?? "—"}
+</Td>
+)}
+{columnas.referencia && (
+<Td>
+{(m.repuestos as any)?.referencia ?? "—"}
+</Td>
+)}
+
+{columnas.marca && (
+<Td>
+{(m.repuestos as any)?.marca ?? "—"}
 </Td>
 )}
 
@@ -550,17 +655,6 @@ shadow-lg
       </div>
 
       {/* EXPORTAR */}
-
-      <div className="flex justify-end mt-6">
-        <button
-          onClick={exportarCSV}
-          className="bg-indigo-600 hover:bg-indigo-700 
-            text-white px-6 py-2.5 rounded-xl 
-            font-semibold transition shadow-md"
-        >
-          Exportar CSV
-        </button>
-      </div>
 
     </div>
   );

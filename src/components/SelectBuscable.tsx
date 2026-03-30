@@ -47,11 +47,12 @@ export default function SelectBuscable({
     const map = new Map<string, Item>();
 
     items.forEach((i) => {
-      if (!i?.id) return;
+      if (!map.has(String(i.id))) {
       map.set(String(i.id), {
         id: String(i.id),
         nombre: i.nombre
       });
+    }
     });
 
     return Array.from(map.values());
@@ -148,6 +149,7 @@ export default function SelectBuscable({
                   <button
                     key={`select-item-${item.id}`}
                     onClick={()=>{
+                      console.log("SELECTED:", item.id);
                       onChange(item.id)
                       setAbierto(false)
                       setBusqueda("")

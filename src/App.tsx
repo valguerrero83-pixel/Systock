@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Empleados from "./pages/Empleados";
 import Estadisticas from "./pages/Estadisticas";
 
+
 // --------------------------------------
 // PROTECTED ROUTE
 // --------------------------------------
